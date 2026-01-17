@@ -1,0 +1,166 @@
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { ScreenWrapper } from '../../components/ScreenWrapper';
+import { GlassCard } from '../../components/GlassCard';
+import { COLORS, FONTS, SPACING, LAYOUT } from '../../constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { LanguageToggle } from '../../components/LanguageToggle';
+
+export const RegisterScreen = () => {
+    const navigation = useNavigation<any>();
+    const { t, isRTL } = useLanguage();
+
+    return (
+        <ScreenWrapper>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+            >
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+
+                    {/* Language Toggle - Top Right */}
+                    <View style={styles.topRight}>
+                        <LanguageToggle />
+                    </View>
+
+                    <View style={styles.headerContainer}>
+                        <Text style={styles.logoText}>FOR</Text>
+                        <Text style={styles.subtitle}>{t('registerSubtitle')}</Text>
+                    </View>
+
+                    <GlassCard style={styles.formContainer}>
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, isRTL && styles.rtlText]}>{t('namePlaceholder')}</Text>
+                            <TextInput
+                                style={[styles.input, isRTL && styles.rtlInput]}
+                                placeholder="John Doe"
+                                placeholderTextColor="rgba(255,255,255,0.3)"
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, isRTL && styles.rtlText]}>{t('emailPlaceholder')}</Text>
+                            <TextInput
+                                style={[styles.input, isRTL && styles.rtlInput]}
+                                placeholder="name@example.com"
+                                placeholderTextColor="rgba(255,255,255,0.3)"
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, isRTL && styles.rtlText]}>{t('passwordPlaceholder')}</Text>
+                            <TextInput
+                                style={[styles.input, isRTL && styles.rtlInput]}
+                                placeholder="••••••••"
+                                placeholderTextColor="rgba(255,255,255,0.3)"
+                                secureTextEntry
+                            />
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.button}
+                            // Navigate to Onboarding instead of MainBase using replace to prevent back
+                            onPress={() => navigation.replace('Onboarding')}
+                        >
+                            <Text style={styles.buttonText}>{t('signUpButton')}</Text>
+                        </TouchableOpacity>
+
+                        <View style={styles.footer}>
+                            <Text style={styles.footerText}>{t('alreadyHaveAccount')} </Text>
+                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                                <Text style={styles.linkText}>{t('loginLink')}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </GlassCard>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </ScreenWrapper>
+    );
+};
+
+const styles = StyleSheet.create({
+    scrollContent: {
+        flexGrow: 1,
+        padding: SPACING.l,
+        justifyContent: 'center',
+    },
+    topRight: {
+        position: 'absolute',
+        top: 60,
+        right: 20,
+        zIndex: 10,
+    },
+    headerContainer: {
+        alignItems: 'center',
+        marginBottom: SPACING.xl,
+    },
+    logoText: {
+        fontSize: 48,
+        fontWeight: 'bold',
+        color: COLORS.primary,
+        letterSpacing: 4,
+        marginBottom: SPACING.s,
+    },
+    title: {
+        fontSize: FONTS.headerSize,
+        fontWeight: 'bold',
+        color: COLORS.textPrimary,
+        marginBottom: SPACING.s,
+    },
+    subtitle: {
+        fontSize: FONTS.bodySize,
+        color: COLORS.textSecondary,
+    },
+    formContainer: {
+        padding: SPACING.l,
+    },
+    inputContainer: {
+        marginBottom: SPACING.l,
+    },
+    label: {
+        color: COLORS.textSecondary,
+        marginBottom: SPACING.s,
+        fontSize: 14,
+    },
+    rtlText: {
+        textAlign: 'right',
+    },
+    input: {
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        borderRadius: LAYOUT.borderRadius,
+        padding: SPACING.m,
+        color: COLORS.textPrimary,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    rtlInput: {
+        textAlign: 'right',
+    },
+    button: {
+        backgroundColor: COLORS.primary,
+        padding: SPACING.m,
+        borderRadius: LAYOUT.borderRadius,
+        alignItems: 'center',
+        marginTop: SPACING.s,
+    },
+    buttonText: {
+        color: '#000',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    footer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: SPACING.l,
+    },
+    footerText: {
+        color: COLORS.textSecondary,
+    },
+    linkText: {
+        color: COLORS.accent,
+        fontWeight: 'bold',
+    },
+});
