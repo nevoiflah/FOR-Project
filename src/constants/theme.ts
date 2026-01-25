@@ -1,4 +1,4 @@
-export const COLORS = {
+export const DARK_COLORS = {
     primary: '#00F5FF',      // Electric Cyan
     accent: '#B0FB54',       // Lime Green
     background: '#080808',   // Deep Black
@@ -8,7 +8,25 @@ export const COLORS = {
     danger: '#F87171',
     textPrimary: '#FFFFFF',
     textSecondary: '#A1A1AA', // Zinc 400
+    cardBackground: 'rgba(255, 255, 255, 0.05)',
+    divider: 'rgba(255, 255, 255, 0.1)',
 };
+
+export const LIGHT_COLORS = {
+    primary: '#00B4D8',      // A slightly deeper cyan for light mode
+    accent: '#72BB19',       // A darker lime for readability
+    background: '#F8F9FA',   // Off-white
+    surface: '#FFFFFF',      // Pure White
+    success: '#22C55E',
+    warning: '#F59E0B',
+    danger: '#EF4444',
+    textPrimary: '#18181B',  // Zinc 900
+    textSecondary: '#52525B', // Zinc 600
+    cardBackground: 'rgba(255, 255, 255, 0.8)',
+    divider: 'rgba(0, 0, 0, 0.05)',
+};
+
+export const COLORS = DARK_COLORS; // Default for backwards compatibility during migration
 
 export const SPACING = {
     xs: 4,

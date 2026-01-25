@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { COLORS, LAYOUT } from '../constants/theme';
+import { LAYOUT } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface GlassCardProps {
     children: React.ReactNode;
@@ -11,9 +12,11 @@ interface GlassCardProps {
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({ children, style, contentContainerStyle, intensity = 20 }) => {
+    const { isDark, colors } = useTheme();
+
     return (
-        <View style={[styles.container, style]}>
-            <BlurView intensity={intensity} tint="dark" style={[styles.blurContainer, contentContainerStyle]}>
+        <View style={[styles.container, { backgroundColor: colors.cardBackground, borderColor: colors.divider }, style]}>
+            <BlurView intensity={intensity} tint={isDark ? "dark" : "light"} style={[styles.blurContainer, contentContainerStyle]}>
                 {children}
             </BlurView>
         </View>
@@ -24,10 +27,7 @@ const styles = StyleSheet.create({
     container: {
         borderRadius: LAYOUT.borderRadius,
         overflow: 'hidden',
-        backgroundColor: 'rgba(255, 255, 255, 0.03)', // Very subtle light overlay
-        // Removed border for seamless look, or use very faint:
-        borderColor: 'rgba(255, 255, 255, 0.05)',
-        borderWidth: 1, // Keep 1px but very transparent for crisp edge
+        borderWidth: 1,
     },
     blurContainer: {
         flex: 1,

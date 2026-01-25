@@ -159,6 +159,10 @@ export const translations = {
         biometrics: "Face ID / Touch ID",
         biometricLogin: "Login with Face ID",
         enableBiometrics: "Enable Biometric Login",
+        theme: "Theme",
+        light: "Light",
+        dark: "Dark",
+        system: "System",
     },
     he: {
         // Auth
@@ -322,6 +326,10 @@ export const translations = {
         biometrics: "זיהוי פנים / טביעת אצבע",
         biometricLogin: "התחבר עם זיהוי פנים",
         enableBiometrics: "הפעל כניסה ביומטרית",
+        theme: "ערכת נושא",
+        light: "בהירה",
+        dark: "כהה",
+        system: "לפי מערכת",
     },
 };
 

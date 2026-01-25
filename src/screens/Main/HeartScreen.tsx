@@ -3,15 +3,19 @@ import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { GlassChart } from '../../components/GlassChart';
-import { COLORS, FONTS, SPACING } from '@/constants/theme';
+import { COLORS, FONTS, SPACING } from '../../constants/theme';
 import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 // @ts-ignore
 import { Heart, Activity } from 'lucide-react-native';
 
 export const HeartScreen = () => {
     const { data } = useData();
     const { t, isRTL } = useLanguage();
+    const { colors, isDark } = useTheme();
+
+    const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
     // Mock HR Trend Data
 
@@ -31,7 +35,7 @@ export const HeartScreen = () => {
                             </GlassCard>
 
                             <GlassCard style={styles.mainCard} contentContainerStyle={{ padding: SPACING.l }}>
-                                <Activity size={32} color={COLORS.accent} style={{ marginBottom: 10 }} />
+                                <Activity size={32} color={colors.accent} style={{ marginBottom: 10 }} />
                                 <Text style={styles.bigValue}>{data.heart.variability} ms</Text>
                                 <Text style={styles.label}>{t('hrv')}</Text>
                             </GlassCard>
@@ -78,7 +82,7 @@ export const HeartScreen = () => {
                             isRTL && { alignItems: 'flex-end' }
                         ]} contentContainerStyle={{ padding: SPACING.l }}>
                             <Text style={{
-                                color: COLORS.accent,
+                                color: colors.accent,
                                 fontWeight: 'bold',
                                 marginBottom: 4,
                                 textTransform: 'uppercase',
@@ -99,7 +103,7 @@ export const HeartScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     container: {
         padding: SPACING.l,
         paddingBottom: 100,
@@ -107,7 +111,7 @@ const styles = StyleSheet.create({
     pageTitle: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: SPACING.l,
     },
     grid: {
@@ -117,7 +121,6 @@ const styles = StyleSheet.create({
     },
     mainCard: {
         width: '48%',
-        // padding: SPACING.l,
         alignItems: 'center',
         justifyContent: 'center',
         height: 160,
@@ -125,27 +128,26 @@ const styles = StyleSheet.create({
     bigValue: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: SPACING.s,
     },
     label: {
         fontSize: 12,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         textAlign: 'center',
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: SPACING.m,
         marginTop: SPACING.m,
     },
     rangeCard: {
-        // padding: SPACING.l,
     },
     rangeBar: {
         height: 8,
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: colors.divider,
         borderRadius: 4,
         marginBottom: SPACING.s,
         position: 'relative',
@@ -162,14 +164,13 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     rangeText: {
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         fontWeight: 'bold',
     },
     insightCard: {
-        // padding: SPACING.l,
     },
     insightText: {
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         fontSize: 16,
         lineHeight: 24,
     },

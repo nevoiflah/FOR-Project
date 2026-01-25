@@ -4,6 +4,7 @@ import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { COLORS, SPACING, FONTS, LAYOUT } from '../../constants/theme';
 import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 // @ts-ignore
 import { ArrowLeft, User, Calendar, Ruler, Weight } from 'lucide-react-native';
 import { HapticFeedback } from '../../utils/haptics';
@@ -12,6 +13,9 @@ import { getDisplayValue, toMetricHeight, toMetricWeight } from '../../utils/uni
 export const EditProfileScreen = ({ navigation }: any) => {
     const { data, updateUserProfile } = useData();
     const { t, isRTL } = useLanguage();
+    const { colors, isDark } = useTheme();
+
+    const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
     const [name, setName] = useState(data?.userProfile?.name || '');
     const [age, setAge] = useState(data?.userProfile?.age || '');
@@ -54,7 +58,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
             <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{label}</Text>
             <View style={[styles.inputWrapper, isRTL && { flexDirection: 'row-reverse' }]}>
                 <View style={styles.iconContainer}>
-                    <Icon size={20} color={COLORS.textSecondary} />
+                    <Icon size={20} color={colors.textSecondary} />
                 </View>
                 <TextInput
                     style={[styles.input, isRTL && { textAlign: 'right' }]}
@@ -97,7 +101,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
                         onPress={() => navigation.goBack()}
                         style={styles.backButton}
                     >
-                        <ArrowLeft size={24} color={COLORS.textPrimary} style={isRTL && { transform: [{ rotate: '180deg' }] }} />
+                        <ArrowLeft size={24} color={colors.textPrimary} style={isRTL && { transform: [{ rotate: '180deg' }] }} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>{t('editProfileTitle')}</Text>
                     <View style={{ width: 40 }} />
@@ -167,7 +171,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     container: {
         padding: SPACING.l,
     },
@@ -182,19 +186,19 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
     },
     backButton: {
         padding: 8,
         borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: colors.cardBackground,
     },
     inputContainer: {
         marginBottom: SPACING.l,
     },
     label: {
         fontSize: 14,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         marginBottom: 8,
         textTransform: 'uppercase',
         fontWeight: '600',
@@ -202,10 +206,10 @@ const styles = StyleSheet.create({
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: colors.cardBackground,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: colors.divider,
         height: 56,
     },
     iconContainer: {
@@ -215,14 +219,14 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         fontSize: 16,
         paddingHorizontal: 8,
         height: '100%',
     },
     genderSelector: {
         flexDirection: 'row',
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: colors.cardBackground,
         borderRadius: 12,
         padding: 4,
         marginBottom: SPACING.l,
@@ -234,21 +238,20 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     genderOptionSelected: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
     },
     genderText: {
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         fontWeight: 'bold',
     },
     genderTextSelected: {
-        color: COLORS.background,
+        color: colors.background,
     },
     footer: {
         padding: SPACING.l,
-        // Removed background color to avoid "strip" look
     },
     saveButton: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -256,7 +259,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
     },
     saveButtonText: {
-        color: COLORS.background,
+        color: colors.background,
         fontWeight: 'bold',
         fontSize: 16,
     }

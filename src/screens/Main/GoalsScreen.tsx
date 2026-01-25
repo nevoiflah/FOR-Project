@@ -5,6 +5,7 @@ import { GlassCard } from '../../components/GlassCard';
 import { COLORS, SPACING, FONTS, LAYOUT } from '../../constants/theme';
 import { useData, Goal } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 // @ts-ignore
 import { Target, Flag, Edit2, CheckCircle, Plus, X, Trash2 } from 'lucide-react-native';
 import { HapticFeedback } from '../../utils/haptics';
@@ -12,6 +13,9 @@ import { HapticFeedback } from '../../utils/haptics';
 export const GoalsScreen = () => {
     const { data, addGoal, removeGoal, updateGoal } = useData();
     const { t, isRTL } = useLanguage();
+    const { colors, isDark } = useTheme();
+
+    const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
     // Modal State
     const [modalVisible, setModalVisible] = useState(false);
@@ -31,7 +35,7 @@ export const GoalsScreen = () => {
             target: parseInt(newTarget) || 10,
             current: 0,
             unit: newUnit,
-            color: COLORS.primary, // Could allow color selection later
+            color: colors.primary, // Could allow color selection later
             type: 'numeric'
         });
 
@@ -71,9 +75,9 @@ export const GoalsScreen = () => {
                     <View style={[styles.goalHeader, isRTL && { flexDirection: 'row-reverse' }]}>
                         <Text style={styles.goalTitle}>{item.title}</Text>
                         {isComplete ? (
-                            <CheckCircle size={20} color={COLORS.success} />
+                            <CheckCircle size={20} color={colors.success} />
                         ) : (
-                            <Text style={{ color: COLORS.textSecondary, fontSize: 12 }}>{t('tapToUpdate')}</Text>
+                            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{t('tapToUpdate')}</Text>
                         )}
                     </View>
 
@@ -85,7 +89,7 @@ export const GoalsScreen = () => {
                         <Text style={styles.goalProgress}>
                             <Text style={{ color: item.color, fontWeight: 'bold' }}>{item.current}</Text> / {item.target} {item.unit}
                         </Text>
-                        <Text style={{ color: COLORS.textSecondary, fontSize: 12 }}>{Math.round(progress * 100)}%</Text>
+                        <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{Math.round(progress * 100)}%</Text>
                     </View>
                 </GlassCard>
             </TouchableOpacity>
@@ -110,7 +114,7 @@ export const GoalsScreen = () => {
                                 setModalVisible(true)
                             }}
                         >
-                            <Plus size={20} color={COLORS.background} />
+                            <Plus size={20} color={colors.background} />
                             <Text style={styles.addButtonText}>{t('addNewGoal') || 'Add New Goal'}</Text>
                         </TouchableOpacity>
                     </>
@@ -135,7 +139,7 @@ export const GoalsScreen = () => {
                             <View style={[styles.modalHeader, isRTL && { flexDirection: 'row-reverse' }]}>
                                 <Text style={styles.modalTitle}>{t('newGoalTitle')}</Text>
                                 <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                    <X size={24} color={COLORS.textSecondary} />
+                                    <X size={24} color={colors.textSecondary} />
                                 </TouchableOpacity>
                             </View>
 
@@ -167,7 +171,7 @@ export const GoalsScreen = () => {
                                     <TextInput
                                         style={[styles.input, isRTL && { textAlign: 'right' }]}
                                         placeholder={t('goalUnitPlaceholder')}
-                                        placeholderTextColor="#666"
+                                        placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
                                         value={newUnit}
                                         onChangeText={setNewUnit}
                                     />
@@ -186,7 +190,7 @@ export const GoalsScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     container: {
         padding: SPACING.l,
         paddingBottom: 100,
@@ -194,7 +198,7 @@ const styles = StyleSheet.create({
     pageTitle: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: SPACING.l,
     },
     goalItem: {
@@ -209,15 +213,15 @@ const styles = StyleSheet.create({
     goalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
     },
     progressBackground: {
         height: 12,
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: colors.cardBackground,
         borderRadius: 6,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: colors.divider,
         marginBottom: SPACING.s,
     },
     progressBar: {
@@ -231,10 +235,10 @@ const styles = StyleSheet.create({
     },
     goalProgress: {
         fontSize: 14,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
     },
     addButton: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -244,7 +248,7 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.xl,
     },
     addButtonText: {
-        color: COLORS.background,
+        color: colors.background,
         fontWeight: 'bold',
         fontSize: 16,
         marginLeft: 10,
@@ -256,23 +260,22 @@ const styles = StyleSheet.create({
         marginTop: 100,
     },
     emptyText: {
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         fontSize: 16,
     },
-    // Modal Styles
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.8)',
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: '#1A1E22',
+        backgroundColor: colors.surface,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: SPACING.l,
         paddingBottom: 40,
         borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.1)',
+        borderTopColor: colors.divider,
     },
     modalHeader: {
         flexDirection: 'row',
@@ -283,35 +286,35 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
     },
     inputGroup: {
         marginBottom: SPACING.m,
     },
     label: {
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         marginBottom: 8,
         fontSize: 14,
         textTransform: 'uppercase',
     },
     input: {
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: colors.cardBackground,
         borderRadius: 12,
         padding: 16,
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         fontSize: 16,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: colors.divider,
     },
     createButton: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         padding: 16,
         borderRadius: 12,
         alignItems: 'center',
         marginTop: SPACING.m,
     },
     createButtonText: {
-        color: COLORS.background,
+        color: colors.background,
         fontWeight: 'bold',
         fontSize: 16,
     }

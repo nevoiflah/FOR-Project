@@ -5,18 +5,21 @@ import { AppNavigator } from './src/navigation/AppNavigator';
 import { DataProvider } from './src/contexts/DataContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import { AuthProvider } from './src/contexts/AuthContext';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <DataProvider>
-            <StatusBar style="light" />
-            <AppNavigator />
-          </DataProvider>
-        </AuthProvider>
-      </LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <DataProvider>
+              <StatusBar style="auto" />
+              <AppNavigator />
+            </DataProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

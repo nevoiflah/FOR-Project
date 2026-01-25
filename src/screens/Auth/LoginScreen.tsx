@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { LanguageToggle } from '../../components/LanguageToggle';
@@ -16,6 +17,9 @@ import { ScanFace } from 'lucide-react-native';
 export const LoginScreen = () => {
     const navigation = useNavigation<any>();
     const { t, isRTL } = useLanguage();
+    const { colors, isDark } = useTheme();
+
+    const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -109,7 +113,7 @@ export const LoginScreen = () => {
                             <TextInput
                                 style={[styles.input, isRTL && styles.rtlInput]}
                                 placeholder="name@example.com"
-                                placeholderTextColor="rgba(255,255,255,0.3)"
+                                placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 value={email}
@@ -125,7 +129,7 @@ export const LoginScreen = () => {
                             <TextInput
                                 style={[styles.input, isRTL && styles.rtlInput]}
                                 placeholder="••••••••"
-                                placeholderTextColor="rgba(255,255,255,0.3)"
+                                placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
                                 secureTextEntry
                                 value={password}
                                 onChangeText={setPassword}
@@ -137,8 +141,8 @@ export const LoginScreen = () => {
                                 style={styles.biometricButton}
                                 onPress={handleBiometricLogin}
                             >
-                                <ScanFace size={24} color={COLORS.primary} style={{ marginRight: 8 }} />
-                                <Text style={[styles.buttonText, { color: COLORS.primary }]}>{t('biometricLogin')}</Text>
+                                <ScanFace size={24} color={colors.primary} style={{ marginRight: 8 }} />
+                                <Text style={[styles.buttonText, { color: colors.primary }]}>{t('biometricLogin')}</Text>
                             </TouchableOpacity>
                         )}
 
@@ -165,7 +169,7 @@ export const LoginScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
         padding: SPACING.l,
@@ -184,19 +188,19 @@ const styles = StyleSheet.create({
     logoText: {
         fontSize: 48,
         fontWeight: 'bold',
-        color: COLORS.primary,
+        color: colors.primary,
         letterSpacing: 4,
         marginBottom: SPACING.s,
     },
     title: {
         fontSize: FONTS.headerSize,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: SPACING.s,
     },
     subtitle: {
         fontSize: FONTS.bodySize,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
     },
     formContainer: {
         padding: SPACING.l,
@@ -205,7 +209,7 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.l,
     },
     label: {
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         marginBottom: SPACING.s,
         fontSize: 14,
     },
@@ -213,25 +217,25 @@ const styles = StyleSheet.create({
         textAlign: 'right',
     },
     input: {
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: colors.cardBackground,
         borderRadius: LAYOUT.borderRadius,
         padding: SPACING.m,
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: colors.divider,
     },
     rtlInput: {
         textAlign: 'right',
     },
     button: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         padding: SPACING.m,
         borderRadius: LAYOUT.borderRadius,
         alignItems: 'center',
         marginTop: SPACING.s,
     },
     buttonText: {
-        color: '#000',
+        color: isDark ? '#000' : '#fff',
         fontWeight: 'bold',
         fontSize: 16,
     },
@@ -242,9 +246,9 @@ const styles = StyleSheet.create({
         padding: SPACING.m,
         borderRadius: LAYOUT.borderRadius,
         borderWidth: 1,
-        borderColor: COLORS.primary,
+        borderColor: colors.primary,
         marginBottom: SPACING.m,
-        backgroundColor: 'rgba(0, 245, 255, 0.1)',
+        backgroundColor: isDark ? 'rgba(0, 245, 255, 0.1)' : 'rgba(0, 180, 216, 0.1)',
     },
     footer: {
         flexDirection: 'row',
@@ -252,15 +256,15 @@ const styles = StyleSheet.create({
         marginTop: SPACING.l,
     },
     footerText: {
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
     },
     linkText: {
-        color: COLORS.accent,
+        color: colors.accent,
         fontWeight: 'bold',
     },
     errorText: {
-        color: '#FF6B6B',
-        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+        color: colors.danger,
+        backgroundColor: isDark ? 'rgba(248, 113, 113, 0.1)' : 'rgba(239, 68, 68, 0.1)',
         padding: 10,
         borderRadius: 8,
         marginBottom: SPACING.m,

@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { View, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { COLORS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Icons
 import { Home, Moon, Heart, TrendingUp, User, Settings, ArrowRight, Target } from 'lucide-react-native';
@@ -25,6 +25,8 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 const MainTabs = () => {
+    const { colors, isDark } = useTheme();
+
     return (
         <Tab.Navigator
             id="main-tabs"
@@ -33,10 +35,10 @@ const MainTabs = () => {
                 tabBarStyle: styles.tabBar,
                 tabBarShowLabel: false,
                 tabBarBackground: () => (
-                    <BlurView tint="dark" intensity={30} style={StyleSheet.absoluteFill} />
+                    <BlurView tint={isDark ? "dark" : "light"} intensity={30} style={StyleSheet.absoluteFill} />
                 ),
-                tabBarActiveTintColor: COLORS.primary,
-                tabBarInactiveTintColor: COLORS.textSecondary,
+                tabBarActiveTintColor: colors.primary,
+                tabBarInactiveTintColor: colors.textSecondary,
             }}
         >
             <Tab.Screen
@@ -100,12 +102,15 @@ import { LoadingRing } from '../components/LoadingRing';
 export const AppNavigator = () => {
     const { user, loading: authLoading } = useAuth();
     const { data, isSyncing } = useData();
+    const { colors, theme: currentTheme } = useTheme();
 
-    const theme = {
+    const navigationTheme = {
         ...DefaultTheme,
         colors: {
             ...DefaultTheme.colors,
-            background: COLORS.background,
+            background: colors.background,
+            card: colors.surface,
+            text: colors.textPrimary,
         },
     };
 
@@ -114,7 +119,7 @@ export const AppNavigator = () => {
 
     if (isLoading) {
         return (
-            <View style={{ flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
                 <LoadingRing size={100} />
             </View>
         );
@@ -125,7 +130,7 @@ export const AppNavigator = () => {
     const needsOnboarding = user && (!data?.userProfile?.age || !data?.userProfile?.weight);
 
     return (
-        <NavigationContainer theme={theme}>
+        <NavigationContainer theme={navigationTheme}>
             <Stack.Navigator id="root-stack" screenOptions={{ headerShown: false }}>
                 {!user ? (
                     <Stack.Group screenOptions={{ animation: 'fade' }}>

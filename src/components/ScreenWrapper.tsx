@@ -1,18 +1,19 @@
 import React from 'react';
-import { View, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
+import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ScreenWrapperProps {
     children: React.ReactNode;
 }
 
 export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ children }) => {
+    const { colors, isDark } = useTheme();
+
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" />
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
             <LinearGradient
-                colors={[COLORS.background, '#1A1E22']} // Subtle gradient from background to slightly lighter
+                colors={[colors.background, isDark ? '#1A1E22' : '#E9ECEF']}
                 style={styles.gradient}
             >
                 <SafeAreaView style={styles.safeArea}>
@@ -26,7 +27,6 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ children }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
     },
     gradient: {
         flex: 1,

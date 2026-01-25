@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { LanguageToggle } from '../../components/LanguageToggle';
@@ -13,6 +14,9 @@ import { HapticFeedback } from '../../utils/haptics';
 export const RegisterScreen = () => {
     const navigation = useNavigation<any>();
     const { t, isRTL } = useLanguage();
+    const { colors, isDark } = useTheme();
+
+    const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -72,7 +76,7 @@ export const RegisterScreen = () => {
                             <TextInput
                                 style={[styles.input, isRTL && styles.rtlInput]}
                                 placeholder="John Doe"
-                                placeholderTextColor="rgba(255,255,255,0.3)"
+                                placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
                                 value={name}
                                 onChangeText={setName}
                                 autoCorrect={false}
@@ -84,7 +88,7 @@ export const RegisterScreen = () => {
                             <TextInput
                                 style={[styles.input, isRTL && styles.rtlInput]}
                                 placeholder="name@example.com"
-                                placeholderTextColor="rgba(255,255,255,0.3)"
+                                placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 value={email}
@@ -98,7 +102,7 @@ export const RegisterScreen = () => {
                             <TextInput
                                 style={[styles.input, isRTL && styles.rtlInput]}
                                 placeholder="••••••••"
-                                placeholderTextColor="rgba(255,255,255,0.3)"
+                                placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
                                 secureTextEntry
                                 value={password}
                                 onChangeText={setPassword}
@@ -128,7 +132,7 @@ export const RegisterScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
         padding: SPACING.l,
@@ -147,19 +151,19 @@ const styles = StyleSheet.create({
     logoText: {
         fontSize: 48,
         fontWeight: 'bold',
-        color: COLORS.primary,
+        color: colors.primary,
         letterSpacing: 4,
         marginBottom: SPACING.s,
     },
     title: {
         fontSize: FONTS.headerSize,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: SPACING.s,
     },
     subtitle: {
         fontSize: FONTS.bodySize,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
     },
     formContainer: {
         padding: SPACING.l,
@@ -168,7 +172,7 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.l,
     },
     label: {
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         marginBottom: SPACING.s,
         fontSize: 14,
     },
@@ -176,25 +180,25 @@ const styles = StyleSheet.create({
         textAlign: 'right',
     },
     input: {
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: colors.cardBackground,
         borderRadius: LAYOUT.borderRadius,
         padding: SPACING.m,
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: colors.divider,
     },
     rtlInput: {
         textAlign: 'right',
     },
     button: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         padding: SPACING.m,
         borderRadius: LAYOUT.borderRadius,
         alignItems: 'center',
         marginTop: SPACING.s,
     },
     buttonText: {
-        color: '#000',
+        color: isDark ? '#000' : '#fff',
         fontWeight: 'bold',
         fontSize: 16,
     },
@@ -204,15 +208,15 @@ const styles = StyleSheet.create({
         marginTop: SPACING.l,
     },
     footerText: {
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
     },
     linkText: {
-        color: COLORS.accent,
+        color: colors.accent,
         fontWeight: 'bold',
     },
     errorText: {
-        color: '#FF6B6B',
-        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+        color: colors.danger,
+        backgroundColor: isDark ? 'rgba(248, 113, 113, 0.1)' : 'rgba(239, 68, 68, 0.1)',
         padding: 10,
         borderRadius: 8,
         marginBottom: SPACING.m,

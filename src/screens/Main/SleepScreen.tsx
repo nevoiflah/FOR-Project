@@ -6,12 +6,16 @@ import { GlassChart } from '../../components/GlassChart';
 import { COLORS, FONTS, SPACING } from '../../constants/theme';
 import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 // @ts-ignore
 import { Moon, Clock, BarChart2 } from 'lucide-react-native';
 
 export const SleepScreen = () => {
     const { data } = useData();
     const { t, isRTL } = useLanguage();
+    const { colors, isDark } = useTheme();
+
+    const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
     return (
         <ScreenWrapper>
@@ -43,11 +47,11 @@ export const SleepScreen = () => {
                                     data={data.sleep.weekly}
                                     height={120}
                                     width={Dimensions.get('window').width - 48} // Full width of card (Screen - ScreenPadding)
-                                    color={COLORS.primary}
+                                    color={colors.primary}
                                     gradientId="sleep-weekly-grad"
                                 />
                                 <View style={{ padding: SPACING.m, width: '100%', alignItems: 'center' }}>
-                                    <Text style={{ color: COLORS.textSecondary, fontSize: 12 }}>{t('last7Days')}</Text>
+                                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{t('last7Days')}</Text>
                                 </View>
                             </GlassCard>
                         </View>
@@ -74,7 +78,7 @@ export const SleepScreen = () => {
                         {/* Insight */}
                         <GlassCard style={[styles.insightCard, isRTL && { alignItems: 'flex-end' }]} contentContainerStyle={{ padding: SPACING.l }}>
                             <Text style={{
-                                color: COLORS.accent,
+                                color: colors.accent,
                                 fontWeight: 'bold',
                                 marginBottom: 4,
                                 textTransform: 'uppercase',
@@ -95,7 +99,7 @@ export const SleepScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     container: {
         padding: SPACING.l,
         paddingBottom: 100,
@@ -103,33 +107,29 @@ const styles = StyleSheet.create({
     pageTitle: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: SPACING.l,
     },
     scoreCard: {
-        // flexDirection: 'row', // Moved to contentContainerStyle
-        // alignItems: 'center', // Moved to contentContainerStyle
-        // padding: SPACING.l, // Moved
         marginBottom: SPACING.xl,
-        // justifyContent: 'space-around', // Moved
     },
     scoreCircle: {
         width: 100,
         height: 100,
         borderRadius: 50,
         borderWidth: 8,
-        borderColor: COLORS.primary,
+        borderColor: colors.primary,
         justifyContent: 'center',
         alignItems: 'center',
     },
     scoreValue: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
     },
     scoreLabel: {
         fontSize: 12,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         textTransform: 'uppercase',
     },
     textContainer: {
@@ -138,20 +138,19 @@ const styles = StyleSheet.create({
     sleepDuration: {
         fontSize: 36,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
     },
     sleepSubtitle: {
         fontSize: 16,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: SPACING.m,
     },
     detailsCard: {
-        // padding: SPACING.m,
         marginBottom: SPACING.xl,
     },
     detailRow: {
@@ -161,23 +160,21 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         fontSize: 16,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
     },
     detailValue: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
     },
     divider: {
         height: 1,
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: colors.divider,
     },
     insightCard: {
-        // padding: SPACING.l,
-        // Removed override to use default GlassCard style
     },
     insightText: {
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         fontSize: 16,
         lineHeight: 24,
     },

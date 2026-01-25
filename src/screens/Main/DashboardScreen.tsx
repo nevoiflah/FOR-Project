@@ -11,11 +11,15 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { Circle, Activity, Moon, RefreshCcw, CheckCircle2 } from 'lucide-react-native';
 import { TouchableOpacity, Alert } from 'react-native';
 import { HapticFeedback } from '../../utils/haptics';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export const DashboardScreen = () => {
     const { isConnected, isSyncing, data } = useData();
     const { t, isRTL } = useLanguage();
+    const { colors, isDark } = useTheme();
     const [showSuccess, setShowSuccess] = useState(false);
+
+    const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
 
 
@@ -57,7 +61,7 @@ export const DashboardScreen = () => {
                         {/* Sleep Card */}
                         <GlassCard style={styles.metricCard} contentContainerStyle={{ padding: SPACING.m, alignItems: 'center' }}>
                             <View style={styles.iconContainer}>
-                                <Moon size={24} color={COLORS.primary} />
+                                <Moon size={24} color={colors.primary} />
                             </View>
                             <Text style={styles.metricValue}>{data.sleep.duration}</Text>
                             <Text style={styles.metricLabel}>{t('sleepScore')} {data.sleep.score}</Text>
@@ -66,7 +70,7 @@ export const DashboardScreen = () => {
                         {/* Steps Card */}
                         <GlassCard style={styles.metricCard} contentContainerStyle={{ padding: SPACING.m, alignItems: 'center' }}>
                             <View style={styles.iconContainer}>
-                                <Activity size={24} color={COLORS.accent} />
+                                <Activity size={24} color={colors.accent} />
                             </View>
                             <Text style={styles.metricValue}>{data.steps.count.toLocaleString()}</Text>
                             <Text style={styles.metricLabel}>{t('steps')}</Text>
@@ -84,7 +88,7 @@ export const DashboardScreen = () => {
                         {/* Readiness Card */}
                         <GlassCard style={styles.metricCard} contentContainerStyle={{ padding: SPACING.m, alignItems: 'center' }}>
                             <View style={styles.iconContainer}>
-                                <Circle size={24} color={COLORS.success} />
+                                <Circle size={24} color={colors.success} />
                             </View>
                             <Text style={styles.metricValue}>{data.readiness.score}</Text>
                             <Text style={styles.metricLabel}>{data.readiness.status}</Text>
@@ -106,7 +110,7 @@ export const DashboardScreen = () => {
 
                         <Text style={[
                             styles.insightText,
-                            { color: COLORS.textSecondary, marginBottom: SPACING.l },
+                            { color: colors.textSecondary, marginBottom: SPACING.l },
                             isRTL && { textAlign: 'right' }
                         ]}>
                             {data.readiness.score >= 80
@@ -120,7 +124,7 @@ export const DashboardScreen = () => {
                                 data={[70, 75, 78, 85, 82, 90, data.readiness.score]}
                                 height={120}
                                 width={Dimensions.get('window').width - 48}
-                                color={data.readiness.score >= 80 ? COLORS.success : COLORS.accent}
+                                color={data.readiness.score >= 80 ? colors.success : colors.accent}
                                 gradientId="dash-ready-grad"
                             />
                         </View>
@@ -132,7 +136,7 @@ export const DashboardScreen = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     container: {
         padding: SPACING.l,
         paddingBottom: 100,
@@ -142,12 +146,12 @@ const styles = StyleSheet.create({
     },
     greeting: {
         fontSize: FONTS.subHeaderSize,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
     },
     username: {
         fontSize: FONTS.headerSize,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
     },
     ringContainer: {
         alignItems: 'center',
@@ -157,7 +161,7 @@ const styles = StyleSheet.create({
     },
     syncText: {
         marginTop: SPACING.m,
-        color: COLORS.primary,
+        color: colors.primary,
         fontSize: 14,
         letterSpacing: 1,
         textTransform: 'uppercase',
@@ -171,85 +175,51 @@ const styles = StyleSheet.create({
     metricCard: {
         width: '48%',
         marginBottom: SPACING.m,
-        // padding: SPACING.m,
-        // alignItems: 'center',
     },
     largeCard: {
         width: '100%',
-        padding: 0, // Removed padding to allow full-width chart
+        padding: 0,
         marginBottom: SPACING.m,
-        overflow: 'hidden', // Ensure chart clipped at rounded corners
+        overflow: 'hidden',
     },
     iconContainer: {
         marginBottom: SPACING.s,
         padding: SPACING.s,
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: colors.cardBackground,
         borderRadius: 50,
     },
     metricValue: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: 4,
     },
     metricLabel: {
         fontSize: 12,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
     },
     cardTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: SPACING.m,
-    },
-    chartPlaceholder: {
-        padding: SPACING.m,
-        backgroundColor: 'rgba(0,0,0,0.2)',
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     insightHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: SPACING.l, // Added individual padding
-        paddingTop: SPACING.l,        // Added individual padding
+        paddingHorizontal: SPACING.l,
+        paddingTop: SPACING.l,
     },
     insightText: {
         fontSize: 14,
         lineHeight: 22,
-        paddingHorizontal: SPACING.l, // Added individual padding
-    },
-    sourceBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 255, 157, 0.1)',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 20,
-        marginTop: 8,
+        paddingHorizontal: SPACING.l,
     },
     sourceText: {
         fontSize: 10,
-        color: COLORS.primary,
+        color: colors.primary,
         fontWeight: 'bold',
         textTransform: 'uppercase',
-    },
-    syncButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 20,
-        marginLeft: 8,
-    },
-    syncButtonText: {
-        fontSize: 10,
-        color: COLORS.textPrimary,
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        marginLeft: 4,
     },
 });

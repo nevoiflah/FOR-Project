@@ -5,12 +5,16 @@ import { GlassCard } from '../../components/GlassCard';
 import { COLORS, SPACING, FONTS } from '../../constants/theme';
 import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 // @ts-ignore
 import { ArrowRight, User, Ruler, Weight, Calendar } from 'lucide-react-native';
 
 export const OnboardingScreen = ({ navigation, route }: any) => {
     const { updateUserProfile, data } = useData();
     const { t, isRTL } = useLanguage();
+    const { colors, isDark } = useTheme();
+
+    const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
     const isEditing = route?.params?.isEditing || false;
     const initialData = route?.params?.currentProfile || {};
@@ -96,11 +100,11 @@ export const OnboardingScreen = ({ navigation, route }: any) => {
                             <View style={styles.inputGroup}>
                                 <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('name') || 'Name'}</Text>
                                 <View style={[styles.inputWrapper, isRTL && { flexDirection: 'row-reverse' }]}>
-                                    <User size={20} color={COLORS.textSecondary} />
+                                    <User size={20} color={colors.textSecondary} />
                                     <TextInput
                                         style={[styles.input, isRTL && { textAlign: 'right', marginRight: 10 }]}
                                         placeholder="Your Name"
-                                        placeholderTextColor={COLORS.textSecondary}
+                                        placeholderTextColor={colors.textSecondary}
                                         value={name}
                                         onChangeText={setName}
                                     />
@@ -110,11 +114,11 @@ export const OnboardingScreen = ({ navigation, route }: any) => {
                             <View style={styles.inputGroup}>
                                 <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('age') || 'Age'}</Text>
                                 <View style={[styles.inputWrapper, isRTL && { flexDirection: 'row-reverse' }]}>
-                                    <Calendar size={20} color={COLORS.textSecondary} />
+                                    <Calendar size={20} color={colors.textSecondary} />
                                     <TextInput
                                         style={[styles.input, isRTL && { textAlign: 'right', marginRight: 10 }]}
                                         placeholder="Years"
-                                        placeholderTextColor={COLORS.textSecondary}
+                                        placeholderTextColor={colors.textSecondary}
                                         value={age}
                                         onChangeText={setAge}
                                         keyboardType="numeric"
@@ -137,11 +141,11 @@ export const OnboardingScreen = ({ navigation, route }: any) => {
                             <View style={styles.inputGroup}>
                                 <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('height') || 'Height'} (cm)</Text>
                                 <View style={[styles.inputWrapper, isRTL && { flexDirection: 'row-reverse' }]}>
-                                    <Ruler size={20} color={COLORS.textSecondary} />
+                                    <Ruler size={20} color={colors.textSecondary} />
                                     <TextInput
                                         style={[styles.input, isRTL && { textAlign: 'right', marginRight: 10 }]}
                                         placeholder="175"
-                                        placeholderTextColor={COLORS.textSecondary}
+                                        placeholderTextColor={colors.textSecondary}
                                         value={height}
                                         onChangeText={setHeight}
                                         keyboardType="numeric"
@@ -152,11 +156,11 @@ export const OnboardingScreen = ({ navigation, route }: any) => {
                             <View style={styles.inputGroup}>
                                 <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('weight') || 'Weight'} (kg)</Text>
                                 <View style={[styles.inputWrapper, isRTL && { flexDirection: 'row-reverse' }]}>
-                                    <Weight size={20} color={COLORS.textSecondary} />
+                                    <Weight size={20} color={colors.textSecondary} />
                                     <TextInput
                                         style={[styles.input, isRTL && { textAlign: 'right', marginRight: 10 }]}
                                         placeholder="70"
-                                        placeholderTextColor={COLORS.textSecondary}
+                                        placeholderTextColor={colors.textSecondary}
                                         value={weight}
                                         onChangeText={setWeight}
                                         keyboardType="numeric"
@@ -168,7 +172,7 @@ export const OnboardingScreen = ({ navigation, route }: any) => {
 
                     <TouchableOpacity style={styles.button} onPress={handleNext}>
                         <Text style={styles.buttonText}>{step === 1 ? 'Next' : 'Finish Setup'}</Text>
-                        <ArrowRight size={20} color={COLORS.background} style={{ marginLeft: 8 }} />
+                        <ArrowRight size={20} color={colors.background} style={{ marginLeft: 8 }} />
                     </TouchableOpacity>
                 </GlassCard>
             </ScrollView>
@@ -176,7 +180,7 @@ export const OnboardingScreen = ({ navigation, route }: any) => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     container: {
         padding: SPACING.l,
         paddingTop: 60,
@@ -184,13 +188,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginBottom: 8,
         textAlign: 'center',
     },
     subtitle: {
         fontSize: 14,
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         textAlign: 'center',
         marginBottom: SPACING.xl,
     },
@@ -201,23 +205,23 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.l,
     },
     label: {
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
         marginBottom: 8,
         fontSize: 14,
     },
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: colors.cardBackground,
         borderRadius: 12,
         paddingHorizontal: SPACING.m,
         height: 50,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: colors.divider,
     },
     input: {
         flex: 1,
-        color: COLORS.textPrimary,
+        color: colors.textPrimary,
         marginLeft: 10,
         fontSize: 16,
     },
@@ -229,25 +233,25 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 10,
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: colors.cardBackground,
         borderRadius: 8,
         marginHorizontal: 4,
         borderWidth: 1,
         borderColor: 'transparent',
     },
     genderOptionSelected: {
-        backgroundColor: COLORS.primary,
-        borderColor: COLORS.primary,
+        backgroundColor: colors.primary,
+        borderColor: colors.primary,
     },
     genderText: {
-        color: COLORS.textSecondary,
+        color: colors.textSecondary,
     },
     genderTextSelected: {
-        color: COLORS.background,
+        color: colors.background,
         fontWeight: 'bold',
     },
     button: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -256,7 +260,7 @@ const styles = StyleSheet.create({
         marginTop: SPACING.m,
     },
     buttonText: {
-        color: COLORS.background,
+        color: colors.background,
         fontWeight: 'bold',
         fontSize: 16,
     },
@@ -270,16 +274,16 @@ const styles = StyleSheet.create({
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: colors.divider,
     },
     dotActive: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: colors.primary,
         transform: [{ scale: 1.2 }],
     },
     line: {
         width: 40,
         height: 2,
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: colors.divider,
         marginHorizontal: 8,
     }
 });
