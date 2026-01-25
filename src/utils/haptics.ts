@@ -30,6 +30,11 @@ export const HapticFeedback = {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
     },
+    warning: () => {
+        if (isHapticsSupported) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        }
+    },
     selection: () => {
         if (isHapticsSupported) {
             Haptics.selectionAsync();

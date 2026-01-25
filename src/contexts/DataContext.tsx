@@ -1,6 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { bluetoothService } from '../services/BluetoothService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '../config/firebase';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { useAuth } from './AuthContext';
+import { COLORS } from '../constants/theme';
+
+export interface Goal {
+    id: string;
+    title: string;
+    target: number;
+    current: number;
+    unit: string;
+    color: string;
+    type: 'boolean' | 'numeric';
+}
 
 interface RingData {
     sleep: {
@@ -24,15 +37,19 @@ interface RingData {
     readiness: {
         score: number;
         status: string;
+        weekly: number[];
     };
     userProfile?: {
         name: string;
         age: string;
-        weight: string; // stored as string for input ease, convert when needed
+        weight: string;
         height: string;
         gender: 'male' | 'female' | 'other';
     };
+    goals?: Goal[];
 }
+
+
 
 interface DataContextType {
     isConnected: boolean;
@@ -41,12 +58,14 @@ interface DataContextType {
     connectRing: () => Promise<void>;
     simulateData: (scenario: 'default' | 'poor_sleep' | 'high_stress' | 'perfect_day') => void;
     updateUserProfile: (profile: RingData['userProfile']) => void;
+    addGoal: (goal: Omit<Goal, 'id'>) => Promise<void>;
+    removeGoal: (id: string) => Promise<void>;
+    updateGoal: (id: string, progress: number) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Initial Mock Data
-const MOCK_DATA: RingData = {
+const DEFAULT_DATA: RingData = {
     sleep: {
         duration: '7h 42m',
         score: 88,
@@ -55,130 +74,167 @@ const MOCK_DATA: RingData = {
         weekly: [6.8, 7.2, 7.5, 6.4, 8.0, 7.8, 7.6],
     },
     steps: {
-        count: 8432,
+        count: 0,
         goal: 10000,
-        calories: 420,
+        calories: 0,
     },
     heart: {
-        bpm: 68,
+        bpm: 0,
         resting: 54,
         variability: 45,
         trend: [58, 62, 60, 65, 59, 56, 55, 61, 64, 60],
     },
     readiness: {
-        score: 92,
-        status: 'Excellent',
+        score: 85,
+        status: 'Good',
+        weekly: [82, 85, 88, 84, 86, 85, 87],
     },
+    goals: [
+        { id: '1', title: 'Daily Steps', target: 10000, current: 0, unit: 'steps', color: '#00F5FF', type: 'numeric' },
+        { id: '2', title: 'Sleep Quality', target: 90, current: 0, unit: '/ 100', color: '#B0FB54', type: 'numeric' },
+        { id: '3', title: 'Active Minutes', target: 60, current: 0, unit: 'min', color: '#FBBF24', type: 'numeric' },
+    ],
 };
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
+    const { user } = useAuth();
     const [isConnected, setIsConnected] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const [data, setData] = useState<RingData | null>(null);
 
-    // Auto-connect simulation on mount
-    // Load Data on Mount
+    // Sync with Firestore in real-time
     useEffect(() => {
-        loadData();
-    }, []);
-
-    // Save Data on Change
-    useEffect(() => {
-        if (data) {
-            saveData(data);
+        if (!user) {
+            setData(null);
+            setIsConnected(false);
+            return;
         }
-    }, [data]);
 
-    const loadData = async () => {
-        try {
-            const saved = await AsyncStorage.getItem('app_data');
-            if (saved) {
-                setData(JSON.parse(saved));
-                setIsConnected(true); // Assume connected if we have data
+        const userDocRef = doc(db, 'users', user.uid);
+
+        // Listen for real-time changes
+        const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setData(docSnap.data() as RingData);
+                setIsConnected(true);
             } else {
-                connectRing(); // Fallback to auto-connect simulation
+                // Initialize user data if they are new
+                const initialData = { ...DEFAULT_DATA };
+                if (user.displayName) {
+                    initialData.userProfile = {
+                        name: user.displayName,
+                        age: '',
+                        weight: '',
+                        height: '',
+                        gender: 'other'
+                    };
+                }
+                setDoc(userDocRef, initialData);
             }
-        } catch (e) {
-            connectRing();
-        }
-    };
+        });
 
-    const saveData = async (newData: RingData) => {
-        try {
-            await AsyncStorage.setItem('app_data', JSON.stringify(newData));
-        } catch (e) {
-            console.log('Failed to save data');
-        }
-    };
+        return unsubscribe;
+    }, [user]);
 
     const connectRing = async () => {
-        if (isConnected) return;
+        if (isConnected && data?.steps.count !== 0) return; // Already "connected" and has data
+        if (!user) return;
 
         setIsSyncing(true);
-        bluetoothService.scanAndConnect(); // Trigger the service mock
+        bluetoothService.scanAndConnect();
 
-        // Simulate network/bluetooth delay
-        setTimeout(() => {
+        setTimeout(async () => {
+            const userDocRef = doc(db, 'users', user.uid);
+            await setDoc(userDocRef, DEFAULT_DATA, { merge: true });
             setIsConnected(true);
             setIsSyncing(false);
-            setData(MOCK_DATA);
         }, 1500);
     };
 
-    // Simulation Helper
-    const simulateData = (scenario: 'default' | 'poor_sleep' | 'high_stress' | 'perfect_day') => {
+    const simulateData = async (scenario: 'default' | 'poor_sleep' | 'high_stress' | 'perfect_day') => {
+        if (!user) return;
         setIsSyncing(true);
-        setTimeout(() => {
-            switch (scenario) {
-                case 'poor_sleep':
-                    setData({
-                        ...MOCK_DATA,
-                        sleep: {
-                            ...MOCK_DATA.sleep,
-                            score: 45,
-                            duration: '4h 20m',
-                            weekly: [6.8, 7.2, 7.5, 6.4, 8.0, 5.0, 4.2] // Drop in last day
-                        },
-                        readiness: { score: 55, status: 'Rest Required' }
-                    });
-                    break;
-                case 'high_stress':
-                    setData({
-                        ...MOCK_DATA,
-                        heart: {
-                            ...MOCK_DATA.heart,
-                            variability: 25,
-                            resting: 75,
-                            trend: [65, 70, 72, 75, 78, 80, 82, 75, 78, 85] // High trend
-                        },
-                        readiness: { score: 60, status: 'Stressed' }
-                    });
-                    break;
-                case 'perfect_day':
-                    setData({
-                        ...MOCK_DATA,
-                        sleep: { ...MOCK_DATA.sleep, score: 95, duration: '8h 10m' },
-                        readiness: { score: 98, status: 'Peak Performance' },
-                        heart: { ...MOCK_DATA.heart, variability: 85 }
-                    });
-                    break;
-                case 'default':
-                default:
-                    setData(MOCK_DATA);
-                    break;
-            }
-            setIsSyncing(false);
-        }, 800); // Small delay for realism
+
+        let newData: Partial<RingData> = {};
+
+        switch (scenario) {
+            case 'poor_sleep':
+                newData = {
+                    sleep: {
+                        duration: '4h 20m', score: 45, deep: '0h 40m', rem: '1h 00m',
+                        weekly: [6.8, 7.2, 7.5, 6.4, 8.0, 5.0, 4.2]
+                    },
+                    readiness: { score: 55, status: 'Rest Required', weekly: [82, 85, 88, 84, 86, 60, 55] }
+                };
+                break;
+            case 'high_stress':
+                newData = {
+                    heart: {
+                        bpm: 88, resting: 75, variability: 25,
+                        trend: [65, 70, 72, 75, 78, 80, 82, 75, 78, 85]
+                    },
+                    readiness: { score: 60, status: 'Stressed', weekly: [82, 80, 78, 75, 72, 68, 60] }
+                };
+                break;
+            case 'perfect_day':
+                newData = {
+                    sleep: { duration: '8h 10m', score: 95, deep: '2h 10m', rem: '2h 30m', weekly: [8, 8.2, 8.1, 7.9, 8.5, 8.3, 8.1] },
+                    readiness: { score: 98, status: 'Peak Performance', weekly: [90, 92, 94, 95, 96, 97, 98] },
+                    heart: { ...data?.heart, variability: 85, resting: 50, bpm: 52 } as any
+                };
+                break;
+            case 'default':
+            default:
+                newData = DEFAULT_DATA;
+                break;
+        }
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, newData, { merge: true });
+        setIsSyncing(false);
     };
 
-    const updateUserProfile = (profile: RingData['userProfile']) => {
-        if (!data) return;
-        const newData = { ...data, userProfile: profile };
-        setData(newData);
+    const updateUserProfile = async (profile: RingData['userProfile']) => {
+        if (!user) return;
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, { userProfile: profile }, { merge: true });
+    };
+
+    const addGoal = async (goalData: Omit<Goal, 'id'>) => {
+        if (!user || !data) return;
+        const newGoal: Goal = {
+            ...goalData,
+            id: Date.now().toString(), // Simple ID generation
+        };
+        const updatedGoals = [...(data.goals || []), newGoal];
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, { goals: updatedGoals }, { merge: true });
+    };
+
+    const removeGoal = async (id: string) => {
+        if (!user || !data) return;
+        const updatedGoals = (data.goals || []).filter(g => g.id !== id);
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, { goals: updatedGoals }, { merge: true });
+    };
+
+    const updateGoal = async (id: string, progress: number) => {
+        if (!user || !data) return;
+        const updatedGoals = (data.goals || []).map(g => {
+            if (g.id === id) {
+                return { ...g, current: progress };
+            }
+            return g;
+        });
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, { goals: updatedGoals }, { merge: true });
     };
 
     return (
-        <DataContext.Provider value={{ isConnected, isSyncing, data, connectRing, simulateData, updateUserProfile }}>
+        <DataContext.Provider value={{ isConnected, isSyncing, data, connectRing, simulateData, updateUserProfile, addGoal, removeGoal, updateGoal }}>
             {children}
         </DataContext.Provider>
     );

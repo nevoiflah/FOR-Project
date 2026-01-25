@@ -6,14 +6,21 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": [],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nevoiflah.forproject",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSHealthShareUsageDescription": "FOR needs access to your health data to analyze Sleep and Activity trends.",
+        "NSHealthUpdateUsageDescription": "FOR uses health data for personalized recovery coaching."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +32,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "19bbbaf9-a86c-4106-a298-1321f61271df"
+      }
     }
   }
 }

@@ -26,6 +26,7 @@ const Stack = createNativeStackNavigator();
 const MainTabs = () => {
     return (
         <Tab.Navigator
+            id="main-tabs"
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: styles.tabBar,
@@ -91,7 +92,14 @@ const MainTabs = () => {
     );
 };
 
+import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
+import { LoadingRing } from '../components/LoadingRing';
+
 export const AppNavigator = () => {
+    const { user, loading: authLoading } = useAuth();
+    const { data, isSyncing } = useData();
+
     const theme = {
         ...DefaultTheme,
         colors: {
@@ -100,14 +108,40 @@ export const AppNavigator = () => {
         },
     };
 
+    // or if user is logged in but we are waiting for the FIRST sync
+    const isLoading = authLoading || (user && !data);
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center' }}>
+                <LoadingRing size={100} />
+            </View>
+        );
+    }
+
+    // Determine if onboarding is needed
+    // Safety check: if we have user but no data doc yet, or missing profile fields
+    const needsOnboarding = user && (!data?.userProfile?.age || !data?.userProfile?.weight);
+
     return (
         <NavigationContainer theme={theme}>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="Register" component={RegisterScreen} />
-                <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-                <Stack.Screen name="MainBase" component={MainTabs} />
-                <Stack.Screen name="Goals" component={GoalsScreen} />
+            <Stack.Navigator id="root-stack" screenOptions={{ headerShown: false }}>
+                {!user ? (
+                    <Stack.Group screenOptions={{ animation: 'fade' }}>
+                        <Stack.Screen name="Login" component={LoginScreen} />
+                        <Stack.Screen name="Register" component={RegisterScreen} />
+                    </Stack.Group>
+                ) : needsOnboarding ? (
+                    <Stack.Group screenOptions={{ animation: 'slide_from_right' }}>
+                        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+                    </Stack.Group>
+                ) : (
+                    <Stack.Group>
+                        <Stack.Screen name="MainBase" component={MainTabs} />
+                        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+                        <Stack.Screen name="Goals" component={GoalsScreen} />
+                    </Stack.Group>
+                )}
             </Stack.Navigator>
         </NavigationContainer>
     );

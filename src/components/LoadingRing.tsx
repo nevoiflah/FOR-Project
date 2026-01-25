@@ -5,9 +5,10 @@ import { COLORS } from '../constants/theme';
 
 interface LoadingRingProps {
     success?: boolean;
+    size?: number;
 }
 
-export const LoadingRing = ({ success = false }: LoadingRingProps) => {
+export const LoadingRing = ({ success = false, size = 100 }: LoadingRingProps) => {
     const spinValue = useRef(new Animated.Value(0)).current;
     const pulseValue = useRef(new Animated.Value(1)).current;
     const opacityValue = useRef(new Animated.Value(0)).current; // For checkmark
@@ -65,7 +66,7 @@ export const LoadingRing = ({ success = false }: LoadingRingProps) => {
     return (
         <View style={styles.container}>
             <Animated.View style={{ transform: [{ rotate: spin }, { scale: pulseValue }] }}>
-                <Svg height="100" width="100" viewBox="0 0 100 100">
+                <Svg height={size} width={size} viewBox="0 0 100 100">
                     <Circle
                         cx="50"
                         cy="50"

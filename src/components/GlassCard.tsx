@@ -30,6 +30,7 @@ const styles = StyleSheet.create({
         borderWidth: 1, // Keep 1px but very transparent for crisp edge
     },
     blurContainer: {
+        flex: 1,
         padding: 16,
         backgroundColor: 'transparent', // Let the container bg or blur handle it
     },

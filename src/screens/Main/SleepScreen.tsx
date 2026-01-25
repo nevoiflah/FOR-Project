@@ -21,7 +21,7 @@ export const SleepScreen = () => {
                 {data ? (
                     <>
                         {/* Main Sleep Score */}
-                        <GlassCard style={[styles.scoreCard, isRTL && { flexDirection: 'row-reverse' }]}>
+                        <GlassCard style={[styles.scoreCard, isRTL && { flexDirection: 'row-reverse' }]} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', padding: SPACING.l, justifyContent: 'space-around' }}>
                             <View style={styles.scoreCircle}>
                                 <Text style={styles.scoreValue}>{data.sleep.score}</Text>
                                 <Text style={styles.scoreLabel}>{t('score')}</Text>
@@ -44,6 +44,7 @@ export const SleepScreen = () => {
                                     height={120}
                                     width={Dimensions.get('window').width - 48} // Full width of card (Screen - ScreenPadding)
                                     color={COLORS.primary}
+                                    gradientId="sleep-weekly-grad"
                                 />
                                 <View style={{ padding: SPACING.m, width: '100%', alignItems: 'center' }}>
                                     <Text style={{ color: COLORS.textSecondary, fontSize: 12 }}>{t('last7Days')}</Text>
@@ -53,7 +54,7 @@ export const SleepScreen = () => {
 
                         {/* Sleep Stages */}
                         <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('sleepStages')}</Text>
-                        <GlassCard style={styles.detailsCard}>
+                        <GlassCard style={styles.detailsCard} contentContainerStyle={{ padding: SPACING.m }}>
                             <View style={[styles.detailRow, isRTL && { flexDirection: 'row-reverse' }]}>
                                 <Text style={styles.detailLabel}>{t('deepSleep')}</Text>
                                 <Text style={styles.detailValue}>1h 45m</Text>
@@ -71,7 +72,7 @@ export const SleepScreen = () => {
                         </GlassCard>
 
                         {/* Insight */}
-                        <GlassCard style={[styles.insightCard, isRTL && { alignItems: 'flex-end' }]}>
+                        <GlassCard style={[styles.insightCard, isRTL && { alignItems: 'flex-end' }]} contentContainerStyle={{ padding: SPACING.l }}>
                             <Text style={{
                                 color: COLORS.accent,
                                 fontWeight: 'bold',
@@ -106,11 +107,11 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.l,
     },
     scoreCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: SPACING.l,
+        // flexDirection: 'row', // Moved to contentContainerStyle
+        // alignItems: 'center', // Moved to contentContainerStyle
+        // padding: SPACING.l, // Moved
         marginBottom: SPACING.xl,
-        justifyContent: 'space-around',
+        // justifyContent: 'space-around', // Moved
     },
     scoreCircle: {
         width: 100,
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.m,
     },
     detailsCard: {
-        padding: SPACING.m,
+        // padding: SPACING.m,
         marginBottom: SPACING.xl,
     },
     detailRow: {
@@ -172,10 +173,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.1)',
     },
     insightCard: {
-        padding: SPACING.l,
+        // padding: SPACING.l,
         // Removed override to use default GlassCard style
-        borderColor: COLORS.primary,
-        borderWidth: 1,
     },
     insightText: {
         color: COLORS.textPrimary,

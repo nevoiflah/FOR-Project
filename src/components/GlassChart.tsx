@@ -9,6 +9,8 @@ interface GlassChartProps {
     width?: number;
     color?: string;
     strokeWidth?: number;
+    gradientId?: string;
+    showPoints?: boolean;
 }
 
 export const GlassChart = ({
@@ -16,7 +18,9 @@ export const GlassChart = ({
     height = 150,
     width = Dimensions.get('window').width - 48, // Default padding adjusted
     color = COLORS.primary,
-    strokeWidth = 3
+    strokeWidth = 3,
+    gradientId = 'grad',
+    showPoints = true
 }: GlassChartProps) => {
     if (!data || data.length === 0) return null;
 
@@ -26,7 +30,8 @@ export const GlassChart = ({
 
     // Simple normalization to fit graph in view
     const points = data.map((value, index) => {
-        const x = (index / (data.length - 1)) * width;
+        const divider = data.length > 1 ? data.length - 1 : 1;
+        const x = (index / divider) * width;
         const y = height - ((value - min) / range) * (height * 0.6) - (height * 0.2); // Leave some padding
         return `${x},${y}`;
     });
@@ -42,14 +47,14 @@ export const GlassChart = ({
         <View style={{ height, width }}>
             <Svg height={height} width={width}>
                 <Defs>
-                    <LinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                    <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                         <Stop offset="0" stopColor={color} stopOpacity="0.5" />
                         <Stop offset="1" stopColor={color} stopOpacity="0" />
                     </LinearGradient>
                 </Defs>
 
                 {/* Gradient Fill */}
-                <Path d={fillPathData} fill="url(#grad)" />
+                <Path d={fillPathData} fill={`url(#${gradientId})`} />
 
                 {/* Stroke Line */}
                 <Path
@@ -59,11 +64,13 @@ export const GlassChart = ({
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    opacity={0.9}
                 />
 
                 {/* Data Points (optional, adds polish) */}
-                {data.map((value, index) => {
-                    const x = (index / (data.length - 1)) * width;
+                {showPoints && data.map((value, index) => {
+                    const divider = data.length > 1 ? data.length - 1 : 1;
+                    const x = (index / divider) * width;
                     const y = height - ((value - min) / range) * (height * 0.6) - (height * 0.2);
                     return (
                         <Path

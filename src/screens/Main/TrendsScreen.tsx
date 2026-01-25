@@ -1,66 +1,83 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
-import { GlassChart } from '../../components/GlassChart'; // Using our new mock chart
-import { COLORS, FONTS, SPACING } from '../../constants/theme';
+import { GlassChart } from '../../components/GlassChart';
+import { COLORS, SPACING, FONTS } from '../../constants/theme';
+import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+// @ts-ignore
+import { TrendingUp, Activity, Zap } from 'lucide-react-native';
 
 export const TrendsScreen = () => {
+    const { data } = useData();
     const { t, isRTL } = useLanguage();
 
-    // Mock Weekly Data
-    const readinessData = [70, 75, 72, 80, 85, 82, 88];
-    const sleepData = [6.5, 7.0, 7.2, 6.8, 7.5, 7.8, 7.5];
-    const hrData = [60, 58, 59, 57, 56, 55, 54];
-
-    const TrendSection = ({ title, data, color, postfix = '' }: any) => (
-        <View style={styles.section}>
-            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{title}</Text>
-            <GlassCard style={styles.chartCard}>
-                <View style={[styles.chartHeader, isRTL && { flexDirection: 'row-reverse' }]}>
-                    <Text style={styles.chartPeriod}>{t('last7DaysRange')}</Text>
-                    <Text style={styles.chartAverage}>{t('avg')}: {data[6]}{postfix}</Text>
-                </View>
-
-                {/* Visual Placeholder for Graph */}
-                <View style={styles.graphContainer}>
-                    <GlassChart
-                        data={data}
-                        height={100}
-                        color={color}
-                        strokeWidth={4}
-                    />
-                </View>
-            </GlassCard>
-        </View>
-    );
+    const screenWidth = Dimensions.get('window').width;
 
     return (
         <ScreenWrapper>
-            <ScrollView contentContainerStyle={styles.container}>
-                <Text style={[styles.pageTitle, isRTL && { textAlign: 'right' }]}>{t('trends')}</Text>
+            <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+                <Text style={[styles.pageTitle, isRTL && { textAlign: 'right' }]}>{t('healthTrends') || 'Health Trends'}</Text>
 
-                <TrendSection
-                    title={t('readiness')}
-                    data={readinessData}
-                    color={COLORS.success}
-                />
+                {data ? (
+                    <>
+                        {/* Readiness Trend */}
+                        <View style={styles.section}>
+                            <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                                <TrendingUp size={20} color={COLORS.primary} />
+                                <Text style={styles.sectionTitle}>{t('readinessTrend') || 'Readiness Trend'}</Text>
+                            </View>
+                            <GlassCard style={styles.chartCard} contentContainerStyle={{ padding: 0 }}>
+                                <GlassChart
+                                    data={data.readiness.weekly}
+                                    height={150}
+                                    width={screenWidth - 48}
+                                    color={COLORS.primary}
+                                    gradientId="trend-ready-grad"
+                                />
+                                <View style={styles.chartFooter}>
+                                    <Text style={styles.chartFooterText}>{t('last7Days') || 'Last 7 Days'}</Text>
+                                </View>
+                            </GlassCard>
+                        </View>
 
-                <TrendSection
-                    title={t('sleepDuration')}
-                    data={sleepData}
-                    color={COLORS.primary}
-                    postfix="h"
-                />
+                        {/* Activity Level */}
+                        <View style={styles.section}>
+                            <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                                <Activity size={20} color={COLORS.accent} />
+                                <Text style={styles.sectionTitle}>{t('activityTrend') || 'Activity Trend'}</Text>
+                            </View>
+                            <GlassCard style={styles.chartCard} contentContainerStyle={{ padding: 0 }}>
+                                <GlassChart
+                                    data={[1200, 1500, 1100, 1800, 2200, 1900, 2500]}
+                                    height={150}
+                                    width={screenWidth - 48}
+                                    color={COLORS.accent}
+                                    gradientId="trend-active-grad"
+                                />
+                                <View style={styles.chartFooter}>
+                                    <Text style={styles.chartFooterText}>{t('caloriesBurned') || 'Avg Calories Burned'}</Text>
+                                </View>
+                            </GlassCard>
+                        </View>
 
-                <TrendSection
-                    title={t('restingHr')}
-                    data={hrData}
-                    color="#FF6B6B"
-                    postfix=" bpm"
-                />
-
+                        {/* Insight Card */}
+                        <GlassCard style={styles.insightCard} contentContainerStyle={{ padding: SPACING.l }}>
+                            <View style={[styles.insightHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                                <Zap size={24} color={COLORS.warning} />
+                                <Text style={styles.insightTitle}>{t('monthlyInsight') || 'Monthly Insight'}</Text>
+                            </View>
+                            <Text style={[styles.insightBody, isRTL && { textAlign: 'right' }]}>
+                                Your recovery has improved by 12% compared to last week. Keep focusing on your bedtime routine to maintain this trend.
+                            </Text>
+                        </GlassCard>
+                    </>
+                ) : (
+                    <View style={styles.emptyContainer}>
+                        <Text style={styles.emptyText}>{t('connectToSee') || 'Sync your data to see trends'}</Text>
+                    </View>
+                )}
             </ScrollView>
         </ScreenWrapper>
     );
@@ -80,31 +97,58 @@ const styles = StyleSheet.create({
     section: {
         marginBottom: SPACING.xl,
     },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: SPACING.m,
+    },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         color: COLORS.textPrimary,
-        marginBottom: SPACING.m,
+        marginLeft: 10,
     },
     chartCard: {
+        overflow: 'hidden',
+    },
+    chartFooter: {
         padding: SPACING.m,
-    },
-    chartHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: SPACING.l,
-    },
-    chartPeriod: {
-        color: COLORS.textSecondary,
-        fontSize: 14,
-    },
-    chartAverage: {
-        color: COLORS.textPrimary,
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
-    graphContainer: {
         alignItems: 'center',
-        justifyContent: 'center',
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.05)',
     },
+    chartFooterText: {
+        color: COLORS.textSecondary,
+        fontSize: 12,
+        textTransform: 'uppercase',
+    },
+    insightCard: {
+        // padding: SPACING.l,
+    },
+    insightHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: SPACING.m,
+    },
+    insightTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: COLORS.textPrimary,
+        marginLeft: 10,
+    },
+    insightBody: {
+        fontSize: 16,
+        color: COLORS.textSecondary,
+        lineHeight: 24,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 100,
+    },
+    emptyText: {
+        color: COLORS.textSecondary,
+        fontSize: 16,
+    }
 });

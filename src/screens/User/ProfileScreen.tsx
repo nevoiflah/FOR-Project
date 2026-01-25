@@ -11,18 +11,54 @@ import { User, Bell, Smartphone, Shield, LogOut, ChevronRight, Activity, Calenda
 
 import { HapticFeedback } from '../../utils/haptics';
 
+import { notificationService } from '../../services/NotificationService';
+import { useAuth } from '../../contexts/AuthContext';
+
 export const ProfileScreen = ({ navigation }: any) => {
     const { connectRing, isConnected, simulateData, data } = useData();
     const { t, isRTL } = useLanguage();
+    const { logout, user } = useAuth();
 
-    // Mock State for settings
-    const [notifications, setNotifications] = useState(true);
+    // Settings State
+    const [notifications, setNotifications] = useState(false);
     const [metricUnits, setMetricUnits] = useState(true);
+
+
+
+    const toggleNotifications = async (value: boolean) => {
+        HapticFeedback.light();
+        if (value) {
+            const token = await notificationService.registerForPushNotificationsAsync();
+            if (token) {
+                setNotifications(true);
+                // Schedule default reminders
+                await notificationService.scheduleMorningReadiness(data?.readiness.score || 85);
+            } else {
+                Alert.alert(t('error'), "Notification permissions are required. Please enable them in your device settings.");
+                setNotifications(false);
+            }
+        } else {
+            await notificationService.cancelAllNotifications();
+            setNotifications(false);
+        }
+    };
+
+    const sendTestNotification = async () => {
+        HapticFeedback.success();
+        await notificationService.scheduleHealthReminder(
+            "Test Notification 🧪",
+            "This is a test from the FOR app!",
+            new Date().getHours(),
+            new Date().getMinutes() + 1 // Schedule for 1 min from now or just use immediate if possible.
+            // Actually scheduleNotificationAsync can take immediate too, but let's stick to our helper.
+        );
+        Alert.alert("Success", "Test notification scheduled for 1 minute from now.");
+    };
 
     const handleLogout = () => {
         Alert.alert(t('logoutConfirmTitle'), t('logoutConfirmMessage'), [
             { text: t('cancel'), style: "cancel" },
-            { text: t('confirm'), style: "destructive" }
+            { text: t('confirm'), style: "destructive", onPress: logout }
         ]);
     };
 
@@ -74,8 +110,8 @@ export const ProfileScreen = ({ navigation }: any) => {
                         <User size={30} color={COLORS.background} />
                     </View>
                     <View style={isRTL && { alignItems: 'flex-end' }}>
-                        <Text style={styles.profileName}>{data?.userProfile?.name || 'Guest'}</Text>
-                        <Text style={styles.profileEmail}>user@example.com</Text>
+                        <Text style={styles.profileName}>{data?.userProfile?.name || user?.displayName || 'Guest'}</Text>
+                        <Text style={styles.profileEmail}>{user?.email || 'user@example.com'}</Text>
                     </View>
                 </GlassCard>
 
@@ -133,7 +169,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                         title={t('notifications')}
                         isToggle
                         toggleValue={notifications}
-                        onToggle={setNotifications}
+                        onToggle={toggleNotifications}
                     />
                     <View style={styles.divider} />
                     <SettingRow
@@ -143,6 +179,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                         onPress={() => setMetricUnits(!metricUnits)}
                     />
                 </GlassCard>
+
 
                 {/* Settings Section: Device */}
                 <Text style={[styles.sectionHeader, isRTL && { textAlign: 'right', marginRight: SPACING.s, marginLeft: 0 }]}>{t('device')}</Text>
@@ -164,6 +201,12 @@ export const ProfileScreen = ({ navigation }: any) => {
                 {/* Developer Tools (Simulation) */}
                 <Text style={[styles.sectionHeader, isRTL && { textAlign: 'right', marginRight: SPACING.s, marginLeft: 0 }]}>Developer Tools</Text>
                 <GlassCard style={styles.settingsGroup}>
+                    <SettingRow
+                        icon={Bell}
+                        title="Send Test Notification"
+                        onPress={sendTestNotification}
+                    />
+                    <View style={styles.divider} />
                     <SettingRow
                         icon={Shield}
                         title="Force Poor Sleep"

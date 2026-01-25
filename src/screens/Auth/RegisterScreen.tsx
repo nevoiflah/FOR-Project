@@ -1,15 +1,50 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '../../config/firebase';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
-import { COLORS, FONTS, SPACING, LAYOUT } from '../../constants/theme';
-import { useNavigation } from '@react-navigation/native';
-import { useLanguage } from '../../contexts/LanguageContext';
 import { LanguageToggle } from '../../components/LanguageToggle';
+import { COLORS, FONTS, SPACING, LAYOUT } from '../../constants/theme';
+import { HapticFeedback } from '../../utils/haptics';
 
 export const RegisterScreen = () => {
     const navigation = useNavigation<any>();
     const { t, isRTL } = useLanguage();
+
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleRegister = async () => {
+        if (!email || !password || !name) {
+            setError(t('fillAllFields'));
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+        HapticFeedback.light();
+
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            // Update profile with name
+            await updateProfile(userCredential.user, { displayName: name });
+
+            HapticFeedback.success();
+            // AuthContext will automatically navigate to Onboarding due to user state change
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message || t('authError'));
+            HapticFeedback.error();
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <ScreenWrapper>
@@ -30,12 +65,17 @@ export const RegisterScreen = () => {
                     </View>
 
                     <GlassCard style={styles.formContainer}>
+                        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
                         <View style={styles.inputContainer}>
                             <Text style={[styles.label, isRTL && styles.rtlText]}>{t('namePlaceholder')}</Text>
                             <TextInput
                                 style={[styles.input, isRTL && styles.rtlInput]}
                                 placeholder="John Doe"
                                 placeholderTextColor="rgba(255,255,255,0.3)"
+                                value={name}
+                                onChangeText={setName}
+                                autoCorrect={false}
                             />
                         </View>
 
@@ -47,6 +87,9 @@ export const RegisterScreen = () => {
                                 placeholderTextColor="rgba(255,255,255,0.3)"
                                 keyboardType="email-address"
                                 autoCapitalize="none"
+                                value={email}
+                                onChangeText={setEmail}
+                                autoCorrect={false}
                             />
                         </View>
 
@@ -57,15 +100,19 @@ export const RegisterScreen = () => {
                                 placeholder="••••••••"
                                 placeholderTextColor="rgba(255,255,255,0.3)"
                                 secureTextEntry
+                                value={password}
+                                onChangeText={setPassword}
                             />
                         </View>
 
                         <TouchableOpacity
-                            style={styles.button}
-                            // Navigate to Onboarding instead of MainBase using replace to prevent back
-                            onPress={() => navigation.replace('Onboarding')}
+                            style={[styles.button, loading && { opacity: 0.7 }]}
+                            onPress={handleRegister}
+                            disabled={loading}
                         >
-                            <Text style={styles.buttonText}>{t('signUpButton')}</Text>
+                            <Text style={styles.buttonText}>
+                                {loading ? t('loading') : t('signUpButton')}
+                            </Text>
                         </TouchableOpacity>
 
                         <View style={styles.footer}>
@@ -162,5 +209,14 @@ const styles = StyleSheet.create({
     linkText: {
         color: COLORS.accent,
         fontWeight: 'bold',
+    },
+    errorText: {
+        color: '#FF6B6B',
+        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+        padding: 10,
+        borderRadius: 8,
+        marginBottom: SPACING.m,
+        textAlign: 'center',
+        fontSize: 12,
     },
 });

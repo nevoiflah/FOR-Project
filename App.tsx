@@ -4,15 +4,18 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { DataProvider } from './src/contexts/DataContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
+import { AuthProvider } from './src/contexts/AuthContext';
 
 export default function App() {
   return (
     <SafeAreaProvider>
       <LanguageProvider>
-        <DataProvider>
-          <StatusBar style="light" />
-          <AppNavigator />
-        </DataProvider>
+        <AuthProvider>
+          <DataProvider>
+            <StatusBar style="light" />
+            <AppNavigator />
+          </DataProvider>
+        </AuthProvider>
       </LanguageProvider>
     </SafeAreaProvider>
   );

@@ -8,12 +8,16 @@ import { COLORS, FONTS, SPACING } from '../../constants/theme';
 import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 // @ts-ignore
-import { Circle, Activity, Moon } from 'lucide-react-native';
+import { Circle, Activity, Moon, RefreshCcw, CheckCircle2 } from 'lucide-react-native';
+import { TouchableOpacity, Alert } from 'react-native';
+import { HapticFeedback } from '../../utils/haptics';
 
 export const DashboardScreen = () => {
     const { isConnected, isSyncing, data } = useData();
     const { t, isRTL } = useLanguage();
     const [showSuccess, setShowSuccess] = useState(false);
+
+
 
     useEffect(() => {
         if (isConnected && !isSyncing) {
@@ -23,27 +27,35 @@ export const DashboardScreen = () => {
         }
     }, [isConnected, isSyncing]);
 
+
+
     return (
         <ScreenWrapper>
             <ScrollView contentContainerStyle={styles.container}>
                 <View style={[styles.header, isRTL && { alignItems: 'flex-end' }]}>
                     <Text style={styles.greeting}>{t('greeting')}</Text>
-                    <Text style={styles.username}>Nevo</Text>
+                    <Text style={styles.username}>{data?.userProfile?.name || 'User'}</Text>
                 </View>
 
-                {/* Ring Connection Status */}
+                {/* Ring Connection / Health Sync Status */}
                 <View style={styles.ringContainer}>
                     <LoadingRing success={showSuccess} />
-                    <Text style={styles.syncText}>
-                        {isSyncing ? t('syncing') : (isConnected ? t('ringConnected') : t('connecting'))}
-                    </Text>
+                    <View style={{ alignItems: 'center' }}>
+                        <Text style={styles.syncText}>
+                            {isSyncing ? t('syncing') : (isConnected ? t('ringConnected') : t('connecting'))}
+                        </Text>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                            {/* Removed Health Sync Badge and Button */}
+                        </View>
+                    </View>
                 </View>
 
                 {/* Key Metrics */}
                 {data ? (
                     <View style={[styles.metricsGrid, isRTL && { flexDirection: 'row-reverse' }]}>
                         {/* Sleep Card */}
-                        <GlassCard style={styles.metricCard}>
+                        <GlassCard style={styles.metricCard} contentContainerStyle={{ padding: SPACING.m, alignItems: 'center' }}>
                             <View style={styles.iconContainer}>
                                 <Moon size={24} color={COLORS.primary} />
                             </View>
@@ -52,7 +64,7 @@ export const DashboardScreen = () => {
                         </GlassCard>
 
                         {/* Steps Card */}
-                        <GlassCard style={styles.metricCard}>
+                        <GlassCard style={styles.metricCard} contentContainerStyle={{ padding: SPACING.m, alignItems: 'center' }}>
                             <View style={styles.iconContainer}>
                                 <Activity size={24} color={COLORS.accent} />
                             </View>
@@ -61,7 +73,7 @@ export const DashboardScreen = () => {
                         </GlassCard>
 
                         {/* Heart Rate Card */}
-                        <GlassCard style={styles.metricCard}>
+                        <GlassCard style={styles.metricCard} contentContainerStyle={{ padding: SPACING.m, alignItems: 'center' }}>
                             <View style={styles.iconContainer}>
                                 <Circle size={24} color="#FF6B6B" />
                             </View>
@@ -70,7 +82,7 @@ export const DashboardScreen = () => {
                         </GlassCard>
 
                         {/* Readiness Card */}
-                        <GlassCard style={styles.metricCard}>
+                        <GlassCard style={styles.metricCard} contentContainerStyle={{ padding: SPACING.m, alignItems: 'center' }}>
                             <View style={styles.iconContainer}>
                                 <Circle size={24} color={COLORS.success} />
                             </View>
@@ -109,6 +121,7 @@ export const DashboardScreen = () => {
                                 height={120}
                                 width={Dimensions.get('window').width - 48}
                                 color={data.readiness.score >= 80 ? COLORS.success : COLORS.accent}
+                                gradientId="dash-ready-grad"
                             />
                         </View>
                     </GlassCard>
@@ -158,8 +171,8 @@ const styles = StyleSheet.create({
     metricCard: {
         width: '48%',
         marginBottom: SPACING.m,
-        padding: SPACING.m,
-        alignItems: 'center',
+        // padding: SPACING.m,
+        // alignItems: 'center',
     },
     largeCard: {
         width: '100%',
@@ -207,5 +220,36 @@ const styles = StyleSheet.create({
         fontSize: 14,
         lineHeight: 22,
         paddingHorizontal: SPACING.l, // Added individual padding
+    },
+    sourceBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 255, 157, 0.1)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
+        marginTop: 8,
+    },
+    sourceText: {
+        fontSize: 10,
+        color: COLORS.primary,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+    },
+    syncButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
+        marginLeft: 8,
+    },
+    syncButtonText: {
+        fontSize: 10,
+        color: COLORS.textPrimary,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        marginLeft: 4,
     },
 });

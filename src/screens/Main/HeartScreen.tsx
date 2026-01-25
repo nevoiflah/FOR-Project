@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { GlassChart } from '../../components/GlassChart';
-import { COLORS, FONTS, SPACING } from '../../constants/theme';
+import { COLORS, FONTS, SPACING } from '@/constants/theme';
 import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 // @ts-ignore
@@ -24,13 +24,13 @@ export const HeartScreen = () => {
                 {data ? (
                     <>
                         <View style={[styles.grid, isRTL && { flexDirection: 'row-reverse' }]}>
-                            <GlassCard style={styles.mainCard}>
+                            <GlassCard style={styles.mainCard} contentContainerStyle={{ padding: SPACING.l }}>
                                 <Heart size={32} color="#FF6B6B" style={{ marginBottom: 10 }} />
                                 <Text style={styles.bigValue}>{data.heart.resting}</Text>
                                 <Text style={styles.label}>{t('restingHr')}</Text>
                             </GlassCard>
 
-                            <GlassCard style={styles.mainCard}>
+                            <GlassCard style={styles.mainCard} contentContainerStyle={{ padding: SPACING.l }}>
                                 <Activity size={32} color={COLORS.accent} style={{ marginBottom: 10 }} />
                                 <Text style={styles.bigValue}>{data.heart.variability} ms</Text>
                                 <Text style={styles.label}>{t('hrv')}</Text>
@@ -47,21 +47,27 @@ export const HeartScreen = () => {
                                 <GlassChart
                                     data={data.heart.trend}
                                     height={120}
-                                    width={Dimensions.get('window').width - 48} // Full width of card
+                                    width={Dimensions.get('window').width - 48}
                                     color="#FF6B6B"
+                                    gradientId="heart-hr-grad"
                                 />
                             </GlassCard>
                         </View>
 
                         <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('todaysRange')}</Text>
-                        <GlassCard style={styles.rangeCard}>
+                        <GlassCard style={styles.rangeCard} contentContainerStyle={{ padding: SPACING.l }}>
                             <View style={styles.rangeBar}>
-                                <View style={[styles.rangeFill, { left: '20%', width: '40%' }]} />
-                                {/* Simulated range bar */}
+                                <View style={[
+                                    styles.rangeFill,
+                                    {
+                                        left: `${Math.max(0, ((data.heart.resting - 5 - 40) / 80) * 100)}%`,
+                                        width: '40%'
+                                    }
+                                ]} />
                             </View>
                             <View style={[styles.rangeLabels, isRTL && { flexDirection: 'row-reverse' }]}>
-                                <Text style={styles.rangeText}>{t('min')} 48</Text>
-                                <Text style={styles.rangeText}>{t('max')} 112</Text>
+                                <Text style={styles.rangeText}>{t('min')} {data.heart.resting - 5}</Text>
+                                <Text style={styles.rangeText}>{t('max')} {data.heart.resting + 45}</Text>
                             </View>
                         </GlassCard>
 
@@ -70,7 +76,7 @@ export const HeartScreen = () => {
                             styles.insightCard,
                             { marginTop: SPACING.l },
                             isRTL && { alignItems: 'flex-end' }
-                        ]}>
+                        ]} contentContainerStyle={{ padding: SPACING.l }}>
                             <Text style={{
                                 color: COLORS.accent,
                                 fontWeight: 'bold',
@@ -111,7 +117,7 @@ const styles = StyleSheet.create({
     },
     mainCard: {
         width: '48%',
-        padding: SPACING.l,
+        // padding: SPACING.l,
         alignItems: 'center',
         justifyContent: 'center',
         height: 160,
@@ -135,7 +141,7 @@ const styles = StyleSheet.create({
         marginTop: SPACING.m,
     },
     rangeCard: {
-        padding: SPACING.l,
+        // padding: SPACING.l,
     },
     rangeBar: {
         height: 8,
@@ -160,10 +166,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     insightCard: {
-        padding: SPACING.l,
-        backgroundColor: 'rgba(52, 211, 153, 0.1)',
-        borderColor: COLORS.primary,
-        borderWidth: 1,
+        // padding: SPACING.l,
     },
     insightText: {
         color: COLORS.textPrimary,

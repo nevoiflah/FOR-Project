@@ -16,6 +16,9 @@ export const translations = {
         alreadyHaveAccount: "Already have an account?",
         loginLink: "Login",
         error: "Error",
+        fillAllFields: "Please fill all fields",
+        authError: "Authentication failed",
+        loading: "Loading...",
 
         // Onboarding
         myDetails: "My Details",
@@ -41,6 +44,9 @@ export const translations = {
         insightText: "Your recovery is excellent. You are ready for high intensity training today.",
         connectToSee: "Connect Ring to see analysis",
         connectedNoData: "⚠️ Connected but DATA is missing!",
+        syncNow: "Sync Now",
+        linkedToAppleHealth: "Linked to Apple Health",
+        source: "Source",
 
         // Sleep
         sleepAnalysis: "Sleep Analysis",
@@ -86,10 +92,13 @@ export const translations = {
         logoutConfirmTitle: "Logout",
         logoutConfirmMessage: "Are you sure you want to log out?",
         cancel: "Cancel",
+        delete: "Delete",
         confirm: "Logout",
         myDevices: "My Devices",
         connected: "Connected",
         disconnected: "Disconnected",
+        healthSync: "Health Sync",
+        appleHealth: "Apple Health",
 
         // Units
         metric: "Metric (kg/km)",
@@ -112,6 +121,17 @@ export const translations = {
         goalStep: "Steps",
         goalSleep: "Sleep Hours",
         goalReadiness: "Readiness",
+        healthTrends: "Health Trends",
+        readinessTrend: "Readiness Trend",
+        activityTrend: "Activity Trend",
+        caloriesBurned: "Avg Calories Burned",
+        monthlyInsight: "Monthly Insight",
+        dailyGoals: "Daily Goals",
+        stepGoal: "Steps",
+        stepsUnit: "steps",
+        sleepGoal: "Sleep Quality",
+        activityGoal: "Active Minutes",
+        addNewGoal: "Add New Goal",
     },
     he: {
         // Auth
@@ -130,6 +150,9 @@ export const translations = {
         alreadyHaveAccount: "כבר יש לך חשבון?",
         loginLink: "התחבר",
         error: "שגיאה",
+        fillAllFields: "אנא מלא את כל השדות",
+        authError: "חיבור נכשל",
+        loading: "טוען...",
 
         // Onboarding
         myDetails: "הפרטים שלי",
@@ -155,6 +178,9 @@ export const translations = {
         insightText: "ההתאוששות שלך מצוינת. אתה מוכן לאימון בעצימות גבוהה היום.",
         connectToSee: "חבר את הטבעת לצפייה בניתוח",
         connectedNoData: "⚠️ מחובר אך אין נתונים!",
+        syncNow: "סנכרן עכשיו",
+        linkedToAppleHealth: "מקושר ל-Apple Health",
+        source: "מקור",
 
         // Sleep
         sleepAnalysis: "ניתוח שינה",
@@ -200,10 +226,13 @@ export const translations = {
         logoutConfirmTitle: "התנתקות",
         logoutConfirmMessage: "האם אתה בטוח שברצונך להתנתק?",
         cancel: "ביטול",
+        delete: "מחיקה",
         confirm: "התנתק",
         myDevices: "המכשירים שלי",
         connected: "מחובר",
         disconnected: "מנותק",
+        healthSync: "סינכרון בריאות",
+        appleHealth: "Apple Health",
 
         // Units
         metric: "מטרי (ק״ג/ק״מ)",
@@ -226,6 +255,17 @@ export const translations = {
         goalStep: "צעדים",
         goalSleep: "שעות שינה",
         goalReadiness: "מוכנות",
+        healthTrends: "מגמות בריאות",
+        readinessTrend: "מגמת מוכנות",
+        activityTrend: "מגמת פעילות",
+        caloriesBurned: "ממוצע קלוריות שנשרפו",
+        monthlyInsight: "תובנה חודשית",
+        dailyGoals: "יעדים יומיים",
+        stepGoal: "צעדים",
+        stepsUnit: "צעדים",
+        sleepGoal: "איכות שינה",
+        activityGoal: "דקות פעילות",
+        addNewGoal: "הוסף יעד חדש",
     },
 };
 
