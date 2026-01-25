@@ -7,7 +7,7 @@ import { BlurView } from 'expo-blur';
 import { useTheme } from '../contexts/ThemeContext';
 
 // Icons
-import { Home, Moon, Heart, TrendingUp, User, Settings, ArrowRight, Target } from 'lucide-react-native';
+import { Home, Moon, Heart, TrendingUp, User, Settings, ArrowRight } from 'lucide-react-native';
 
 // Screens
 import { LoginScreen } from '../screens/Auth/LoginScreen';
@@ -17,7 +17,6 @@ import { DashboardScreen } from '../screens/Main/DashboardScreen';
 import { SleepScreen } from '../screens/Main/SleepScreen';
 import { HeartScreen } from '../screens/Main/HeartScreen';
 import { TrendsScreen } from '../screens/Main/TrendsScreen';
-import { GoalsScreen } from '../screens/Main/GoalsScreen';
 import { ProfileScreen } from '../screens/User/ProfileScreen';
 import { EditProfileScreen } from '../screens/User/EditProfileScreen';
 
@@ -76,14 +75,6 @@ const MainTabs = () => {
                     tabBarIcon: ({ color }) => <TrendingUp color={color} size={24} />
                 }}
             />
-            <Tab.Screen
-                name="Goals"
-                component={GoalsScreen}
-                options={{
-                    tabBarIcon: ({ color }) => <Target color={color} size={24} />
-                }}
-            />
-            {/* Goals might be accessed via dashboard or its own tab? Used Trends for now. Let's add Profile as 5th tab */}
             <Tab.Screen
                 name="Profile"
                 component={ProfileScreen}
@@ -145,7 +136,6 @@ export const AppNavigator = () => {
                     <Stack.Group>
                         <Stack.Screen name="MainBase" component={MainTabs} />
                         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-                        <Stack.Screen name="Goals" component={GoalsScreen} />
                         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
                     </Stack.Group>
                 )}
