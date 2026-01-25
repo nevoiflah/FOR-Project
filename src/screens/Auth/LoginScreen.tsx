@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -9,6 +9,9 @@ import { GlassCard } from '../../components/GlassCard';
 import { LanguageToggle } from '../../components/LanguageToggle';
 import { COLORS, FONTS, SPACING, LAYOUT } from '../../constants/theme';
 import { HapticFeedback } from '../../utils/haptics';
+import { biometricService } from '../../services/BiometricService'; // New import
+// @ts-ignore
+import { ScanFace } from 'lucide-react-native';
 
 export const LoginScreen = () => {
     const navigation = useNavigation<any>();
@@ -18,6 +21,42 @@ export const LoginScreen = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    const [hasBiometrics, setHasBiometrics] = useState(false);
+
+    useEffect(() => {
+        checkBiometrics();
+    }, []);
+
+    const checkBiometrics = async () => {
+        const creds = await biometricService.getCredentials();
+        const available = await biometricService.checkAvailability();
+        if (creds && available) {
+            setHasBiometrics(true);
+            // Optional: Auto-prompt on mount
+            // handleBiometricLogin(); 
+        }
+    };
+
+    const handleBiometricLogin = async () => {
+        const creds = await biometricService.getCredentials();
+        if (!creds) return;
+
+        const success = await biometricService.authenticate();
+        if (success) {
+            setLoading(true);
+            HapticFeedback.success();
+            try {
+                await signInWithEmailAndPassword(auth, creds.email, creds.pass);
+                // Navigation handled by context
+            } catch (err: any) {
+                console.error(err);
+                setError(t('authError'));
+                HapticFeedback.error();
+                setLoading(false);
+            }
+        }
+    };
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -92,6 +131,16 @@ export const LoginScreen = () => {
                                 onChangeText={setPassword}
                             />
                         </View>
+
+                        {hasBiometrics && (
+                            <TouchableOpacity
+                                style={styles.biometricButton}
+                                onPress={handleBiometricLogin}
+                            >
+                                <ScanFace size={24} color={COLORS.primary} style={{ marginRight: 8 }} />
+                                <Text style={[styles.buttonText, { color: COLORS.primary }]}>{t('biometricLogin')}</Text>
+                            </TouchableOpacity>
+                        )}
 
                         <TouchableOpacity
                             style={[styles.button, loading && { opacity: 0.7 }]}
@@ -185,6 +234,17 @@ const styles = StyleSheet.create({
         color: '#000',
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    biometricButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: SPACING.m,
+        borderRadius: LAYOUT.borderRadius,
+        borderWidth: 1,
+        borderColor: COLORS.primary,
+        marginBottom: SPACING.m,
+        backgroundColor: 'rgba(0, 245, 255, 0.1)',
     },
     footer: {
         flexDirection: 'row',

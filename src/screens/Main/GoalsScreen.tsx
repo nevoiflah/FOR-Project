@@ -21,7 +21,7 @@ export const GoalsScreen = () => {
 
     const handleAddGoal = async () => {
         if (!newTitle || !newTarget || !newUnit) {
-            Alert.alert("Missing Fields", "Please fill in all fields to create a goal.");
+            Alert.alert(t('missingFields'), t('missingFieldsMsg'));
             return;
         }
 
@@ -73,7 +73,7 @@ export const GoalsScreen = () => {
                         {isComplete ? (
                             <CheckCircle size={20} color={COLORS.success} />
                         ) : (
-                            <Text style={{ color: COLORS.textSecondary, fontSize: 12 }}>Tap to update</Text>
+                            <Text style={{ color: COLORS.textSecondary, fontSize: 12 }}>{t('tapToUpdate')}</Text>
                         )}
                     </View>
 
@@ -97,9 +97,9 @@ export const GoalsScreen = () => {
             <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
                 <Text style={[styles.pageTitle, isRTL && { textAlign: 'right' }]}>{t('dailyGoals') || 'Daily Goals'}</Text>
 
-                {data && data.goals ? (
+                {data ? (
                     <>
-                        {data.goals.map((goal) => (
+                        {(data.goals || []).map((goal) => (
                             <GoalItem key={goal.id} item={goal} />
                         ))}
 
@@ -132,30 +132,30 @@ export const GoalsScreen = () => {
                         style={styles.modalOverlay}
                     >
                         <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>New Goal</Text>
+                            <View style={[styles.modalHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                                <Text style={styles.modalTitle}>{t('newGoalTitle')}</Text>
                                 <TouchableOpacity onPress={() => setModalVisible(false)}>
                                     <X size={24} color={COLORS.textSecondary} />
                                 </TouchableOpacity>
                             </View>
 
                             <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Goal Title</Text>
+                                <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('goalLabelTitle')}</Text>
                                 <TextInput
-                                    style={styles.input}
-                                    placeholder="e.g. Drink Water"
+                                    style={[styles.input, isRTL && { textAlign: 'right' }]}
+                                    placeholder={t('goalTitlePlaceholder')}
                                     placeholderTextColor="#666"
                                     value={newTitle}
                                     onChangeText={setNewTitle}
                                 />
                             </View>
 
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between' }}>
                                 <View style={[styles.inputGroup, { width: '48%' }]}>
-                                    <Text style={styles.label}>Target</Text>
+                                    <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('goalLabelTarget')}</Text>
                                     <TextInput
-                                        style={styles.input}
-                                        placeholder="100"
+                                        style={[styles.input, isRTL && { textAlign: 'right' }]}
+                                        placeholder={t('goalTargetPlaceholder')}
                                         placeholderTextColor="#666"
                                         keyboardType="numeric"
                                         value={newTarget}
@@ -163,10 +163,10 @@ export const GoalsScreen = () => {
                                     />
                                 </View>
                                 <View style={[styles.inputGroup, { width: '48%' }]}>
-                                    <Text style={styles.label}>Unit</Text>
+                                    <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('goalLabelUnit')}</Text>
                                     <TextInput
-                                        style={styles.input}
-                                        placeholder="mins"
+                                        style={[styles.input, isRTL && { textAlign: 'right' }]}
+                                        placeholder={t('goalUnitPlaceholder')}
                                         placeholderTextColor="#666"
                                         value={newUnit}
                                         onChangeText={setNewUnit}
@@ -175,7 +175,7 @@ export const GoalsScreen = () => {
                             </View>
 
                             <TouchableOpacity style={styles.createButton} onPress={handleAddGoal}>
-                                <Text style={styles.createButtonText}>Create Goal</Text>
+                                <Text style={styles.createButtonText}>{t('createGoalBtn')}</Text>
                             </TouchableOpacity>
                         </View>
                     </KeyboardAvoidingView>

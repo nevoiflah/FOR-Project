@@ -69,7 +69,7 @@ export const TrendsScreen = () => {
                                 <Text style={styles.insightTitle}>{t('monthlyInsight') || 'Monthly Insight'}</Text>
                             </View>
                             <Text style={[styles.insightBody, isRTL && { textAlign: 'right' }]}>
-                                Your recovery has improved by 12% compared to last week. Keep focusing on your bedtime routine to maintain this trend.
+                                {t('monthlyInsightBody')}
                             </Text>
                         </GlassCard>
                     </>

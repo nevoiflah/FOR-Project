@@ -19,6 +19,7 @@ import { HeartScreen } from '../screens/Main/HeartScreen';
 import { TrendsScreen } from '../screens/Main/TrendsScreen';
 import { GoalsScreen } from '../screens/Main/GoalsScreen';
 import { ProfileScreen } from '../screens/User/ProfileScreen';
+import { EditProfileScreen } from '../screens/User/EditProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -140,6 +141,7 @@ export const AppNavigator = () => {
                         <Stack.Screen name="MainBase" component={MainTabs} />
                         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
                         <Stack.Screen name="Goals" component={GoalsScreen} />
+                        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
                     </Stack.Group>
                 )}
             </Stack.Navigator>

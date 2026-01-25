@@ -13,46 +13,92 @@ import { HapticFeedback } from '../../utils/haptics';
 
 import { notificationService } from '../../services/NotificationService';
 import { useAuth } from '../../contexts/AuthContext';
+import { convertHeight, convertWeight } from '../../utils/units';
+import { biometricService } from '../../services/BiometricService'; // New import
 
 export const ProfileScreen = ({ navigation }: any) => {
-    const { connectRing, isConnected, simulateData, data } = useData();
+    const { connectRing, isConnected, simulateData, data, toggleUnitSystem, toggleNotifications: setGlobalNotifications } = useData();
     const { t, isRTL } = useLanguage();
     const { logout, user } = useAuth();
 
-    // Settings State
-    const [notifications, setNotifications] = useState(false);
-    const [metricUnits, setMetricUnits] = useState(true);
-
-
-
-    const toggleNotifications = async (value: boolean) => {
+    const handleToggleNotifications = async (value: boolean) => {
         HapticFeedback.light();
         if (value) {
             const token = await notificationService.registerForPushNotificationsAsync();
             if (token) {
-                setNotifications(true);
+                await setGlobalNotifications(true);
                 // Schedule default reminders
                 await notificationService.scheduleMorningReadiness(data?.readiness.score || 85);
             } else {
                 Alert.alert(t('error'), "Notification permissions are required. Please enable them in your device settings.");
-                setNotifications(false);
+                await setGlobalNotifications(false);
             }
         } else {
             await notificationService.cancelAllNotifications();
-            setNotifications(false);
+            await setGlobalNotifications(false);
+        }
+    };
+
+    const [biometricsEnabled, setBiometricsEnabled] = useState(false);
+
+    // Check initial state (mock for now, or check SecureStore asynchronously)
+    React.useEffect(() => {
+        biometricService.getCredentials().then(creds => {
+            setBiometricsEnabled(!!creds);
+        });
+    }, []);
+
+    const toggleBiometrics = async (value: boolean) => {
+        HapticFeedback.light();
+        if (value) {
+            // Check hardware first
+            const available = await biometricService.checkAvailability();
+            if (!available) {
+                Alert.alert(t('error'), 'Biometrics not supported or not enrolled on this device.');
+                return;
+            }
+
+            // For MVP: We need the password to save it. 
+            // In a real app we'd show a modal to input password.
+            // Here, we'll assume we can't enable it without re-entry, 
+            // so we show an alert instruction.
+            Alert.prompt(
+                t('enableBiometrics'),
+                "Please enter your password to enable Face ID login.",
+                [
+                    { text: t('cancel'), style: 'cancel' },
+                    {
+                        text: t('confirm') || 'Enable',
+                        onPress: async (password) => {
+                            if (user && user.email && password) {
+                                const success = await biometricService.saveCredentials(user.email, password);
+                                if (success) {
+                                    setBiometricsEnabled(true);
+                                    Alert.alert(t('success'), 'Biometric login enabled.');
+                                } else {
+                                    Alert.alert(t('error'), 'Failed to save credentials.');
+                                }
+                            }
+                        }
+                    }
+                ],
+                'secure-text'
+            );
+        } else {
+            setBiometricsEnabled(false);
+            await biometricService.clearCredentials();
         }
     };
 
     const sendTestNotification = async () => {
         HapticFeedback.success();
         await notificationService.scheduleHealthReminder(
-            "Test Notification 🧪",
-            "This is a test from the FOR app!",
+            t('testNotifTitle'),
+            t('testNotifBody'),
             new Date().getHours(),
-            new Date().getMinutes() + 1 // Schedule for 1 min from now or just use immediate if possible.
-            // Actually scheduleNotificationAsync can take immediate too, but let's stick to our helper.
+            new Date().getMinutes() + 1
         );
-        Alert.alert("Success", "Test notification scheduled for 1 minute from now.");
+        Alert.alert(t('success') || "Success", t('testNotifSuccess'));
     };
 
     const handleLogout = () => {
@@ -123,7 +169,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                                 {t('myDetails')}
                             </Text>
                             <TouchableOpacity
-                                onPress={() => navigation.navigate('Onboarding', { isEditing: true, currentProfile: data.userProfile })}
+                                onPress={() => navigation.navigate('EditProfile')}
                                 style={{ padding: 4, marginRight: isRTL ? 0 : SPACING.s, marginLeft: isRTL ? SPACING.s : 0 }}
                             >
                                 <Text style={{ color: COLORS.primary, fontWeight: 'bold' }}>{t('edit') || 'Edit'}</Text>
@@ -147,14 +193,14 @@ export const ProfileScreen = ({ navigation }: any) => {
                             <SettingRow
                                 icon={Ruler}
                                 title={t('height')}
-                                value={`${data.userProfile.height} cm`}
+                                value={convertHeight(data.userProfile.height, data.unitSystem || 'metric')}
                                 showChevron={false}
                             />
                             <View style={styles.divider} />
                             <SettingRow
                                 icon={Weight}
                                 title={t('weight')}
-                                value={`${data.userProfile.weight} kg`}
+                                value={convertWeight(data.userProfile.weight, data.unitSystem || 'metric')}
                                 showChevron={false}
                             />
                         </GlassCard>
@@ -168,15 +214,23 @@ export const ProfileScreen = ({ navigation }: any) => {
                         icon={Bell}
                         title={t('notifications')}
                         isToggle
-                        toggleValue={notifications}
-                        onToggle={toggleNotifications}
+                        toggleValue={!!data?.notificationsEnabled}
+                        onToggle={handleToggleNotifications}
                     />
                     <View style={styles.divider} />
                     <SettingRow
                         icon={Activity}
                         title={t('units')}
-                        value={metricUnits ? t('metric') : t('imperial')}
-                        onPress={() => setMetricUnits(!metricUnits)}
+                        value={data?.unitSystem === 'metric' ? t('metric') : t('imperial')}
+                        onPress={toggleUnitSystem}
+                    />
+                    <View style={styles.divider} />
+                    <SettingRow
+                        icon={Shield}
+                        title={t('biometrics')}
+                        isToggle
+                        toggleValue={biometricsEnabled}
+                        onToggle={toggleBiometrics}
                     />
                 </GlassCard>
 
@@ -199,35 +253,35 @@ export const ProfileScreen = ({ navigation }: any) => {
                 </GlassCard>
 
                 {/* Developer Tools (Simulation) */}
-                <Text style={[styles.sectionHeader, isRTL && { textAlign: 'right', marginRight: SPACING.s, marginLeft: 0 }]}>Developer Tools</Text>
+                <Text style={[styles.sectionHeader, isRTL && { textAlign: 'right', marginRight: SPACING.s, marginLeft: 0 }]}>{t('devTools')}</Text>
                 <GlassCard style={styles.settingsGroup}>
                     <SettingRow
                         icon={Bell}
-                        title="Send Test Notification"
+                        title={t('sendTestNotif')}
                         onPress={sendTestNotification}
                     />
                     <View style={styles.divider} />
                     <SettingRow
                         icon={Shield}
-                        title="Force Poor Sleep"
+                        title={t('forcePoorSleep')}
                         onPress={() => simulateData('poor_sleep')}
                     />
                     <View style={styles.divider} />
                     <SettingRow
                         icon={Activity}
-                        title="Force High Stress"
+                        title={t('forceHighStress')}
                         onPress={() => simulateData('high_stress')}
                     />
                     <View style={styles.divider} />
                     <SettingRow
                         icon={Smartphone}
-                        title="Force Perfect Day"
+                        title={t('forcePerfectDay')}
                         onPress={() => simulateData('perfect_day')}
                     />
                     <View style={styles.divider} />
                     <SettingRow
                         icon={LogOut}
-                        title="Reset Data"
+                        title={t('resetData')}
                         onPress={() => simulateData('default')}
                     />
                 </GlassCard>

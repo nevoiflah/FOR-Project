@@ -47,6 +47,8 @@ interface RingData {
         gender: 'male' | 'female' | 'other';
     };
     goals?: Goal[];
+    unitSystem?: 'metric' | 'imperial';
+    notificationsEnabled?: boolean;
 }
 
 
@@ -57,6 +59,8 @@ interface DataContextType {
     data: RingData | null;
     connectRing: () => Promise<void>;
     simulateData: (scenario: 'default' | 'poor_sleep' | 'high_stress' | 'perfect_day') => void;
+    toggleUnitSystem: () => Promise<void>;
+    toggleNotifications: (enabled: boolean) => Promise<void>;
     updateUserProfile: (profile: RingData['userProfile']) => void;
     addGoal: (goal: Omit<Goal, 'id'>) => Promise<void>;
     removeGoal: (id: string) => Promise<void>;
@@ -94,6 +98,7 @@ const DEFAULT_DATA: RingData = {
         { id: '2', title: 'Sleep Quality', target: 90, current: 0, unit: '/ 100', color: '#B0FB54', type: 'numeric' },
         { id: '3', title: 'Active Minutes', target: 60, current: 0, unit: 'min', color: '#FBBF24', type: 'numeric' },
     ],
+    unitSystem: 'metric',
 };
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
@@ -194,6 +199,27 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         setIsSyncing(false);
     };
 
+    const toggleUnitSystem = async () => {
+        if (!user || !data) return;
+        const newSystem = data.unitSystem === 'metric' ? 'imperial' : 'metric';
+
+        // Optimistic update
+        setData(prev => prev ? { ...prev, unitSystem: newSystem } : null);
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, { unitSystem: newSystem }, { merge: true });
+    };
+
+    const toggleNotifications = async (enabled: boolean) => {
+        if (!user || !data) return;
+
+        // Optimistic update
+        setData(prev => prev ? { ...prev, notificationsEnabled: enabled } : null);
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, { notificationsEnabled: enabled }, { merge: true });
+    };
+
     const updateUserProfile = async (profile: RingData['userProfile']) => {
         if (!user) return;
         const userDocRef = doc(db, 'users', user.uid);
@@ -234,7 +260,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <DataContext.Provider value={{ isConnected, isSyncing, data, connectRing, simulateData, updateUserProfile, addGoal, removeGoal, updateGoal }}>
+        <DataContext.Provider value={{ isConnected, isSyncing, data, connectRing, simulateData, toggleUnitSystem, toggleNotifications, updateUserProfile, addGoal, removeGoal, updateGoal }}>
             {children}
         </DataContext.Provider>
     );
