@@ -1,5 +1,5 @@
 export const DARK_COLORS = {
-    primary: '#00F5FF',      // Electric Cyan
+    primary: '#FF4500',      // Electric Magma (Neon Orange-Red)
     accent: '#B0FB54',       // Lime Green
     background: '#080808',   // Deep Black
     surface: '#121212',      // Dark Grey Surface
@@ -13,7 +13,7 @@ export const DARK_COLORS = {
 };
 
 export const LIGHT_COLORS = {
-    primary: '#00B4D8',      // A slightly deeper cyan for light mode
+    primary: '#EA580C',      // Deep Orange
     accent: '#72BB19',       // A darker lime for readability
     background: '#F8F9FA',   // Off-white
     surface: '#FFFFFF',      // Pure White
