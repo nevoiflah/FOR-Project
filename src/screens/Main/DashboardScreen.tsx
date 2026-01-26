@@ -88,7 +88,7 @@ export const DashboardScreen = () => {
                     <View style={[styles.goalHeader, isRTL && { flexDirection: 'row-reverse' }]}>
                         <Text style={styles.goalTitle}>{item.title}</Text>
                         {isComplete ? (
-                            <CheckCircle size={20} color={colors.success} />
+                            <CheckCircle size={20} color={colors.primary} />
                         ) : (
                             <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{t('tapToUpdate')}</Text>
                         )}
@@ -166,7 +166,7 @@ export const DashboardScreen = () => {
                         {/* Readiness Card */}
                         <GlassCard style={styles.metricCard} contentContainerStyle={{ padding: SPACING.m, alignItems: 'center' }}>
                             <View style={styles.iconContainer}>
-                                <Circle size={24} color={colors.success} />
+                                <Circle size={24} color={colors.primary} />
                             </View>
                             <Text style={styles.metricValue}>{data.readiness.score}</Text>
                             <Text style={styles.metricLabel}>{data.readiness.status}</Text>
@@ -202,7 +202,7 @@ export const DashboardScreen = () => {
                                 data={[70, 75, 78, 85, 82, 90, data.readiness.score]}
                                 height={120}
                                 width={Dimensions.get('window').width - 48}
-                                color={data.readiness.score >= 80 ? colors.success : colors.accent}
+                                color={data.readiness.score >= 80 ? colors.primary : colors.accent}
                                 gradientId="dash-ready-grad"
                             />
                         </View>
@@ -214,7 +214,7 @@ export const DashboardScreen = () => {
                     <>
                         <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }]}>
                             <Target size={20} color={colors.primary} style={isRTL ? { marginLeft: 10 } : { marginRight: 10 }} />
-                            <Text style={styles.cardTitle}>{t('dailyGoals') || 'Daily Goals'}</Text>
+                            <Text style={styles.sectionTitle}>{t('dailyGoals') || 'Daily Goals'}</Text>
                         </View>
                         {(data.goals || []).map((goal) => (
                             <GoalItem key={goal.id} item={goal} />
@@ -390,7 +390,13 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: SPACING.l,
-        marginBottom: SPACING.s,
+        marginBottom: SPACING.m,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: colors.textPrimary,
+        // No bottom margin to ensure alignment with icon
     },
     goalItem: {
         marginBottom: SPACING.m,

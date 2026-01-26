@@ -71,7 +71,7 @@ export const LoadingRing = ({ success = false, size = 100 }: LoadingRingProps) =
                         cx="50"
                         cy="50"
                         r="40"
-                        stroke={success ? COLORS.success : COLORS.primary}
+                        stroke={success ? COLORS.primary : COLORS.primary}
                         strokeWidth="6"
                         fill="transparent"
                         strokeDasharray={success ? "0" : "200"} // Solid line if success
@@ -103,7 +103,7 @@ export const LoadingRing = ({ success = false, size = 100 }: LoadingRingProps) =
                     {/* Since we can't import icons easily inside this specific component without passing them,
                        we will just draw a checkmark with SVG */}
                     <Svg height="40" width="40" viewBox="0 0 24 24">
-                        <Circle cx="12" cy="12" r="10" fill={COLORS.success} />
+                        <Circle cx="12" cy="12" r="10" fill={COLORS.primary} />
                         {/* Checkmark path */}
                         {/* M9 12l2 2 4-4 */}
                     </Svg>

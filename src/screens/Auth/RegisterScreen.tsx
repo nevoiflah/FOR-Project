@@ -211,7 +211,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
         color: colors.textSecondary,
     },
     linkText: {
-        color: colors.accent,
+        color: colors.primary,
         fontWeight: 'bold',
     },
     errorText: {

@@ -95,8 +95,8 @@ const DEFAULT_DATA: RingData = {
     },
     goals: [
         { id: '1', title: 'Daily Steps', target: 10000, current: 0, unit: 'steps', color: COLORS.primary, type: 'numeric' },
-        { id: '2', title: 'Sleep Quality', target: 90, current: 0, unit: '/ 100', color: '#B0FB54', type: 'numeric' },
-        { id: '3', title: 'Active Minutes', target: 60, current: 0, unit: 'min', color: '#FBBF24', type: 'numeric' },
+        { id: '2', title: 'Sleep Quality', target: 90, current: 0, unit: '/ 100', color: COLORS.danger, type: 'numeric' },
+        { id: '3', title: 'Active Minutes', target: 60, current: 0, unit: 'min', color: COLORS.warning, type: 'numeric' },
     ],
     unitSystem: 'metric',
 };

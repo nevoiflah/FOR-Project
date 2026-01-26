@@ -248,7 +248,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.primary,
         marginBottom: SPACING.m,
-        backgroundColor: isDark ? 'rgba(0, 245, 255, 0.1)' : 'rgba(0, 180, 216, 0.1)',
+        backgroundColor: isDark ? 'rgba(255, 69, 0, 0.1)' : 'rgba(234, 88, 12, 0.1)',
     },
     footer: {
         flexDirection: 'row',
@@ -259,7 +259,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
         color: colors.textSecondary,
     },
     linkText: {
-        color: colors.accent,
+        color: colors.primary,
         fontWeight: 'bold',
     },
     errorText: {

@@ -1,6 +1,6 @@
 export const DARK_COLORS = {
     primary: '#FF4500',      // Electric Magma (Neon Orange-Red)
-    accent: '#B0FB54',       // Lime Green
+    accent: '#FFB703',       // Golden Amber (Complementary to Orange)
     background: '#080808',   // Deep Black
     surface: '#121212',      // Dark Grey Surface
     success: '#4ADE80',
@@ -14,7 +14,7 @@ export const DARK_COLORS = {
 
 export const LIGHT_COLORS = {
     primary: '#EA580C',      // Deep Orange
-    accent: '#72BB19',       // A darker lime for readability
+    accent: '#F59E0B',       // Amber-600
     background: '#F8F9FA',   // Off-white
     surface: '#FFFFFF',      // Pure White
     success: '#22C55E',
