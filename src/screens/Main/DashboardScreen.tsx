@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { GlassChart } from '../../components/GlassChart';
 import { LoadingRing } from '../../components/LoadingRing';
-import { COLORS, FONTS, SPACING } from '../../constants/theme';
-import { useData } from '../../contexts/DataContext';
+import { COLORS, FONTS, FONT_SIZE, SPACING, LAYOUT } from '../../constants/theme';
 import { useLanguage } from '../../contexts/LanguageContext';
 // @ts-ignore
-import { Circle, Activity, Moon, RefreshCcw, CheckCircle2, Target, CheckCircle, Plus, X } from 'lucide-react-native';
+import { Bell, Battery, CheckCircle, Target, Plus, X, Play, Zap, Wind, Moon, Sun, CloudRain, Flame, Activity, Circle } from 'lucide-react-native';
 import { HapticFeedback } from '../../utils/haptics';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useData, WorkoutType } from '../../contexts/DataContext';
 import { Goal } from '../../contexts/DataContext';
 
 export const DashboardScreen = () => {
+    const navigation = useNavigation<any>();
     const { isConnected, isSyncing, data, addGoal, removeGoal, updateGoal } = useData();
     const { t, isRTL } = useLanguage();
     const { colors, isDark } = useTheme();
@@ -178,6 +181,84 @@ export const DashboardScreen = () => {
                         {/* Empty view, waiting for data */}
                     </View>
                 )}
+
+                {/* Quick Actions (Start Workout) */}
+                <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                    <Activity size={20} color={colors.primary} style={isRTL ? { marginLeft: 10 } : { marginRight: 10 }} />
+                    <Text style={styles.sectionTitle}>{t('startActivity')}</Text>
+                </View>
+
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={[styles.actionScroll, isRTL && { flexDirection: 'row-reverse' }]}
+                >
+                    {(['run', 'walk', 'hiit', 'yoga'] as const).map((type) => (
+                        <TouchableOpacity
+                            key={type}
+                            style={[
+                                styles.actionCard,
+                                { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.6)' }
+                            ]}
+                            onPress={() => navigation.navigate('Workout', { type })}
+                        >
+                            <View style={[styles.iconCircle, { backgroundColor: colors.background }]}>
+                                {type === 'run' && <Wind size={24} color={colors.primary} />}
+                                {type === 'walk' && <Activity size={24} color={colors.accent} />}
+                                {type === 'hiit' && <Zap size={24} color="#FF6B6B" />}
+                                {type === 'yoga' && <Sun size={24} color="#FFD93D" />}
+                            </View>
+                            <Text style={[styles.actionText, { color: colors.textPrimary }]}>
+                                {t(type as any)}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+
+                {/* Mindfulness Zone */}
+                <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                    <Wind size={20} color={colors.primary} style={isRTL ? { marginLeft: 10 } : { marginRight: 10 }} />
+                    <Text style={styles.sectionTitle}>{t('mindfulnessZone')}</Text>
+                </View>
+
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={[styles.actionScroll, isRTL && { flexDirection: 'row-reverse' }]}
+                >
+                    <TouchableOpacity
+                        style={[styles.mindfulnessCard, { backgroundColor: '#E3F2FD' }]}
+                        onPress={() => navigation.navigate('Mindfulness', { type: 'focus' })}
+                    >
+                        <View style={[styles.playIconOverlay, { backgroundColor: 'rgba(255,255,255,0.8)' }]}>
+                            <Play size={16} color={colors.primary} fill={colors.primary} />
+                        </View>
+                        <Text style={[styles.mindfulnessTitle, { color: '#1565C0' }]}>{t('morningFocus')}</Text>
+                        <Text style={[styles.mindfulnessSubtitle, { color: '#1976D2' }]}>10 min</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.mindfulnessCard, { backgroundColor: '#F3E5F5' }]}
+                        onPress={() => navigation.navigate('Mindfulness', { type: 'deep_sleep' })}
+                    >
+                        <View style={[styles.playIconOverlay, { backgroundColor: 'rgba(255,255,255,0.8)' }]}>
+                            <Play size={16} color="#7B1FA2" fill="#7B1FA2" />
+                        </View>
+                        <Text style={[styles.mindfulnessTitle, { color: '#4A148C' }]}>{t('deepSleep')}</Text>
+                        <Text style={[styles.mindfulnessSubtitle, { color: '#6A1B9A' }]}>20 min</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.mindfulnessCard, { backgroundColor: '#E8F5E9' }]}
+                        onPress={() => navigation.navigate('Mindfulness', { type: 'stress' })}
+                    >
+                        <View style={[styles.playIconOverlay, { backgroundColor: 'rgba(255,255,255,0.8)' }]}>
+                            <Play size={16} color="#2E7D32" fill="#2E7D32" />
+                        </View>
+                        <Text style={[styles.mindfulnessTitle, { color: '#1B5E20' }]}>{t('stressRelief')}</Text>
+                        <Text style={[styles.mindfulnessSubtitle, { color: '#2E7D32' }]}>5 min</Text>
+                    </TouchableOpacity>
+                </ScrollView>
 
                 {/* Daily Insight */}
                 {data && (
@@ -389,14 +470,73 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: SPACING.l,
+        gap: SPACING.s,
+        marginTop: SPACING.xl, // Increased from l to xl
         marginBottom: SPACING.m,
+        paddingHorizontal: SPACING.xs,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: FONT_SIZE.l,
+        fontWeight: '600',
         color: colors.textPrimary,
+        letterSpacing: 0.5,
         // No bottom margin to ensure alignment with icon
+    },
+    actionScroll: {
+        gap: SPACING.m,
+        paddingRight: SPACING.l, // Add padding for last item
+        marginBottom: SPACING.l, // Add bottom margin for spacing between sections
+    },
+    actionCard: {
+        width: 100,
+        height: 110,
+        borderRadius: LAYOUT.borderRadius,
+        padding: SPACING.m,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
+    },
+    iconCircle: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: SPACING.s,
+    },
+    actionText: {
+        fontSize: FONT_SIZE.s,
+        fontWeight: '600',
+    },
+    mindfulnessCard: {
+        width: 140,
+        height: 100,
+        borderRadius: LAYOUT.borderRadius,
+        padding: SPACING.m,
+        justifyContent: 'flex-end',
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    playIconOverlay: {
+        position: 'absolute',
+        top: SPACING.s,
+        right: SPACING.s,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    mindfulnessTitle: {
+        fontSize: FONT_SIZE.m,
+        fontWeight: '700',
+        marginBottom: 2,
+    },
+    mindfulnessSubtitle: {
+        fontSize: FONT_SIZE.xs,
     },
     goalItem: {
         marginBottom: SPACING.m,

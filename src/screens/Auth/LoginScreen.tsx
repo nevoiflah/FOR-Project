@@ -99,7 +99,7 @@ export const LoginScreen = () => {
                     </View>
 
                     <View style={styles.headerContainer}>
-                        <Text style={styles.logoText}>FOR</Text>
+                        <Text style={styles.logoText}>F.O.R</Text>
                         <Text style={styles.subtitle}>{t('loginSubtitle')}</Text>
                     </View>
 

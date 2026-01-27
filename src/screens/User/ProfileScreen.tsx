@@ -258,6 +258,13 @@ export const ProfileScreen = ({ navigation }: any) => {
                                 value={convertWeight(data.userProfile.weight, data.unitSystem || 'metric')}
                                 showChevron={false}
                             />
+                            <View style={styles.divider} />
+                            <SettingRow
+                                icon={Activity}
+                                title={t('history') || 'History'} // Fallback if translation missing
+                                value=""
+                                onPress={() => navigation.navigate('History')}
+                            />
                         </GlassCard>
                     </>
                 )}
@@ -311,6 +318,14 @@ export const ProfileScreen = ({ navigation }: any) => {
                         icon={Shield}
                         title={t('firmware')}
                         value="v2.1.0"
+                    />
+                    <View style={styles.divider} />
+                    <SettingRow
+                        icon={Activity} // Using Activity icon for now
+                        title={t('appleHealth')}
+                        isToggle
+                        toggleValue={false} // Placeholder, need state
+                        onToggle={(val) => { console.log("Apple Health Toggle:", val); }}
                     />
                 </GlassCard>
 

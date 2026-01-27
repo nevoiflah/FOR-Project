@@ -19,6 +19,9 @@ import { HeartScreen } from '../screens/Main/HeartScreen';
 import { TrendsScreen } from '../screens/Main/TrendsScreen';
 import { ProfileScreen } from '../screens/User/ProfileScreen';
 import { EditProfileScreen } from '../screens/User/EditProfileScreen';
+import { WorkoutScreen } from '../screens/Main/WorkoutScreen';
+import { MindfulnessScreen } from '../screens/Main/MindfulnessScreen';
+import { HistoryScreen } from '../screens/User/HistoryScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -137,6 +140,9 @@ export const AppNavigator = () => {
                         <Stack.Screen name="MainBase" component={MainTabs} />
                         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
                         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                        <Stack.Screen name="Workout" component={WorkoutScreen} />
+                        <Stack.Screen name="Mindfulness" component={MindfulnessScreen} />
+                        <Stack.Screen name="History" component={HistoryScreen} />
                     </Stack.Group>
                 )}
             </Stack.Navigator>

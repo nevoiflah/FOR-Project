@@ -102,6 +102,50 @@ class NotificationService {
         }
     }
 
+    async checkDailyGoals(data: any, goals: any[]) { // Using 'any' for goals to avoid circular dependency, but logically it's Goal[]
+        if (!data || !goals) return;
+
+        // Find relevant goals
+        const stepsGoal = goals.find(g => g.title.toLowerCase().includes('steps'));
+        const sleepGoal = goals.find(g => g.title.toLowerCase().includes('sleep'));
+
+        // Check Steps
+        if (stepsGoal && data.steps?.count >= stepsGoal.target && stepsGoal.target > 0) {
+            // In a real app, check if we already notified for this specific goal today
+            await this.scheduleImmediateNotification(
+                "Goal Reached! 🏆",
+                `Congratulations! You've hit your daily goal of ${stepsGoal.target} steps.`
+            );
+        }
+
+        // Check Sleep Score
+        if (sleepGoal && data.sleep?.score >= sleepGoal.target && sleepGoal.target > 0) {
+            const currentHour = new Date().getHours();
+            // Only notify in the morning
+            if (currentHour >= 8 && currentHour <= 11) {
+                await this.scheduleImmediateNotification(
+                    "Great Sleep! 🌙",
+                    `You achieved your sleep quality goal with a score of ${data.sleep.score}.`
+                );
+            }
+        }
+    }
+
+    async scheduleImmediateNotification(title: string, body: string) {
+        try {
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title,
+                    body,
+                    sound: true,
+                },
+                trigger: null, // Send immediately
+            });
+        } catch (e) {
+            console.error('[NotificationService] Immediate Notification Error:', e);
+        }
+    }
+
     async cancelAllNotifications() {
         await Notifications.cancelAllScheduledNotificationsAsync();
     }

@@ -4,6 +4,8 @@ import { db } from '../config/firebase';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import { COLORS } from '../constants/theme';
+import { notificationService } from '../services/NotificationService';
+import { appleHealthService } from '../services/AppleHealthService';
 
 export interface Goal {
     id: string;
@@ -13,6 +15,18 @@ export interface Goal {
     unit: string;
     color: string;
     type: 'boolean' | 'numeric';
+}
+
+export type WorkoutType = 'run' | 'walk' | 'cycle' | 'yoga' | 'hiit' | 'mindfulness';
+
+export interface Workout {
+    id: string;
+    type: WorkoutType;
+    duration: number; // in seconds
+    calories: number;
+    date: string; // ISO string
+    heartRateAvg?: number;
+    distance?: number; // in meters (optional)
 }
 
 interface RingData {
@@ -47,11 +61,11 @@ interface RingData {
         gender: 'male' | 'female' | 'other';
     };
     goals?: Goal[];
+    history?: Workout[];
     unitSystem?: 'metric' | 'imperial';
     notificationsEnabled?: boolean;
+    appleHealthEnabled?: boolean;
 }
-
-
 
 interface DataContextType {
     isConnected: boolean;
@@ -61,10 +75,12 @@ interface DataContextType {
     simulateData: (scenario: 'default' | 'poor_sleep' | 'high_stress' | 'perfect_day') => void;
     toggleUnitSystem: () => Promise<void>;
     toggleNotifications: (enabled: boolean) => Promise<void>;
+    toggleAppleHealth: (enabled: boolean) => Promise<void>;
     updateUserProfile: (profile: RingData['userProfile']) => void;
     addGoal: (goal: Omit<Goal, 'id'>) => Promise<void>;
     removeGoal: (id: string) => Promise<void>;
     updateGoal: (id: string, progress: number) => Promise<void>;
+    saveWorkout: (workout: Omit<Workout, 'id'>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -98,6 +114,7 @@ const DEFAULT_DATA: RingData = {
         { id: '2', title: 'Sleep Quality', target: 90, current: 0, unit: '/ 100', color: COLORS.danger, type: 'numeric' },
         { id: '3', title: 'Active Minutes', target: 60, current: 0, unit: 'min', color: COLORS.warning, type: 'numeric' },
     ],
+    history: [],
     unitSystem: 'metric',
 };
 
@@ -140,6 +157,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
         return unsubscribe;
     }, [user]);
+
+    // Check goals whenever data changes
+    useEffect(() => {
+        if (data && data.goals && data.notificationsEnabled) {
+            notificationService.checkDailyGoals(data, data.goals);
+        }
+    }, [data]);
 
     const connectRing = async () => {
         if (isConnected && data?.steps.count !== 0) return; // Already "connected" and has data
@@ -220,6 +244,25 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await setDoc(userDocRef, { notificationsEnabled: enabled }, { merge: true });
     };
 
+    const toggleAppleHealth = async (enabled: boolean) => {
+        if (!user || !data) return;
+
+        if (enabled) {
+            const authorized = await appleHealthService.init();
+            if (!authorized) {
+                console.log('Apple Health permission denied or not available');
+                // Even if not authorized, we might want to explain to user, but for now we won't toggle verify
+                return;
+            }
+        }
+
+        // Optimistic update
+        setData(prev => prev ? { ...prev, appleHealthEnabled: enabled } : null);
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, { appleHealthEnabled: enabled }, { merge: true });
+    };
+
     const updateUserProfile = async (profile: RingData['userProfile']) => {
         if (!user) return;
         const userDocRef = doc(db, 'users', user.uid);
@@ -259,8 +302,23 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await setDoc(userDocRef, { goals: updatedGoals }, { merge: true });
     };
 
+    const saveWorkout = async (workoutData: Omit<Workout, 'id'>) => {
+        if (!user || !data) return;
+        const newWorkout: Workout = {
+            ...workoutData,
+            id: Date.now().toString(),
+        };
+        const updatedHistory = [newWorkout, ...(data.history || [])];
+
+        // Optimistic update
+        setData(prev => prev ? { ...prev, history: updatedHistory } : null);
+
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, { history: updatedHistory }, { merge: true });
+    };
+
     return (
-        <DataContext.Provider value={{ isConnected, isSyncing, data, connectRing, simulateData, toggleUnitSystem, toggleNotifications, updateUserProfile, addGoal, removeGoal, updateGoal }}>
+        <DataContext.Provider value={{ isConnected, isSyncing, data, connectRing, simulateData, toggleUnitSystem, toggleNotifications, toggleAppleHealth, updateUserProfile, addGoal, removeGoal, updateGoal, saveWorkout }}>
             {children}
         </DataContext.Provider>
     );

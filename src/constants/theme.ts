@@ -44,6 +44,16 @@ export const FONTS = {
     captionSize: 12,
 };
 
+export const FONT_SIZE = {
+    xs: 12,
+    s: 14,
+    m: 16,
+    l: 18,
+    xl: 24,
+    xxl: 32,
+    xxxl: 48,
+};
+
 export const LAYOUT = {
     borderRadius: 16,
     cardPadding: 20,

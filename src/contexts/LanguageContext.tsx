@@ -7,7 +7,7 @@ type Locale = 'en' | 'he';
 interface LanguageContextType {
     locale: Locale;
     setLocale: (locale: Locale) => void;
-    t: (key: TranslationKey) => string;
+    t: (key: TranslationKey, options?: Record<string, string | number>) => string;
     isRTL: boolean;
 }
 
@@ -44,8 +44,16 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         // For this seamless toggle, we will manage direction manually in styles.
     };
 
-    const t = (key: TranslationKey): string => {
-        return translations[locale][key] || key;
+    const t = (key: TranslationKey, options?: Record<string, string | number>): string => {
+        let text = translations[locale][key] || key;
+
+        if (options) {
+            Object.keys(options).forEach(optionKey => {
+                text = text.replace(new RegExp(`{{${optionKey}}}`, 'g'), String(options[optionKey]));
+            });
+        }
+
+        return text;
     };
 
     const isRTL = locale === 'he';
