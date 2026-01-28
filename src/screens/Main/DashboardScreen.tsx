@@ -231,7 +231,7 @@ export const DashboardScreen = () => {
                         onPress={() => navigation.navigate('Mindfulness', { type: 'focus' })}
                     >
                         <View style={[styles.playIconOverlay, { backgroundColor: 'rgba(255,255,255,0.8)' }]}>
-                            <Play size={16} color={colors.primary} fill={colors.primary} />
+                            <Play size={16} color="#1565C0" fill="#1565C0" />
                         </View>
                         <Text style={[styles.mindfulnessTitle, { color: '#1565C0' }]}>{t('morningFocus')}</Text>
                         <Text style={[styles.mindfulnessSubtitle, { color: '#1976D2' }]}>10 min</Text>

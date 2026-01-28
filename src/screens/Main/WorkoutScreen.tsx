@@ -18,7 +18,7 @@ export const WorkoutScreen = () => {
     const { saveWorkout, data } = useData();
     const { type } = route.params as { type: WorkoutType } || { type: 'run' };
 
-    const [isActive, setIsActive] = useState(true);
+    const [isActive, setIsActive] = useState(false); // Start paused
     const [seconds, setSeconds] = useState(0);
     const [calories, setCalories] = useState(0);
     const [heartRate, setHeartRate] = useState(data?.heart.bpm || 75);

@@ -13,7 +13,27 @@ export const MindfulnessScreen = () => {
     const route = useRoute();
     const { colors } = useTheme();
     const { saveWorkout } = useData();
-    const { title, duration } = route.params as { title: string, duration: number } || { title: 'Mindfulness', duration: 10 };
+    
+    // Map type to title and duration
+    const getMindfulnessConfig = (type?: string) => {
+        switch (type) {
+            case 'focus':
+                return { title: 'Deep Focus', duration: 15 };
+            case 'deep_sleep':
+                return { title: 'Deep Sleep', duration: 20 };
+            case 'stress':
+                return { title: 'Stress Relief', duration: 10 };
+            default:
+                return { title: 'Mindfulness', duration: 10 };
+        }
+    };
+
+    const params = route.params as { type?: string; title?: string; duration?: number } | undefined;
+    const config = params?.title && params?.duration 
+        ? { title: params.title, duration: params.duration }
+        : getMindfulnessConfig(params?.type);
+    
+    const { title, duration } = config;
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [timeLeft, setTimeLeft] = useState(duration * 60);
