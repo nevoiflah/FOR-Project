@@ -115,7 +115,7 @@ export const DashboardScreen = () => {
 
 
     return (
-        <ScreenWrapper>
+        <ScreenWrapper bgContext="dashboard">
             <ScrollView contentContainerStyle={styles.container}>
                 <View style={[styles.header, isRTL && { alignItems: 'flex-end' }]}>
                     <Text style={styles.greeting}>{t('greeting')}</Text>

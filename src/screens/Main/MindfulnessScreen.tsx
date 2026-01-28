@@ -60,7 +60,7 @@ export const MindfulnessScreen = () => {
     const styles = createStyles(colors);
 
     return (
-        <ScreenWrapper>
+        <ScreenWrapper bgContext="mindfulness">
             <View style={styles.container}>
                 <TouchableOpacity style={styles.closeButton} onPress={handleSessionEnd}>
                     <X size={24} color={colors.textSecondary} />

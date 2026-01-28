@@ -18,7 +18,7 @@ export const SleepScreen = () => {
     const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
     return (
-        <ScreenWrapper>
+        <ScreenWrapper bgContext="sleep">
             <ScrollView contentContainerStyle={styles.container}>
                 <Text style={[styles.pageTitle, isRTL && { textAlign: 'right' }]}>{t('sleepAnalysis')}</Text>
 

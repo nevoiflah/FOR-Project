@@ -76,7 +76,7 @@ export const OnboardingScreen = ({ navigation, route }: any) => {
     );
 
     return (
-        <ScreenWrapper>
+        <ScreenWrapper bgVariant="auth">
             <ScrollView contentContainerStyle={styles.container}>
 
                 {/* Progress Indicators */}

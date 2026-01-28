@@ -62,7 +62,7 @@ export const WorkoutScreen = () => {
     const styles = createStyles(colors);
 
     return (
-        <ScreenWrapper>
+        <ScreenWrapper bgContext="workout">
             <View style={styles.container}>
                 <View style={styles.header}>
                     <Text style={styles.title}>{t('workoutTitle', { type: t(type).toUpperCase() })}</Text>

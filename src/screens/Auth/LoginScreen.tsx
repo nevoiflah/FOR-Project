@@ -86,7 +86,7 @@ export const LoginScreen = () => {
     };
 
     return (
-        <ScreenWrapper>
+        <ScreenWrapper bgVariant="auth">
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1 }}

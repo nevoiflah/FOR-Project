@@ -21,7 +21,7 @@ export const HeartScreen = () => {
 
 
     return (
-        <ScreenWrapper>
+        <ScreenWrapper bgContext="heart">
             <ScrollView contentContainerStyle={styles.container}>
                 <Text style={[styles.pageTitle, isRTL && { textAlign: 'right' }]}>{t('heartHealth')}</Text>
 
