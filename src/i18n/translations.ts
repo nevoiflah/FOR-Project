@@ -21,6 +21,16 @@ export const translations = {
         authError: "Authentication failed",
         loading: "Loading...",
 
+        // Registration Wizard
+        gettingToKnowYou: "Let's get to know you",
+        identitySubtitle: "This helps us personalize your experience.",
+        bodyMetrics: "Body Metrics",
+        metricsSubtitle: "Used for accurate calorie and recovery calculations.",
+        secureAccount: "Secure your account",
+        accountSubtitle: "Save your progress and access it anywhere.",
+        next: "Next",
+        other: "Other",
+
         // Onboarding
         onboarding: 'Onboarding',
         myDetails: "My Details",
@@ -214,6 +224,16 @@ export const translations = {
         fillAllFields: "אנא מלא את כל השדות",
         authError: "חיבור נכשל",
         loading: "טוען...",
+
+        // Registration Wizard
+        gettingToKnowYou: "בוא נכיר אותך",
+        identitySubtitle: "זה עוזר לנו להתאים את החוויה",
+        bodyMetrics: "מדדים גופניים",
+        metricsSubtitle: "משמש לחישוב קלוריות והתאוששות",
+        secureAccount: "אבטח את החשבון",
+        accountSubtitle: "שמור את ההתקדמות שלך וגש אליה מכל מקום",
+        next: "הבא",
+        other: "אחר",
 
         // Onboarding
         onboarding: 'הכרות',

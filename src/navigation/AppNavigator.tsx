@@ -60,6 +60,13 @@ const MainTabs = () => {
             <Tab.Screen
                 name="Sleep"
                 component={SleepScreen}
+                listeners={{
+                    tabPress: () => {
+                        // @ts-ignore
+                        const { HapticFeedback } = require('../utils/haptics');
+                        HapticFeedback.selection();
+                    },
+                }}
                 options={{
                     tabBarIcon: ({ color }) => <Moon color={color} size={24} />
                 }}
@@ -67,6 +74,13 @@ const MainTabs = () => {
             <Tab.Screen
                 name="Heart"
                 component={HeartScreen}
+                listeners={{
+                    tabPress: () => {
+                        // @ts-ignore
+                        const { HapticFeedback } = require('../utils/haptics');
+                        HapticFeedback.selection();
+                    },
+                }}
                 options={{
                     tabBarIcon: ({ color }) => <Heart color={color} size={24} />
                 }}
@@ -74,6 +88,13 @@ const MainTabs = () => {
             <Tab.Screen
                 name="Trends"
                 component={TrendsScreen}
+                listeners={{
+                    tabPress: () => {
+                        // @ts-ignore
+                        const { HapticFeedback } = require('../utils/haptics');
+                        HapticFeedback.selection();
+                    },
+                }}
                 options={{
                     tabBarIcon: ({ color }) => <TrendingUp color={color} size={24} />
                 }}
@@ -81,6 +102,13 @@ const MainTabs = () => {
             <Tab.Screen
                 name="Profile"
                 component={ProfileScreen}
+                listeners={{
+                    tabPress: () => {
+                        // @ts-ignore
+                        const { HapticFeedback } = require('../utils/haptics');
+                        HapticFeedback.selection();
+                    },
+                }}
                 options={{
                     tabBarIcon: ({ color }) => <User color={color} size={24} />
                 }}
