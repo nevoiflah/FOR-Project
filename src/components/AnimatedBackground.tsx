@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Dimensions, Animated, Easing } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '../contexts/ThemeContext';
+import Svg, { Circle, Rect, G } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
 
@@ -12,20 +13,23 @@ interface AnimatedBackgroundProps {
 
 export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant = 'main' }) => {
     const { colors, isDark } = useTheme();
-    
+
     // Animation values
     const walkerAnim = useRef(new Animated.Value(0)).current;
     const stepAnim = useRef(new Animated.Value(0)).current;
     const starTwinkle = useRef(new Animated.Value(0)).current;
     const cloudPulse = useRef(new Animated.Value(0)).current;
-    
+
+    // State for SVG walker animation
+    const [step, setStep] = useState(0);
+
     useEffect(() => {
         // Walker moves across screen
         Animated.loop(
             Animated.sequence([
                 Animated.timing(walkerAnim, {
                     toValue: 1,
-                    duration: 15000,
+                    duration: 25000,
                     useNativeDriver: true,
                 }),
                 Animated.timing(walkerAnim, {
@@ -41,13 +45,13 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
             Animated.sequence([
                 Animated.timing(stepAnim, {
                     toValue: 1,
-                    duration: 500,
+                    duration: 650,
                     useNativeDriver: true,
                     easing: Easing.inOut(Easing.ease),
                 }),
                 Animated.timing(stepAnim, {
                     toValue: 0,
-                    duration: 500,
+                    duration: 650,
                     useNativeDriver: true,
                     easing: Easing.inOut(Easing.ease),
                 }),
@@ -85,6 +89,13 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
                 }),
             ])
         ).start();
+
+        // Step counter for SVG walker
+        const stepInterval = setInterval(() => {
+            setStep(prev => (prev + 1) % 100);
+        }, 10);
+
+        return () => clearInterval(stepInterval);
     }, []);
 
     // Color scheme based on theme
@@ -93,18 +104,18 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
             return {
                 bg: '#0A0A0A',
                 walker: '#FFFFFF',
-                terrain1: 'rgba(139, 90, 43, 0.5)',      // Muted brown (back)
-                terrain2: 'rgba(184, 115, 51, 0.4)',     // Lighter brown
-                terrain3: 'rgba(205, 133, 63, 0.35)',    // Peru/tan (front - less bright)
+                terrain1: 'rgba(139, 90, 43, 0.5)',
+                terrain2: 'rgba(184, 115, 51, 0.4)',
+                terrain3: 'rgba(205, 133, 63, 0.35)',
                 stars: 'rgba(255, 255, 255, 0.8)',
             };
         } else {
             return {
                 bg: '#FAFAFA',
                 walker: '#1A1A1A',
-                terrain1: 'rgba(160, 82, 45, 0.4)',      // Sienna
-                terrain2: 'rgba(188, 143, 143, 0.35)',   // Rosy brown
-                terrain3: 'rgba(210, 180, 140, 0.3)',    // Tan (less bright)
+                terrain1: 'rgba(160, 82, 45, 0.4)',
+                terrain2: 'rgba(188, 143, 143, 0.35)',
+                terrain3: 'rgba(210, 180, 140, 0.3)',
                 stars: 'rgba(100, 100, 100, 0.3)',
             };
         }
@@ -140,45 +151,6 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
         outputRange: [0, 1, 1, 0],
     });
 
-    // Walking animations
-    const headBob = stepAnim.interpolate({
-        inputRange: [0, 0.25, 0.5, 0.75, 1],
-        outputRange: [0, -2, 0, -2, 0],
-    });
-
-    const headTilt = stepAnim.interpolate({
-        inputRange: [0, 0.5, 1],
-        outputRange: ['2deg', '-2deg', '2deg'],
-    });
-
-    const leftLegRotate = stepAnim.interpolate({
-        inputRange: [0, 0.5, 1],
-        outputRange: ['30deg', '-30deg', '30deg'],
-    });
-    const rightLegRotate = stepAnim.interpolate({
-        inputRange: [0, 0.5, 1],
-        outputRange: ['-30deg', '30deg', '-30deg'],
-    });
-
-    const bodyLean = stepAnim.interpolate({
-        inputRange: [0, 0.5, 1],
-        outputRange: ['2deg', '-2deg', '2deg'],
-    });
-
-    const leftArmRotate = stepAnim.interpolate({
-        inputRange: [0, 0.5, 1],
-        outputRange: ['-25deg', '25deg', '-25deg'],
-    });
-    const rightArmRotate = stepAnim.interpolate({
-        inputRange: [0, 0.5, 1],
-        outputRange: ['25deg', '-25deg', '25deg'],
-    });
-
-    const bodyBounce = stepAnim.interpolate({
-        inputRange: [0, 0.25, 0.5, 0.75, 1],
-        outputRange: [0, -4, 0, -4, 0],
-    });
-
     // Create layered terrain
     const createTerrainLayer = (amplitude: number, frequency: number, offset: number) => {
         const points = [];
@@ -192,9 +164,9 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
         return points;
     };
 
-    const terrain1 = createTerrainLayer(60, 2.5, 80);   // Back layer
-    const terrain2 = createTerrainLayer(55, 3, 40);     // Middle layer
-    const terrain3 = createTerrainLayer(50, 3, 0);      // Front layer (walker walks on this)
+    const terrain1 = createTerrainLayer(60, 2.5, 80);
+    const terrain2 = createTerrainLayer(55, 3, 40);
+    const terrain3 = createTerrainLayer(50, 3, 0);
 
     // Generate stars (dark mode)
     const stars = Array.from({ length: 35 }, (_, i) => ({
@@ -203,25 +175,31 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
         size: 2 + (Math.sin(i * 456.789) * 0.5 + 0.5) * 2,
     }));
 
-    // Generate clouds (light mode) - positioned like stars
-    const clouds = Array.from({ length: 5 }, (_, i) => ({ // Reduced from 10 to 5
+    // Generate clouds (light mode)
+    const clouds = Array.from({ length: 5 }, (_, i) => ({
         x: (Math.sin(i * 234.567) * 0.5 + 0.5) * width,
-        y: (Math.cos(i * 345.678) * 0.5 + 0.5) * height * 0.3, // Changed from 0.5 to 0.3 (higher)
+        y: (Math.cos(i * 345.678) * 0.5 + 0.5) * height * 0.3,
         scale: 0.6 + (Math.sin(i * 123.456) * 0.5 + 0.5) * 0.5,
         baseOpacity: 0.5 + (i % 3) * 0.15,
     }));
+
+    // SVG Walker animation calculations
+    const progress = step / 100;
+    const leftLeg = Math.sin(progress * Math.PI * 2) * 20;
+    const rightLeg = -Math.sin(progress * Math.PI * 2) * 20;
+    const leftArm = -Math.sin(progress * Math.PI * 2) * 15;
+    const rightArm = Math.sin(progress * Math.PI * 2) * 15;
 
     return (
         <View style={[StyleSheet.absoluteFillObject, { backgroundColor: themeColors.bg }]}>
             {/* Stars (dark mode) or Clouds (light mode) */}
             {isDark ? (
-                // Stars for dark mode
                 stars.map((star, index) => {
                     const opacity = starTwinkle.interpolate({
                         inputRange: [0, 0.5, 1],
                         outputRange: [0.3, 1, 0.3],
                     });
-                    
+
                     return (
                         <Animated.View
                             key={`star-${index}`}
@@ -240,7 +218,6 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
                     );
                 })
             ) : (
-                // Clouds for light mode
                 clouds.map((cloud, index) => {
                     const opacity = cloudPulse.interpolate({
                         inputRange: [0, 0.5, 1],
@@ -260,7 +237,6 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
                                 },
                             ]}
                         >
-                            {/* Cloud made of overlapping circles */}
                             <View style={[styles.cloudPuff, styles.cloudPuff1]} />
                             <View style={[styles.cloudPuff, styles.cloudPuff2]} />
                             <View style={[styles.cloudPuff, styles.cloudPuff3]} />
@@ -271,7 +247,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
                 })
             )}
 
-            {/* Terrain Layer 1 (Back - darkest) */}
+            {/* Terrain Layer 1 (Back) */}
             <View style={styles.terrainContainer}>
                 {terrain1.map((point, index) => (
                     <View
@@ -309,7 +285,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
                 ))}
             </View>
 
-            {/* Terrain Layer 3 (Front - lightest tan) */}
+            {/* Terrain Layer 3 (Front) */}
             <View style={styles.terrainContainer}>
                 {terrain3.map((point, index) => (
                     <View
@@ -328,7 +304,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
                 ))}
             </View>
 
-            {/* Walking Figure */}
+            {/* Walking Figure - SVG */}
             <Animated.View
                 style={[
                     styles.walkerContainer,
@@ -341,88 +317,69 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
                     },
                 ]}
             >
-                {/* Head */}
-                <Animated.View
-                    style={[
-                        styles.head,
-                        {
-                            backgroundColor: themeColors.walker,
-                            transform: [
-                                { translateY: bodyBounce },
-                                { translateY: headBob },
-                                { rotate: headTilt },
-                            ],
-                        },
-                    ]}
-                />
-                
-                {/* Body */}
-                <Animated.View
-                    style={[
-                        styles.body,
-                        {
-                            backgroundColor: themeColors.walker,
-                            transform: [
-                                { translateY: bodyBounce },
-                                { rotate: bodyLean },
-                            ],
-                        },
-                    ]}
-                />
-                
-                {/* Left Arm */}
-                <Animated.View
-                    style={[
-                        styles.arm,
-                        styles.leftArm,
-                        { 
-                            backgroundColor: themeColors.walker,
-                            transform: [
-                                { translateY: bodyBounce },
-                                { rotate: leftArmRotate },
-                            ],
-                        },
-                    ]}
-                />
-                
-                {/* Right Arm */}
-                <Animated.View
-                    style={[
-                        styles.arm,
-                        styles.rightArm,
-                        { 
-                            backgroundColor: themeColors.walker,
-                            transform: [
-                                { translateY: bodyBounce },
-                                { rotate: rightArmRotate },
-                            ],
-                        },
-                    ]}
-                />
-                
-                {/* Left Leg */}
-                <Animated.View
-                    style={[
-                        styles.leg,
-                        styles.leftLeg,
-                        { 
-                            backgroundColor: themeColors.walker,
-                            transform: [{ rotate: leftLegRotate }],
-                        },
-                    ]}
-                />
-                
-                {/* Right Leg */}
-                <Animated.View
-                    style={[
-                        styles.leg,
-                        styles.rightLeg,
-                        { 
-                            backgroundColor: themeColors.walker,
-                            transform: [{ rotate: rightLegRotate }],
-                        },
-                    ]}
-                />
+                <Svg width="40" height="70" viewBox="0 0 60 100">
+                    {/* Head */}
+                    <Circle cx="30" cy="12" r="8" fill={themeColors.walker} />
+
+                    {/* Torso */}
+                    <Rect x="24" y="20" width="12" height="30" rx="6" fill={themeColors.walker} />
+
+                    {/* Left Arm */}
+                    <G transform={`translate(24, 24)`}>
+                        <Rect
+                            x="-1.5"
+                            y="0"
+                            width="3"
+                            height="22"
+                            rx="1.5"
+                            fill={themeColors.walker}
+                            rotation={leftArm}
+                            origin="1.5, 0"
+                        />
+                    </G>
+
+                    {/* Right Arm */}
+                    <G transform={`translate(36, 24)`}>
+                        <Rect
+                            x="-1.5"
+                            y="0"
+                            width="3"
+                            height="22"
+                            rx="1.5"
+                            fill={themeColors.walker}
+                            rotation={rightArm}
+                            origin="1.5, 0"
+                        />
+                    </G>
+
+                    {/* Left Leg */}
+                    <G transform={`translate(27, 48)`}>
+                        <Rect
+                            x="-2.5"
+                            y="0"
+                            width="5"
+                            height="32"
+                            rx="2.5"
+                            fill={themeColors.walker}
+                            rotation={leftLeg}
+                            origin="2.5, 0"
+                        />
+                    </G>
+
+                    {/* Right Leg */}
+                    <G transform={`translate(33, 48)`}>
+                        <Rect
+                            x="-2.5"
+                            y="0"
+                            width="5"
+                            height="32"
+                            rx="2.5"
+                            fill={themeColors.walker}
+                            rotation={rightLeg}
+                            origin="2.5, 0"
+                        />
+                    </G>
+                </Svg>
             </Animated.View>
 
             {/* Very light blur */}
@@ -443,7 +400,7 @@ const styles = StyleSheet.create({
     },
     cloudPuff: {
         position: 'absolute',
-        backgroundColor: '#C0C0C0', // Darker gray (was #E8E8E8)
+        backgroundColor: '#C0C0C0',
         borderRadius: 50,
     },
     cloudPuff1: {
@@ -486,49 +443,7 @@ const styles = StyleSheet.create({
     },
     walkerContainer: {
         position: 'absolute',
-        width: 50,
+        width: 40,
         height: 70,
-    },
-    head: {
-        width: 14,
-        height: 14,
-        borderRadius: 7,
-        position: 'absolute',
-        top: 0,
-        left: 18,
-    },
-    body: {
-        width: 10,
-        height: 24,
-        borderRadius: 5,
-        position: 'absolute',
-        top: 14,
-        left: 20,
-    },
-    arm: {
-        width: 4,
-        height: 20,
-        borderRadius: 2,
-        position: 'absolute',
-        top: 16,
-    },
-    leftArm: {
-        left: 15,
-    },
-    rightArm: {
-        left: 31,
-    },
-    leg: {
-        width: 5,
-        height: 26,
-        borderRadius: 2.5,
-        position: 'absolute',
-        top: 36,
-    },
-    leftLeg: {
-        left: 19,
-    },
-    rightLeg: {
-        left: 26,
     },
 });
