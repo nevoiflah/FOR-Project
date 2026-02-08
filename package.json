@@ -25,6 +25,7 @@
     "expo-local-authentication": "~17.0.8",
     "expo-notifications": "~0.32.16",
     "expo-secure-store": "~15.0.8",
+    "expo-splash-screen": "^31.0.13",
     "expo-status-bar": "~3.0.9",
     "firebase": "^11.4.0",
     "lucide-react-native": "^0.562.0",
