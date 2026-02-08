@@ -15,16 +15,15 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
     const { colors, isDark } = useTheme();
 
     // Animation values
+    const [step, setStep] = useState(0);
     const walkerAnim = useRef(new Animated.Value(0)).current;
     const stepAnim = useRef(new Animated.Value(0)).current;
     const starTwinkle = useRef(new Animated.Value(0)).current;
     const cloudPulse = useRef(new Animated.Value(0)).current;
-
-    // State for SVG walker animation
-    const [step, setStep] = useState(0);
+    const walkerAnim2 = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        // Walker moves across screen
+        // Walker 1 moves across screen
         Animated.loop(
             Animated.sequence([
                 Animated.timing(walkerAnim, {
@@ -39,6 +38,24 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
                 }),
             ])
         ).start();
+
+        // Walker 2 starts exactly half-way through the first one's cycle
+        const walker2Timeout = setTimeout(() => {
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(walkerAnim2, {
+                        toValue: 1,
+                        duration: 25000,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(walkerAnim2, {
+                        toValue: 0,
+                        duration: 0,
+                        useNativeDriver: true,
+                    }),
+                ])
+            ).start();
+        }, 12850);
 
         // Walking step animation
         Animated.loop(
@@ -95,7 +112,10 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
             setStep(prev => (prev + 1) % 100);
         }, 10);
 
-        return () => clearInterval(stepInterval);
+        return () => {
+            clearInterval(stepInterval);
+            clearTimeout(walker2Timeout);
+        };
     }, []);
 
     // Color scheme based on theme
@@ -130,23 +150,41 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
     });
 
     // Walker follows terrain path
-    const getTerrainY = (progress: number) => {
+    const getTerrainYAtX = (x: number) => {
+        const progress = x / width;
+        // Match the terrain generation logic: height * 0.7 + Math.sin(progress * Math.PI * 3) * 50
         return height * 0.7 + Math.sin(progress * Math.PI * 3) * 50;
     };
 
+    // Generate smooth path points
+    const walkerPathSteps = 20;
+    const walkerPathInput = Array.from({ length: walkerPathSteps + 1 }, (_, i) => i / walkerPathSteps);
+    const walkerPathOutput = walkerPathInput.map(step => {
+        const x = -80 + step * (width + 160);
+        return getTerrainYAtX(x) - 56;
+    });
+
     const walkerTranslateY = walkerAnim.interpolate({
-        inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
-        outputRange: [
-            getTerrainY(0) - 70,
-            getTerrainY(0.2) - 70,
-            getTerrainY(0.4) - 70,
-            getTerrainY(0.6) - 70,
-            getTerrainY(0.8) - 70,
-            getTerrainY(1) - 70,
-        ],
+        inputRange: walkerPathInput,
+        outputRange: walkerPathOutput,
     });
 
     const walkerOpacity = walkerAnim.interpolate({
+        inputRange: [0, 0.05, 0.95, 1],
+        outputRange: [0, 1, 1, 0],
+    });
+
+    const walkerTranslateX2 = walkerAnim2.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-80, width + 80],
+    });
+
+    const walkerTranslateY2 = walkerAnim2.interpolate({
+        inputRange: walkerPathInput,
+        outputRange: walkerPathOutput,
+    });
+
+    const walkerOpacity2 = walkerAnim2.interpolate({
         inputRange: [0, 0.05, 0.95, 1],
         outputRange: [0, 1, 1, 0],
     });
@@ -304,83 +342,28 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ variant 
                 ))}
             </View>
 
-            {/* Walking Figure - SVG */}
-            <Animated.View
-                style={[
-                    styles.walkerContainer,
-                    {
-                        opacity: walkerOpacity,
-                        transform: [
-                            { translateX: walkerTranslateX },
-                            { translateY: walkerTranslateY },
-                        ],
-                    },
-                ]}
-            >
-                <Svg width="40" height="70" viewBox="0 0 60 100">
-                    {/* Head */}
-                    <Circle cx="30" cy="12" r="8" fill={themeColors.walker} />
+            {/* Walking Figures */}
+            <Walker
+                opacity={walkerOpacity}
+                translateX={walkerTranslateX}
+                translateY={walkerTranslateY}
+                themeColors={themeColors}
+                leftLeg={leftLeg}
+                rightLeg={rightLeg}
+                leftArm={leftArm}
+                rightArm={rightArm}
+            />
 
-                    {/* Torso */}
-                    <Rect x="24" y="20" width="12" height="30" rx="6" fill={themeColors.walker} />
-
-                    {/* Left Arm */}
-                    <G transform={`translate(24, 24)`}>
-                        <Rect
-                            x="-1.5"
-                            y="0"
-                            width="3"
-                            height="22"
-                            rx="1.5"
-                            fill={themeColors.walker}
-                            rotation={leftArm}
-                            origin="1.5, 0"
-                        />
-                    </G>
-
-                    {/* Right Arm */}
-                    <G transform={`translate(36, 24)`}>
-                        <Rect
-                            x="-1.5"
-                            y="0"
-                            width="3"
-                            height="22"
-                            rx="1.5"
-                            fill={themeColors.walker}
-                            rotation={rightArm}
-                            origin="1.5, 0"
-                        />
-                    </G>
-
-                    {/* Left Leg */}
-                    <G transform={`translate(27, 48)`}>
-                        <Rect
-                            x="-2.5"
-                            y="0"
-                            width="5"
-                            height="32"
-                            rx="2.5"
-                            fill={themeColors.walker}
-                            rotation={leftLeg}
-                            origin="2.5, 0"
-                        />
-                    </G>
-
-                    {/* Right Leg */}
-                    <G transform={`translate(33, 48)`}>
-                        <Rect
-                            x="-2.5"
-                            y="0"
-                            width="5"
-                            height="32"
-                            rx="2.5"
-                            fill={themeColors.walker}
-                            rotation={rightLeg}
-                            origin="2.5, 0"
-                        />
-                    </G>
-                </Svg>
-            </Animated.View>
+            <Walker
+                opacity={walkerOpacity2}
+                translateX={walkerTranslateX2}
+                translateY={walkerTranslateY2}
+                themeColors={themeColors}
+                leftLeg={leftLeg}
+                rightLeg={rightLeg}
+                leftArm={leftArm}
+                rightArm={rightArm}
+            />
 
             {/* Very light blur */}
             <BlurView intensity={isDark ? 8 : 5} style={StyleSheet.absoluteFillObject} />
@@ -447,3 +430,55 @@ const styles = StyleSheet.create({
         height: 70,
     },
 });
+
+interface WalkerProps {
+    opacity: any;
+    translateX: any;
+    translateY: any;
+    themeColors: any;
+    leftLeg: number;
+    rightLeg: number;
+    leftArm: number;
+    rightArm: number;
+}
+
+const Walker: React.FC<WalkerProps> = ({
+    opacity, translateX, translateY, themeColors,
+    leftLeg, rightLeg, leftArm, rightArm
+}) => (
+    <Animated.View
+        style={[
+            styles.walkerContainer,
+            {
+                opacity,
+                transform: [
+                    { translateX },
+                    { translateY },
+                ],
+            },
+        ]}
+    >
+        <Svg width="40" height="70" viewBox="0 0 60 100">
+            {/* Head */}
+            <Circle cx="30" cy="12" r="8" fill={themeColors.walker} />
+            {/* Torso */}
+            <Rect x="24" y="20" width="12" height="30" rx="6" fill={themeColors.walker} />
+            {/* Left Arm */}
+            <G transform={`translate(24, 24)`}>
+                <Rect x="-1.5" y="0" width="3" height="22" rx="1.5" fill={themeColors.walker} rotation={leftArm} origin="1.5, 0" />
+            </G>
+            {/* Right Arm */}
+            <G transform={`translate(36, 24)`}>
+                <Rect x="-1.5" y="0" width="3" height="22" rx="1.5" fill={themeColors.walker} rotation={rightArm} origin="1.5, 0" />
+            </G>
+            {/* Left Leg */}
+            <G transform={`translate(27, 48)`}>
+                <Rect x="-2.5" y="0" width="5" height="32" rx="2.5" fill={themeColors.walker} rotation={leftLeg} origin="2.5, 0" />
+            </G>
+            {/* Right Leg */}
+            <G transform={`translate(33, 48)`}>
+                <Rect x="-2.5" y="0" width="5" height="32" rx="2.5" fill={themeColors.walker} rotation={rightLeg} origin="2.5, 0" />
+            </G>
+        </Svg>
+    </Animated.View>
+);

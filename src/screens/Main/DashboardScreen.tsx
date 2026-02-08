@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert, Modal, TextInput, KeyboardAvoidingView, Platform, Animated, Easing } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
@@ -28,6 +28,43 @@ export const DashboardScreen = () => {
     const [newTitle, setNewTitle] = useState('');
     const [newTarget, setNewTarget] = useState('');
     const [newUnit, setNewUnit] = useState('');
+
+    // Animation Values
+    const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    const openModal = () => {
+        setModalVisible(true);
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+            Animated.spring(slideAnim, {
+                toValue: 0,
+                speed: 12,
+                bounciness: 4,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    };
+
+    const closeModal = () => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: Dimensions.get('window').height,
+                duration: 250,
+                useNativeDriver: true,
+                easing: Easing.in(Easing.cubic),
+            }),
+        ]).start(() => setModalVisible(false));
+    };
 
     const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
@@ -68,7 +105,7 @@ export const DashboardScreen = () => {
         setNewTitle('');
         setNewTarget('');
         setNewUnit('');
-        setModalVisible(false);
+        closeModal();
     };
 
     const handleDelete = (id: string) => {
@@ -324,7 +361,7 @@ export const DashboardScreen = () => {
                             style={styles.addButton}
                             onPress={() => {
                                 HapticFeedback.light();
-                                setModalVisible(true)
+                                openModal();
                             }}
                         >
                             <Plus size={20} color={colors.background} />
@@ -335,63 +372,79 @@ export const DashboardScreen = () => {
 
                 {/* Add Goal Modal */}
                 <Modal
-                    animationType="slide"
+                    animationType="none"
                     transparent={true}
                     visible={modalVisible}
-                    onRequestClose={() => setModalVisible(false)}
+                    onRequestClose={closeModal}
                 >
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                        style={styles.modalOverlay}
-                    >
-                        <View style={styles.modalContent}>
-                            <View style={[styles.modalHeader, isRTL && { flexDirection: 'row-reverse' }]}>
-                                <Text style={styles.modalTitle}>{t('newGoalTitle')}</Text>
-                                <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                    <X size={24} color={colors.textSecondary} />
+                    <View style={styles.modalOverlay}>
+                        <Animated.View
+                            style={[
+                                StyleSheet.absoluteFill,
+                                { backgroundColor: 'rgba(0,0,0,0.5)', opacity: fadeAnim }
+                            ]}
+                        >
+                            <TouchableOpacity style={{ flex: 1 }} onPress={closeModal} activeOpacity={1} />
+                        </Animated.View>
+
+                        <KeyboardAvoidingView
+                            behavior={Platform.OS === "ios" ? "padding" : "height"}
+                            style={{ width: '100%' }}
+                        >
+                            <Animated.View
+                                style={[
+                                    styles.modalContent,
+                                    { transform: [{ translateY: slideAnim }] }
+                                ]}
+                            >
+                                <View style={[styles.modalHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                                    <Text style={styles.modalTitle}>{t('newGoalTitle')}</Text>
+                                    <TouchableOpacity onPress={closeModal}>
+                                        <X size={24} color={colors.textSecondary} />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View style={styles.inputGroup}>
+                                    <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('goalLabelTitle')}</Text>
+                                    <TextInput
+                                        style={[styles.input, isRTL && { textAlign: 'right' }]}
+                                        placeholder={t('goalTitlePlaceholder')}
+                                        placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
+                                        value={newTitle}
+                                        onChangeText={setNewTitle}
+                                    />
+                                </View>
+
+                                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between' }}>
+                                    <View style={[styles.inputGroup, { width: '48%' }]}>
+                                        <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('goalLabelTarget')}</Text>
+                                        <TextInput
+                                            style={[styles.input, isRTL && { textAlign: 'right' }]}
+                                            placeholder={t('goalTargetPlaceholder')}
+                                            placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
+                                            keyboardType="numeric"
+                                            value={newTarget}
+                                            onChangeText={setNewTarget}
+                                        />
+                                    </View>
+                                    <View style={[styles.inputGroup, { width: '48%' }]}>
+                                        <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('goalLabelUnit')}</Text>
+                                        <TextInput
+                                            style={[styles.input, isRTL && { textAlign: 'right' }]}
+                                            placeholder={t('goalUnitPlaceholder')}
+                                            placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
+                                            value={newUnit}
+                                            onChangeText={setNewUnit}
+                                        />
+                                    </View>
+                                </View>
+
+                                <TouchableOpacity style={styles.createButton} onPress={handleAddGoal}>
+                                    <Text style={styles.createButtonText}>{t('createGoalBtn')}</Text>
                                 </TouchableOpacity>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('goalLabelTitle')}</Text>
-                                <TextInput
-                                    style={[styles.input, isRTL && { textAlign: 'right' }]}
-                                    placeholder={t('goalTitlePlaceholder')}
-                                    placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
-                                    value={newTitle}
-                                    onChangeText={setNewTitle}
-                                />
-                            </View>
-
-                            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between' }}>
-                                <View style={[styles.inputGroup, { width: '48%' }]}>
-                                    <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('goalLabelTarget')}</Text>
-                                    <TextInput
-                                        style={[styles.input, isRTL && { textAlign: 'right' }]}
-                                        placeholder={t('goalTargetPlaceholder')}
-                                        placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
-                                        keyboardType="numeric"
-                                        value={newTarget}
-                                        onChangeText={setNewTarget}
-                                    />
-                                </View>
-                                <View style={[styles.inputGroup, { width: '48%' }]}>
-                                    <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('goalLabelUnit')}</Text>
-                                    <TextInput
-                                        style={[styles.input, isRTL && { textAlign: 'right' }]}
-                                        placeholder={t('goalUnitPlaceholder')}
-                                        placeholderTextColor={isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}
-                                        value={newUnit}
-                                        onChangeText={setNewUnit}
-                                    />
-                                </View>
-                            </View>
-
-                            <TouchableOpacity style={styles.createButton} onPress={handleAddGoal}>
-                                <Text style={styles.createButtonText}>{t('createGoalBtn')}</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </KeyboardAvoidingView>
+                            </Animated.View>
+                        </KeyboardAvoidingView>
+                    </View>
                 </Modal>
 
             </ScrollView>
@@ -611,7 +664,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.8)',
+        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'flex-end',
     },
     modalContent: {
