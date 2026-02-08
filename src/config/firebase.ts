@@ -20,11 +20,14 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 // Initialize Firebase services with persistence
 let auth;
 try {
-  auth = getAuth(app);
-} catch (e) {
+  // @ts-ignore - getReactNativePersistence is not in the main export types
+  const getReactNativePersistence = require('firebase/auth').getReactNativePersistence;
   auth = initializeAuth(app, {
-    persistence: (require('firebase/auth').getReactNativePersistence)(ReactNativeAsyncStorage)
+    persistence: getReactNativePersistence(ReactNativeAsyncStorage)
   });
+} catch (e) {
+  // If auth is already initialized, get the existing instance
+  auth = getAuth(app);
 }
 
 const db = getFirestore(app);

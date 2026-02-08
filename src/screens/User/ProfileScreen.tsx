@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Modal, Animated, Pressable } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
+import { LoadingRing } from '../../components/LoadingRing';
 import { COLORS, FONTS, SPACING } from '../../constants/theme';
 import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -25,8 +26,17 @@ export const ProfileScreen = ({ navigation }: any) => {
     const { logout, user } = useAuth();
     const { theme, colors, setTheme, isDark } = useTheme();
     const [themeModalVisible, setThemeModalVisible] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
     const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+
+    // Wait for initial data to be ready before showing content
+    useEffect(() => {
+        if (data) {
+            const timer = setTimeout(() => setIsMounted(true), 100);
+            return () => clearTimeout(timer);
+        }
+    }, [data]);
 
     const handleToggleNotifications = async (value: boolean) => {
         HapticFeedback.light();
@@ -196,6 +206,17 @@ export const ProfileScreen = ({ navigation }: any) => {
             </TouchableOpacity>
         );
     };
+
+    // Show loading state until mounted
+    if (!isMounted || !data) {
+        return (
+            <ScreenWrapper>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <LoadingRing size={60} />
+                </View>
+            </ScreenWrapper>
+        );
+    }
 
     return (
         <ScreenWrapper>

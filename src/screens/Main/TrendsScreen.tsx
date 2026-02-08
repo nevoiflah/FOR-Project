@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { GlassChart } from '../../components/GlassChart';
+import { LoadingRing } from '../../components/LoadingRing';
 import { COLORS, SPACING, FONTS } from '../../constants/theme';
 import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -14,10 +15,30 @@ export const TrendsScreen = () => {
     const { data } = useData();
     const { t, isRTL } = useLanguage();
     const { colors, isDark } = useTheme();
+    const [isMounted, setIsMounted] = useState(false);
 
     const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
+    // Wait for initial data to be ready before showing content
+    useEffect(() => {
+        if (data) {
+            const timer = setTimeout(() => setIsMounted(true), 100);
+            return () => clearTimeout(timer);
+        }
+    }, [data]);
+
     const screenWidth = Dimensions.get('window').width;
+
+    // Show loading state until mounted
+    if (!isMounted || !data) {
+        return (
+            <ScreenWrapper>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <LoadingRing size={60} />
+                </View>
+            </ScreenWrapper>
+        );
+    }
 
     return (
         <ScreenWrapper>

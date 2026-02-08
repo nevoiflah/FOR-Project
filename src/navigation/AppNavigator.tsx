@@ -164,13 +164,43 @@ export const AppNavigator = () => {
                         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
                     </Stack.Group>
                 ) : (
-                    <Stack.Group>
+                    <Stack.Group screenOptions={{
+                        animation: 'simple_push',
+                        animationDuration: 200,
+                    }}>
                         <Stack.Screen name="MainBase" component={MainTabs} />
                         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-                        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-                        <Stack.Screen name="Workout" component={WorkoutScreen} />
-                        <Stack.Screen name="Mindfulness" component={MindfulnessScreen} />
-                        <Stack.Screen name="History" component={HistoryScreen} />
+                        <Stack.Screen
+                            name="EditProfile"
+                            component={EditProfileScreen}
+                            options={{
+                                presentation: 'modal',
+                                animation: 'slide_from_bottom',
+                            }}
+                        />
+                        <Stack.Screen
+                            name="Workout"
+                            component={WorkoutScreen}
+                            options={{
+                                presentation: 'modal',
+                                animation: 'slide_from_bottom',
+                            }}
+                        />
+                        <Stack.Screen
+                            name="Mindfulness"
+                            component={MindfulnessScreen}
+                            options={{
+                                presentation: 'modal',
+                                animation: 'slide_from_bottom',
+                            }}
+                        />
+                        <Stack.Screen
+                            name="History"
+                            component={HistoryScreen}
+                            options={{
+                                animation: 'slide_from_right',
+                            }}
+                        />
                     </Stack.Group>
                 )}
             </Stack.Navigator>

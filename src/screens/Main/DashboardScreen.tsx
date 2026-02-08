@@ -8,7 +8,7 @@ import { LoadingRing } from '../../components/LoadingRing';
 import { COLORS, FONTS, FONT_SIZE, SPACING, LAYOUT } from '../../constants/theme';
 import { useLanguage } from '../../contexts/LanguageContext';
 // @ts-ignore
-import { Bell, Battery, CheckCircle, Target, Plus, X, Play, Zap, Wind, Moon, Sun, CloudRain, Flame, Activity, Circle } from 'lucide-react-native';
+import { Bell, Battery, CheckCircle, Target, Plus, X, Play, Zap, Wind, Moon, Sun, CloudRain, Flame, Activity, Circle, Footprints, PersonStanding, Sparkles } from 'lucide-react-native';
 import { HapticFeedback } from '../../utils/haptics';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -21,6 +21,7 @@ export const DashboardScreen = () => {
     const { t, isRTL } = useLanguage();
     const { colors, isDark } = useTheme();
     const [showSuccess, setShowSuccess] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
     // Modal State
     const [modalVisible, setModalVisible] = useState(false);
@@ -30,7 +31,14 @@ export const DashboardScreen = () => {
 
     const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
-
+    // Wait for initial data to be ready before showing content
+    useEffect(() => {
+        if (data) {
+            // Small delay to ensure smooth mount
+            const timer = setTimeout(() => setIsMounted(true), 100);
+            return () => clearTimeout(timer);
+        }
+    }, [data]);
 
     useEffect(() => {
         if (isConnected && !isSyncing) {
@@ -113,6 +121,17 @@ export const DashboardScreen = () => {
     };
 
 
+
+    // Show loading state until mounted
+    if (!isMounted || !data) {
+        return (
+            <ScreenWrapper bgContext="dashboard">
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <LoadingRing size={60} />
+                </View>
+            </ScreenWrapper>
+        );
+    }
 
     return (
         <ScreenWrapper bgContext="dashboard">
@@ -203,10 +222,10 @@ export const DashboardScreen = () => {
                             onPress={() => navigation.navigate('Workout', { type })}
                         >
                             <View style={[styles.iconCircle, { backgroundColor: colors.background }]}>
-                                {type === 'run' && <Wind size={24} color={colors.primary} />}
-                                {type === 'walk' && <Activity size={24} color={colors.accent} />}
-                                {type === 'hiit' && <Zap size={24} color="#FF6B6B" />}
-                                {type === 'yoga' && <Sun size={24} color="#FFD93D" />}
+                                {type === 'run' && <Footprints size={24} color={colors.primary} />}
+                                {type === 'walk' && <PersonStanding size={24} color={colors.accent} />}
+                                {type === 'hiit' && <Flame size={24} color="#FF6B6B" />}
+                                {type === 'yoga' && <Sparkles size={24} color="#FFD93D" />}
                             </View>
                             <Text style={[styles.actionText, { color: colors.textPrimary }]}>
                                 {t(type as any)}

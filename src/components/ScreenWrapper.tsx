@@ -12,17 +12,21 @@ interface ScreenWrapperProps {
     bgContext?: BackgroundContext;
 }
 
-export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ 
-    children, 
+export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
+    children,
     bgVariant = 'main',
     bgContext = 'dashboard'
 }) => {
     const { colors } = useTheme();
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View
+            style={[styles.container, { backgroundColor: colors.background }]}
+            removeClippedSubviews={true}
+            collapsable={false}
+        >
             <AnimatedBackground variant={bgVariant} context={bgContext} />
-            <SafeAreaView style={styles.safeArea}>
+            <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
                 {children}
             </SafeAreaView>
         </View>
