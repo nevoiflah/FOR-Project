@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Alert } from 'react-native';
 import { bluetoothService } from '../services/BluetoothService';
 import { db } from '../config/firebase';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import { COLORS } from '../constants/theme';
 import { notificationService } from '../services/NotificationService';
+import { useLanguage } from './LanguageContext';
 import { appleHealthService } from '../services/AppleHealthService';
 
 export interface Goal {
@@ -69,10 +71,12 @@ interface RingData {
 
 interface DataContextType {
     isConnected: boolean;
+    isRingBound: boolean;
     isSyncing: boolean;
     data: RingData | null;
     connectRing: () => Promise<void>;
-    simulateData: (scenario: 'default' | 'poor_sleep' | 'high_stress' | 'perfect_day') => void;
+    disconnectRing: () => Promise<void>;
+    updateRingData: (updates: Partial<RingData>) => Promise<void>;
     toggleUnitSystem: () => Promise<void>;
     toggleNotifications: (enabled: boolean) => Promise<void>;
     toggleAppleHealth: (enabled: boolean) => Promise<void>;
@@ -81,17 +85,18 @@ interface DataContextType {
     removeGoal: (id: string) => Promise<void>;
     updateGoal: (id: string, progress: number) => Promise<void>;
     saveWorkout: (workout: Omit<Workout, 'id'>) => Promise<void>;
+    triggerHeartRateScan: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 const DEFAULT_DATA: RingData = {
     sleep: {
-        duration: '7h 42m',
-        score: 88,
-        deep: '1h 20m',
-        rem: '2h 10m',
-        weekly: [6.8, 7.2, 7.5, 6.4, 8.0, 7.8, 7.6],
+        duration: '0h 0m',
+        score: 0,
+        deep: '0h 0m',
+        rem: '0h 0m',
+        weekly: [0, 0, 0, 0, 0, 0, 0],
     },
     steps: {
         count: 0,
@@ -100,14 +105,14 @@ const DEFAULT_DATA: RingData = {
     },
     heart: {
         bpm: 0,
-        resting: 54,
-        variability: 45,
-        trend: [58, 62, 60, 65, 59, 56, 55, 61, 64, 60],
+        resting: 0,
+        variability: 0,
+        trend: [],
     },
     readiness: {
-        score: 85,
-        status: 'Good',
-        weekly: [82, 85, 88, 84, 86, 85, 87],
+        score: 0,
+        status: 'No Data',
+        weekly: [0, 0, 0, 0, 0, 0, 0],
     },
     goals: [
         { id: '1', title: 'Daily Steps', target: 10000, current: 0, unit: 'steps', color: COLORS.primary, type: 'numeric' },
@@ -116,13 +121,29 @@ const DEFAULT_DATA: RingData = {
     ],
     history: [],
     unitSystem: 'metric',
+    appleHealthEnabled: false,
 };
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const [isConnected, setIsConnected] = useState(false);
+    const [isRingBound, setIsRingBound] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const [data, setData] = useState<RingData | null>(null);
+
+    // Initial load and connection check
+    useEffect(() => {
+        setIsConnected(bluetoothService.isConnected());
+
+        // Listen for physical connection changes
+        const unsubscribe = bluetoothService.onConnectionChange((connected) => {
+            console.log('[DataContext] Connection state CALLBACK:', connected);
+            setIsConnected(connected);
+        });
+
+        return unsubscribe;
+    }, []);
 
     // Sync with Firestore in real-time
     useEffect(() => {
@@ -138,7 +159,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
             if (docSnap.exists()) {
                 setData(docSnap.data() as RingData);
-                setIsConnected(true);
+                setIsRingBound(true);
             } else {
                 // Initialize user data if they are new
                 const initialData = { ...DEFAULT_DATA };
@@ -158,6 +179,113 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         return unsubscribe;
     }, [user]);
 
+    // Monitor Bluetooth Connection and Sync Data
+    useEffect(() => {
+        let hrSubscription: any = null;
+        let batterySubscription: any = null;
+        let proprietarySubscription: any = null;
+
+        const startSync = async () => {
+            console.log(`[DataContext] Attempting startSync. bound=${isRingBound}, connected=${isConnected}`);
+            // Only sync if ring is bound AND physically connected
+            if (isRingBound && isConnected) {
+                console.log('[DataContext] Conditions met. Starting direct data sync from ring...');
+
+                try {
+                    setIsSyncing(true);
+                    // Monitor Heart Rate (Service: 180D, Characteristic: 2A37)
+                    hrSubscription = bluetoothService.monitorCharacteristic(
+                        '180D',
+                        '2A37',
+                        (base64Value) => {
+                            if (base64Value) {
+                                const bpm = bluetoothService.parseHeartRate(base64Value);
+                                if (bpm !== null && bpm > 0) {
+                                    updateRingData({
+                                        heart: {
+                                            bpm: bpm,
+                                            // trend and resting will be handled in updateRingData merge logic if needed, 
+                                            // but better to handle atomic updates there.
+                                        } as any
+                                    });
+                                }
+                            }
+                        }
+                    );
+
+                    // Monitor Battery (Service: 180F, Characteristic: 2A19)
+                    batterySubscription = bluetoothService.monitorCharacteristic(
+                        '180F',
+                        '2A19',
+                        (base64Value) => {
+                            if (base64Value) {
+                                const level = bluetoothService.parseBatteryLevel(base64Value);
+                                if (level !== null) {
+                                    // Hardware info will be displayed in Profile modal
+                                    console.log(`[DataContext] Ring Battery Level: ${level}%`);
+                                }
+                            }
+                        }
+                    );
+
+                    // Monitor Proprietary MHCS data (Service: FDDA, Characteristic: FDD1)
+                    proprietarySubscription = bluetoothService.monitorCharacteristic(
+                        '0000fdda-0000-1000-8000-00805f9b34fb',
+                        '0000fdd1-0000-1000-8000-00805f9b34fb',
+                        (base64Value) => {
+                            if (base64Value) {
+                                console.log(`[DataContext] FDD1 Raw: ${base64Value}`);
+                                const bpm = bluetoothService.parseHeartRate(base64Value);
+                                if (bpm !== null && bpm > 0) {
+                                    console.log(`[DataContext] Proprietary HR (FDD1) parsed: ${bpm}`);
+                                    updateRingData({ heart: { bpm: bpm } as any });
+                                }
+                            }
+                        }
+                    );
+
+                    // Monitor additional Proprietary service (FEE7)
+                    bluetoothService.monitorCharacteristic(
+                        '0000fee7-0000-1000-8000-00805f9b34fb',
+                        '0000fea2-0000-1000-8000-00805f9b34fb',
+                        (base64Value) => {
+                            if (base64Value) {
+                                console.log(`[DataContext] FEA2 Raw: ${base64Value}`);
+                                const bpm = bluetoothService.parseHeartRate(base64Value);
+                                if (bpm !== null && bpm > 0) {
+                                    console.log(`[DataContext] Proprietary HR (FEA2) parsed: ${bpm}`);
+                                    updateRingData({ heart: { bpm: bpm } as any });
+                                }
+                            }
+                        }
+                    );
+
+                    // Log services/characteristics once for debugging
+                    // await bluetoothService.logAllServicesAndCharacteristics();
+
+                    // Start live monitoring immediately (activate green/red lights)
+                    await bluetoothService.startLiveMonitoring();
+                } catch (error) {
+                    console.error('[DataContext] BLE Sync Error:', error);
+                } finally {
+                    setIsSyncing(false);
+                }
+            }
+        };
+
+        if (isRingBound && isConnected) {
+            startSync();
+        }
+
+        return () => {
+            if (hrSubscription) hrSubscription.remove();
+            if (batterySubscription) batterySubscription.remove();
+            if (proprietarySubscription) proprietarySubscription.remove();
+            // Cleanup for FEE7 subscription would need to be handled, but for now we focus on getting data
+            setIsSyncing(false);
+        };
+    }, [isConnected, isRingBound]);
+
     // Check goals whenever data changes
     useEffect(() => {
         if (data && data.goals && data.notificationsEnabled) {
@@ -166,62 +294,72 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     }, [data]);
 
     const connectRing = async () => {
-        if (isConnected && data?.steps.count !== 0) return; // Already "connected" and has data
+        if (isConnected) return;
         if (!user) return;
 
         setIsSyncing(true);
-        bluetoothService.scanAndConnect();
 
+        // Actual connection happens via BLE scan in ProfileScreen
+        // This is a placeholder for context-level state preparation
         setTimeout(async () => {
             const userDocRef = doc(db, 'users', user.uid);
-            await setDoc(userDocRef, DEFAULT_DATA, { merge: true });
-            setIsConnected(true);
+            await setDoc(userDocRef, { isRingBound: true }, { merge: true });
+            setIsRingBound(true);
             setIsSyncing(false);
-        }, 1500);
+        }, 800);
     };
 
-    const simulateData = async (scenario: 'default' | 'poor_sleep' | 'high_stress' | 'perfect_day') => {
+    const disconnectRing = async () => {
         if (!user) return;
         setIsSyncing(true);
-
-        let newData: Partial<RingData> = {};
-
-        switch (scenario) {
-            case 'poor_sleep':
-                newData = {
-                    sleep: {
-                        duration: '4h 20m', score: 45, deep: '0h 40m', rem: '1h 00m',
-                        weekly: [6.8, 7.2, 7.5, 6.4, 8.0, 5.0, 4.2]
-                    },
-                    readiness: { score: 55, status: 'Rest Required', weekly: [82, 85, 88, 84, 86, 60, 55] }
-                };
-                break;
-            case 'high_stress':
-                newData = {
-                    heart: {
-                        bpm: 88, resting: 75, variability: 25,
-                        trend: [65, 70, 72, 75, 78, 80, 82, 75, 78, 85]
-                    },
-                    readiness: { score: 60, status: 'Stressed', weekly: [82, 80, 78, 75, 72, 68, 60] }
-                };
-                break;
-            case 'perfect_day':
-                newData = {
-                    sleep: { duration: '8h 10m', score: 95, deep: '2h 10m', rem: '2h 30m', weekly: [8, 8.2, 8.1, 7.9, 8.5, 8.3, 8.1] },
-                    readiness: { score: 98, status: 'Peak Performance', weekly: [90, 92, 94, 95, 96, 97, 98] },
-                    heart: { ...data?.heart, variability: 85, resting: 50, bpm: 52 } as any
-                };
-                break;
-            case 'default':
-            default:
-                newData = DEFAULT_DATA;
-                break;
+        try {
+            await bluetoothService.disconnect();
+            const userDocRef = doc(db, 'users', user.uid);
+            await setDoc(userDocRef, { isRingBound: false }, { merge: true });
+            setIsRingBound(false);
+        } catch (error) {
+            console.error('[DataContext] Disconnect error:', error);
+        } finally {
+            setIsSyncing(false);
         }
-
-        const userDocRef = doc(db, 'users', user.uid);
-        await setDoc(userDocRef, newData, { merge: true });
-        setIsSyncing(false);
     };
+
+    const updateRingData = async (updates: Partial<RingData>) => {
+        if (!user) return;
+
+        // Set ring bound status
+        setIsRingBound(true);
+
+        setData(prev => {
+            if (!prev) return null;
+
+            // Deep merge logic for heart to preserve trend
+            const newHeart = updates.heart ? {
+                ...prev.heart,
+                ...updates.heart,
+                trend: updates.heart.bpm
+                    ? [...(prev.heart.trend || []), updates.heart.bpm].slice(-10)
+                    : prev.heart.trend
+            } : prev.heart;
+
+            const updated = {
+                ...prev,
+                ...updates,
+                heart: newHeart as any
+            };
+
+            // Sync to Firestore
+            const userDocRef = doc(db, 'users', user.uid);
+            setDoc(userDocRef, updates, { merge: true }).catch(e =>
+                console.error('[DataContext] Firestore Sync Error:', e)
+            );
+
+            console.log('[DataContext] Updated ring data:', updates);
+            return updated;
+        });
+    };
+
+
 
     const toggleUnitSystem = async () => {
         if (!user || !data) return;
@@ -247,17 +385,24 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const toggleAppleHealth = async (enabled: boolean) => {
         if (!user || !data) return;
 
-        if (enabled) {
-            const authorized = await appleHealthService.init();
-            if (!authorized) {
-                console.log('Apple Health permission denied or not available');
-                // Even if not authorized, we might want to explain to user, but for now we won't toggle verify
-                return;
-            }
-        }
-
         // Optimistic update
         setData(prev => prev ? { ...prev, appleHealthEnabled: enabled } : null);
+
+        if (enabled) {
+            try {
+                const authorized = await appleHealthService.init();
+                if (!authorized) {
+                    Alert.alert(
+                        t('appleHealth') || 'Apple Health',
+                        'Unable to connect to Apple Health. Please check your permissions in the Health app.',
+                        [{ text: 'OK' }]
+                    );
+                    // Reset state if failed dramatically, but usually we should stick to user's choice
+                }
+            } catch (error) {
+                console.error('[DataContext] Apple Health Toggle Error:', error);
+            }
+        }
 
         const userDocRef = doc(db, 'users', user.uid);
         await setDoc(userDocRef, { appleHealthEnabled: enabled }, { merge: true });
@@ -317,8 +462,32 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await setDoc(userDocRef, { history: updatedHistory }, { merge: true });
     };
 
+    const triggerHeartRateScan = async () => {
+        if (!isConnected) {
+            throw new Error('Ring is not connected');
+        }
+        await bluetoothService.triggerManualHeartRateScan();
+    };
+
     return (
-        <DataContext.Provider value={{ isConnected, isSyncing, data, connectRing, simulateData, toggleUnitSystem, toggleNotifications, toggleAppleHealth, updateUserProfile, addGoal, removeGoal, updateGoal, saveWorkout }}>
+        <DataContext.Provider value={{
+            isConnected,
+            isRingBound,
+            isSyncing,
+            data,
+            connectRing,
+            disconnectRing,
+            updateRingData,
+            toggleUnitSystem,
+            toggleNotifications,
+            toggleAppleHealth,
+            updateUserProfile,
+            addGoal,
+            removeGoal,
+            updateGoal,
+            saveWorkout,
+            triggerHeartRateScan
+        }}>
             {children}
         </DataContext.Provider>
     );

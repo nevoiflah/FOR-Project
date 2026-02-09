@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { HapticFeedback } from '../../utils/haptics';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { GlassChart } from '../../components/GlassChart';
@@ -12,10 +13,11 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { Heart, Activity } from 'lucide-react-native';
 
 export const HeartScreen = () => {
-    const { data } = useData();
+    const { data, isConnected, triggerHeartRateScan } = useData();
     const { t, isRTL } = useLanguage();
     const { colors, isDark } = useTheme();
     const [isMounted, setIsMounted] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
 
     const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
@@ -27,7 +29,28 @@ export const HeartScreen = () => {
         }
     }, [data]);
 
-    // Mock HR Trend Data
+    const handleManualScan = async () => {
+        if (!isConnected) {
+            Alert.alert(t('connectRing'), t('connectToSee'));
+            return;
+        }
+
+        try {
+            HapticFeedback.light();
+            setIsScanning(true);
+            await triggerHeartRateScan();
+
+            // Show scanning state for at least 5 seconds to match ring measurement time
+            setTimeout(() => {
+                setIsScanning(false);
+                HapticFeedback.success();
+            }, 5000);
+        } catch (error) {
+            console.error('[HeartScreen] Manual scan failed:', error);
+            setIsScanning(false);
+            Alert.alert('Scan Failed', 'Could not start heart rate measurement. Please ensure your ring is snug on your finger.');
+        }
+    };
 
 
     // Show loading state until mounted
@@ -49,10 +72,25 @@ export const HeartScreen = () => {
                 {data ? (
                     <>
                         <View style={[styles.grid, isRTL && { flexDirection: 'row-reverse' }]}>
-                            <GlassCard style={styles.mainCard} contentContainerStyle={{ padding: SPACING.l }}>
-                                <Heart size={32} color="#FF6B6B" style={{ marginBottom: 10 }} />
-                                <Text style={styles.bigValue}>{data.heart.resting}</Text>
-                                <Text style={styles.label}>{t('restingHr')}</Text>
+                            <GlassCard
+                                style={styles.mainCard}
+                                contentContainerStyle={{ padding: SPACING.l }}
+                            >
+                                <TouchableOpacity
+                                    style={{ alignItems: 'center', width: '100%' }}
+                                    onPress={handleManualScan}
+                                    disabled={isScanning}
+                                >
+                                    <View style={styles.iconWrapper}>
+                                        {isScanning ? (
+                                            <ActivityIndicator size="small" color="#FF6B6B" />
+                                        ) : (
+                                            <Heart size={32} color="#FF6B6B" />
+                                        )}
+                                    </View>
+                                    <Text style={styles.bigValue}>{isScanning ? data.heart.bpm || '--' : (data.heart.bpm || data.heart.resting || '--')}</Text>
+                                    <Text style={styles.label}>{isScanning ? 'LIVE HR' : t('restingHr')}</Text>
+                                </TouchableOpacity>
                             </GlassCard>
 
                             <GlassCard style={styles.mainCard} contentContainerStyle={{ padding: SPACING.l }}>
@@ -91,8 +129,8 @@ export const HeartScreen = () => {
                                 ]} />
                             </View>
                             <View style={[styles.rangeLabels, isRTL && { flexDirection: 'row-reverse' }]}>
-                                <Text style={styles.rangeText}>{t('min')} {data.heart.resting - 5}</Text>
-                                <Text style={styles.rangeText}>{t('max')} {data.heart.resting + 45}</Text>
+                                <Text style={styles.rangeText}>{t('min')} {data.heart.resting > 0 ? data.heart.resting - 5 : '--'}</Text>
+                                <Text style={styles.rangeText}>{t('max')} {data.heart.resting > 0 ? data.heart.resting + 45 : '--'}</Text>
                             </View>
                         </GlassCard>
 
@@ -112,7 +150,10 @@ export const HeartScreen = () => {
                                 {t('coachStart')}
                             </Text>
                             <Text style={[styles.insightText, isRTL && { textAlign: 'right' }]}>
-                                {data.heart.variability >= 40 ? t('hrvTipHigh') : t('hrvTipLow')}
+                                {data.heart.variability === 0
+                                    ? t('awaitingData') || 'Awaiting ring metrics...'
+                                    : (data.heart.variability >= 40 ? t('hrvTipHigh') : t('hrvTipLow'))
+                                }
                             </Text>
                         </GlassCard>
                     </>
@@ -156,6 +197,14 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
         fontSize: 12,
         color: colors.textSecondary,
         textAlign: 'center',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    iconWrapper: {
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
     },
     sectionTitle: {
         fontSize: 18,

@@ -82,17 +82,19 @@ export const SleepScreen = () => {
                         <GlassCard style={styles.detailsCard} contentContainerStyle={{ padding: SPACING.m }}>
                             <View style={[styles.detailRow, isRTL && { flexDirection: 'row-reverse' }]}>
                                 <Text style={styles.detailLabel}>{t('deepSleep')}</Text>
-                                <Text style={styles.detailValue}>1h 45m</Text>
+                                <Text style={styles.detailValue}>{data.sleep.deep}</Text>
                             </View>
                             <View style={styles.divider} />
                             <View style={[styles.detailRow, isRTL && { flexDirection: 'row-reverse' }]}>
                                 <Text style={styles.detailLabel}>{t('remSleep')}</Text>
-                                <Text style={styles.detailValue}>2h 10m</Text>
+                                <Text style={styles.detailValue}>{data.sleep.rem}</Text>
                             </View>
                             <View style={styles.divider} />
                             <View style={[styles.detailRow, isRTL && { flexDirection: 'row-reverse' }]}>
                                 <Text style={styles.detailLabel}>{t('lightSleep')}</Text>
-                                <Text style={styles.detailValue}>4h 05m</Text>
+                                <Text style={styles.detailValue}>
+                                    {data.sleep.duration === '0h 0m' ? '0h 0m' : '--'}
+                                </Text>
                             </View>
                         </GlassCard>
 

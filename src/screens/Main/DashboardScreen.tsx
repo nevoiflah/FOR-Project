@@ -159,8 +159,8 @@ export const DashboardScreen = () => {
 
 
 
-    // Show loading state until mounted
-    if (!isMounted || !data) {
+    // Show loading state if no data
+    if (!data) {
         return (
             <ScreenWrapper bgContext="dashboard">
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -183,7 +183,7 @@ export const DashboardScreen = () => {
                     <LoadingRing success={showSuccess} />
                     <View style={{ alignItems: 'center' }}>
                         <Text style={styles.syncText}>
-                            {isSyncing ? t('syncing') : (isConnected ? t('ringConnected') : t('connecting'))}
+                            {isSyncing ? t('syncing') : (isConnected ? t('ringConnected') : t('notConnected'))}
                         </Text>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>

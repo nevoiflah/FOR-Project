@@ -14,7 +14,8 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "react-native-ble-plx"
     ],
     "ios": {
       "supportsTablet": true,
@@ -22,7 +23,9 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSHealthShareUsageDescription": "FOR needs access to your health data to analyze Sleep and Activity trends.",
-        "NSHealthUpdateUsageDescription": "FOR uses health data for personalized recovery coaching."
+        "NSHealthUpdateUsageDescription": "FOR uses health data for personalized recovery coaching.",
+        "NSBluetoothAlwaysUsageDescription": "FOR uses Bluetooth to connect to your smart ring for real-time health data.",
+        "NSBluetoothPeripheralUsageDescription": "FOR uses Bluetooth to connect to your smart ring for real-time health data."
       },
       "entitlements": {
         "com.apple.developer.healthkit": true,
