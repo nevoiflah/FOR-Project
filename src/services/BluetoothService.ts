@@ -324,7 +324,7 @@ class BluetoothService {
     }
 
     // Standard GATT Parsers
-    parseHeartRate(base64Value: string): number | null {
+    parseHeartRate(base64Value: string): { bpm: number; hrv?: number } | null {
         try {
             const data = this.decodeBase64(base64Value);
 
@@ -332,25 +332,28 @@ class BluetoothService {
             // This matches the user's log 'AUAfAA==' -> [1, 64, 31, 0]
             if (data.length === 4 && data[0] === 0x01) {
                 const bpm = data[1];
-                if (bpm > 30 && bpm < 220) return bpm;
+                const hrv = data[2];
+                if (bpm > 30 && bpm < 220) return { bpm, hrv };
                 return null;
             }
 
             // MHCS 16+ byte format (EF 02 ... HR at index 6)
             if (data.length >= 7 && data[0] === 0xEF && data[1] === 0x02) {
-                return data[6]; // 7th byte is HR in this protocol
+                return { bpm: data[6] }; // 7th byte is HR in this protocol
             }
 
             // Fallback to Standard GATT
             if (data.length < 2) return null;
             const flags = data[0];
             const isUint16 = (flags & 0x01) !== 0;
+            let bpm;
 
             if (isUint16) {
-                return (data[2] << 8) | data[1];
+                bpm = (data[2] << 8) | data[1];
             } else {
-                return data[1];
+                bpm = data[1];
             }
+            return { bpm };
         } catch (error) {
             console.error('[BLE] Heart Rate parse error:', error);
             return null;
@@ -371,22 +374,28 @@ class BluetoothService {
     parseSpO2(base64Value: string): number | null {
         try {
             const data = this.decodeBase64(base64Value);
-            // MHCS SpO2 Packet usually starts with EF 03 or similar
-            // Format: [EF, 03, ..., SpO2, ...]
-            // Based on similar rings, SpO2 is often at index 6 or 7
-            if (data.length >= 7 && data[0] === 0xEF) {
-                // Heuristic: valid SpO2 is usually 80-100
-                // We'll search for a valid byte in the payload
-                // For now, let's assume it shares the structure of HR (index 6 or 7)
-                // but we need to verify with logs.
-                // Placeholder logic:
-                return null;
+            // MHCS SpO2 Packet (EF 03 01...)
+            // Based on common protocols (J-Style 2025/3000):
+            // Packet: EF 03 01 [SpO2] [HR] ...
+            if (data.length >= 5 && data[0] === 0xEF && data[1] === 0x03) {
+                const spo2 = data[3];
+                if (spo2 > 80 && spo2 <= 100) return spo2;
             }
+            // FDD 4-byte format?
             return null;
         } catch (error) {
             console.error('[BLE] SpO2 parse error:', error);
             return null;
         }
+    }
+
+    // Calculate stress based on HRV (Simple heuristic)
+    // Higher HRV = Lower Stress
+    // SDNN < 50ms (High Stress), 50-100ms (Moderate), >100ms (Low/Recovery)
+    calculateStress(hrv: number): number {
+        // Map HRV (10-150) to Stress (100-0)
+        const normalized = Math.max(0, Math.min(100, (100 - (hrv - 20))));
+        return Math.round(normalized);
     }
 
     /**

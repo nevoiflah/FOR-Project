@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { GlassChart } from '../../components/GlassChart';
@@ -16,6 +16,7 @@ export const TrendsScreen = () => {
     const { t, isRTL } = useLanguage();
     const { colors, isDark } = useTheme();
     const [isMounted, setIsMounted] = useState(false);
+    const [selectedTab, setSelectedTab] = useState('Day');
 
     const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
@@ -40,54 +41,104 @@ export const TrendsScreen = () => {
         );
     }
 
+    // Helper to get graph data based on tab
+    const getGraphData = () => {
+        if (!data.steps?.history) return [];
+
+        switch (selectedTab) {
+            case 'Week':
+                // Calculate Activity Score: Steps + (Calories / 20)
+                return data.steps.history.week.map(d => d.steps + (d.calories * 2));
+            case 'Month':
+                return data.steps.history.month.map(d => d.steps + (d.calories * 2));
+            case 'Day':
+            default:
+                // For Day view (hourly), show activity level
+                return data.steps.history.day.map(d => d.steps + (d.calories * 2));
+        }
+    };
+
+    const graphData = getGraphData();
+
     return (
         <ScreenWrapper>
             <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-                <Text style={[styles.pageTitle, isRTL && { textAlign: 'right' }]}>{t('healthTrends') || 'Health Trends'}</Text>
+                <Text style={[styles.pageTitle, isRTL && { textAlign: 'right' }]}>{t('activity') || 'Activity'}</Text>
 
                 {data ? (
                     <>
-                        {/* Readiness Trend */}
-                        <View style={styles.section}>
-                            <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }]}>
-                                <TrendingUp size={20} color={colors.primary} />
-                                <Text style={styles.sectionTitle}>{t('readinessTrend') || 'Readiness Trend'}</Text>
-                            </View>
-                            <GlassCard style={styles.chartCard} contentContainerStyle={{ padding: 0 }}>
-                                <GlassChart
-                                    data={data.readiness.weekly}
-                                    height={150}
-                                    width={screenWidth - 48}
-                                    color={colors.primary}
-                                    gradientId="trend-ready-grad"
-                                />
-                                <View style={styles.chartFooter}>
-                                    <Text style={styles.chartFooterText}>{t('last7Days') || 'Last 7 Days'}</Text>
+                        {/* 1. Steps & Calories Cards */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: SPACING.xl }}>
+                            {/* Steps Card */}
+                            <GlassCard style={{ flex: 0.48, padding: SPACING.m }} contentContainerStyle={{ alignItems: 'center' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                    <Activity size={24} color={colors.primary} />
+                                    <Text style={{ marginLeft: 8, color: colors.textSecondary, fontSize: 14 }}>{t('steps') || 'Steps'}</Text>
                                 </View>
+                                <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary }}>
+                                    {data.steps.count.toLocaleString()}
+                                </Text>
+                            </GlassCard>
+
+                            {/* Calories Card */}
+                            <GlassCard style={{ flex: 0.48, padding: SPACING.m }} contentContainerStyle={{ alignItems: 'center' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                    <Zap size={24} color={colors.accent} />
+                                    <Text style={{ marginLeft: 8, color: colors.textSecondary, fontSize: 14 }}>{t('calories') || 'Kcal'}</Text>
+                                </View>
+                                <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary }}>
+                                    {data.steps.calories.toLocaleString()}
+                                </Text>
                             </GlassCard>
                         </View>
 
-                        {/* Activity Level */}
+                        {/* 2. Activity Level Graph */}
                         <View style={styles.section}>
-                            <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }]}>
-                                <Activity size={20} color={colors.accent} />
-                                <Text style={styles.sectionTitle}>{t('activityTrend') || 'Activity Trend'}</Text>
+                            <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }, { justifyContent: 'space-between' }]}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <TrendingUp size={20} color={colors.accent} />
+                                    <Text style={styles.sectionTitle}>{t('activityLevel') || 'Activity Level'}</Text>
+                                </View>
                             </View>
-                            <GlassCard style={styles.chartCard} contentContainerStyle={{ padding: 0 }}>
+
+                            <GlassCard style={styles.chartCard} contentContainerStyle={{ padding: SPACING.m, alignItems: 'center' }}>
+                                {/* Tab Selector */}
+                                <View style={{ flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 20, padding: 4, marginBottom: SPACING.l }}>
+                                    {['Day', 'Week', 'Month'].map((tab) => (
+                                        <TouchableOpacity
+                                            key={tab}
+                                            onPress={() => setSelectedTab(tab)}
+                                            style={{
+                                                paddingVertical: 6,
+                                                paddingHorizontal: 16,
+                                                borderRadius: 16,
+                                                backgroundColor: selectedTab === tab ? colors.primary : 'transparent'
+                                            }}
+                                        >
+                                            <Text style={{ color: selectedTab === tab ? '#FFF' : colors.textSecondary, fontSize: 12, fontWeight: '600' }}>
+                                                {t(tab.toLowerCase() as any) || tab}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+
+                                {/* The Graph */}
                                 <GlassChart
-                                    data={[1200, 1500, 1100, 1800, 2200, 1900, 2500]}
-                                    height={150}
-                                    width={screenWidth - 48}
+                                    data={graphData}
+                                    height={180}
+                                    width={screenWidth - 64}
                                     color={colors.accent}
-                                    gradientId="trend-active-grad"
+                                    gradientId="activity-grad"
                                 />
                                 <View style={styles.chartFooter}>
-                                    <Text style={styles.chartFooterText}>{t('caloriesBurned') || 'Avg Calories Burned'}</Text>
+                                    <Text style={styles.chartFooterText}>
+                                        {selectedTab === 'Day' ? 'Today' : selectedTab === 'Week' ? 'Last 7 Days' : 'Last 30 Days'}
+                                    </Text>
                                 </View>
                             </GlassCard>
                         </View>
 
-                        {/* Insight Card */}
+                        {/* Insight Card (Kept as requested) */}
                         <GlassCard style={styles.insightCard} contentContainerStyle={{ padding: SPACING.l }}>
                             <View style={[styles.insightHeader, isRTL && { flexDirection: 'row-reverse' }]}>
                                 <Zap size={24} color={colors.warning} />

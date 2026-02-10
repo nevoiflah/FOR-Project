@@ -227,6 +227,13 @@ export const translations = {
         testNotifTitle: "Test Notification 🧪",
         testNotifBody: "This is a test from the FOR app!",
         testNotifSuccess: "Test notification scheduled for 1 minute from now.",
+
+        // Activity Screen
+        activity: "Activity",
+        activityLevel: "Activity Level",
+        day: "Day",
+        week: "Week",
+        month: "Month",
     },
     he: {
         // Auth
@@ -453,6 +460,13 @@ export const translations = {
         testNotifTitle: "התראת ניסיון 🧪",
         testNotifBody: "זוהי בדיקה מאפליקציית FOR!",
         testNotifSuccess: "התראת הניסיון תוזמנה לעוד דקה מעכשיו.",
+
+        // Activity Screen
+        activity: "פעילות",
+        activityLevel: "רמת פעילות",
+        day: "יום",
+        week: "שבוע",
+        month: "חודש",
     },
 };
 

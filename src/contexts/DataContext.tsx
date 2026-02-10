@@ -51,6 +51,12 @@ interface RingData {
         count: number;
         goal: number;
         calories: number;
+        distance: number; // New: Distance in km/miles
+        history: {
+            day: { time: string, steps: number, calories: number }[];
+            week: { date: string, steps: number, calories: number }[];
+            month: { date: string, steps: number, calories: number }[];
+        };
     };
     heart: {
         bpm: number;
@@ -142,9 +148,40 @@ const DEFAULT_DATA: RingData = {
         }
     },
     steps: {
-        count: 0,
+        count: 8432,
         goal: 10000,
-        calories: 0,
+        calories: 420,
+        distance: 5.2,
+        history: {
+            day: [
+                { time: '06:00', steps: 0, calories: 0 },
+                { time: '07:00', steps: 150, calories: 10 },
+                { time: '08:00', steps: 800, calories: 45 },
+                { time: '09:00', steps: 1200, calories: 65 },
+                { time: '10:00', steps: 500, calories: 30 },
+                { time: '11:00', steps: 300, calories: 20 },
+                { time: '12:00', steps: 1500, calories: 80 },
+                { time: '13:00', steps: 600, calories: 35 },
+                { time: '14:00', steps: 400, calories: 25 },
+                { time: '15:00', steps: 900, calories: 50 },
+                { time: '16:00', steps: 1100, calories: 60 },
+                { time: '17:00', steps: 200, calories: 15 }
+            ],
+            week: [
+                { date: 'Mon', steps: 6500, calories: 320 },
+                { date: 'Tue', steps: 8200, calories: 410 },
+                { date: 'Wed', steps: 7800, calories: 390 },
+                { date: 'Thu', steps: 9500, calories: 480 },
+                { date: 'Fri', steps: 10200, calories: 510 },
+                { date: 'Sat', steps: 11500, calories: 580 },
+                { date: 'Sun', steps: 5400, calories: 270 },
+            ],
+            month: Array.from({ length: 30 }, (_, i) => ({
+                date: `${i + 1}`,
+                steps: 5000 + Math.floor(Math.random() * 7000),
+                calories: 250 + Math.floor(Math.random() * 350)
+            }))
+        }
     },
     heart: {
         bpm: 0,
@@ -260,15 +297,21 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         '2A37',
                         (base64Value) => {
                             if (base64Value) {
-                                const bpm = bluetoothService.parseHeartRate(base64Value);
-                                if (bpm !== null && bpm > 0) {
-                                    updateRingData({
+                                const parsed = bluetoothService.parseHeartRate(base64Value);
+                                if (parsed && parsed.bpm > 0) {
+                                    const updates: any = {
                                         heart: {
-                                            bpm: bpm,
-                                            // trend and resting will be handled in updateRingData merge logic if needed, 
-                                            // but better to handle atomic updates there.
-                                        } as any
-                                    });
+                                            bpm: parsed.bpm,
+                                        }
+                                    };
+
+                                    // If HRV is available, calculate stress
+                                    if (parsed.hrv) {
+                                        updates.heart.variability = parsed.hrv;
+                                        updates.heart.stress = bluetoothService.calculateStress(parsed.hrv);
+                                    }
+
+                                    updateRingData(updates);
                                 }
                             }
                         }
@@ -295,13 +338,17 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         '0000fdd1-0000-1000-8000-00805f9b34fb',
                         (base64Value) => {
                             if (base64Value) {
-                                console.log(`[DataContext] FDD1 Raw: ${base64Value}`);
+                                // console.log(`[DataContext] FDD1 Raw: ${base64Value}`); // Reduce log spam
 
-                                // Try HR
-                                const bpm = bluetoothService.parseHeartRate(base64Value);
-                                if (bpm !== null && bpm > 0) {
-                                    console.log(`[DataContext] Proprietary HR (FDD1) parsed: ${bpm}`);
-                                    updateRingData({ heart: { bpm: bpm } as any });
+                                // Try HR with HRV
+                                const parsed = bluetoothService.parseHeartRate(base64Value);
+                                if (parsed && parsed.bpm > 0) {
+                                    const updates: any = { heart: { bpm: parsed.bpm } };
+                                    if (parsed.hrv) {
+                                        updates.heart.variability = parsed.hrv;
+                                        updates.heart.stress = bluetoothService.calculateStress(parsed.hrv);
+                                    }
+                                    updateRingData(updates);
                                 }
 
                                 // Try SpO2
@@ -320,13 +367,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         '0000fea2-0000-1000-8000-00805f9b34fb',
                         (base64Value) => {
                             if (base64Value) {
-                                console.log(`[DataContext] FEA2 Raw: ${base64Value}`);
+                                // console.log(`[DataContext] FEA2 Raw: ${base64Value}`); // Reduce log spam
 
                                 // Try HR
-                                const bpm = bluetoothService.parseHeartRate(base64Value);
-                                if (bpm !== null && bpm > 0) {
-                                    console.log(`[DataContext] Proprietary HR (FEA2) parsed: ${bpm}`);
-                                    updateRingData({ heart: { bpm: bpm } as any });
+                                const parsed = bluetoothService.parseHeartRate(base64Value);
+                                if (parsed && parsed.bpm > 0) {
+                                    const updates: any = { heart: { bpm: parsed.bpm } };
+                                    // FDD/FEA protocols usually don't carry HRV here but worth checking
+                                    if (parsed.hrv) {
+                                        updates.heart.variability = parsed.hrv;
+                                        updates.heart.stress = bluetoothService.calculateStress(parsed.hrv);
+                                    }
+                                    updateRingData(updates);
                                 }
 
                                 // Try SpO2
@@ -418,18 +470,69 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 ...updates.heart,
                 trend: updates.heart.bpm
                     ? [...(prev.heart.trend || []), updates.heart.bpm].slice(-10)
-                    : prev.heart.trend
+                    : prev.heart.trend,
+                hrvTrend: updates.heart.variability
+                    ? [...(prev.heart.hrvTrend || []), updates.heart.variability].slice(-10)
+                    : prev.heart.hrvTrend
             } : prev.heart;
+
+            // Handle Sleep History Accumulation (Mocking Sleep Data from Real-time HR)
+            let newSleep = { ...prev.sleep };
+            if (updates.heart?.bpm) {
+                const now = new Date();
+                const currentHourStr = `${now.getHours().toString().padStart(2, '0')}:00`;
+                const bpm = updates.heart.bpm;
+
+                // Simple score calculation: Lower HR = Higher Sleep Score (inverted from 100)
+                // e.g. 60bpm -> 80 score, 80bpm -> 60 score. Clamped 0-100.
+                const calculatedScore = Math.max(0, Math.min(100, 140 - bpm));
+
+                // Initialize hourly array if missing
+                if (!newSleep.history) {
+                    newSleep.history = { ...DEFAULT_DATA.sleep.history };
+                }
+                if (!newSleep.history.day_hourly) {
+                    newSleep.history.day_hourly = [];
+                }
+
+                const existingEntryIndex = newSleep.history.day_hourly.findIndex(h => h.time === currentHourStr);
+
+                if (existingEntryIndex >= 0) {
+                    // Update existing hour
+                    const entry = newSleep.history.day_hourly[existingEntryIndex];
+                    // Weighted average for score could be better, but simple overwrite is fine for "current status"
+                    // or maybe average it? Let's average it to be smoother.
+                    const outputScore = Math.round((entry.score + calculatedScore) / 2);
+
+                    newSleep.history.day_hourly[existingEntryIndex] = {
+                        ...entry,
+                        score: outputScore,
+                        duration: 60 // Assume full hour if we have data (or increment? let's stick to 60 for visibility)
+                    };
+                } else {
+                    // Add new hour
+                    newSleep.history.day_hourly.push({
+                        time: currentHourStr,
+                        date: currentHourStr,
+                        score: calculatedScore,
+                        duration: 60
+                    });
+                    // Sort by time?
+                    // newSleep.history.day_hourly.sort(...) // Optional
+                }
+            }
 
             const updated = {
                 ...prev,
                 ...updates,
-                heart: newHeart as any
+                heart: newHeart as any,
+                sleep: newSleep
             };
 
             // Sync to Firestore
             const userDocRef = doc(db, 'users', user.uid);
-            setDoc(userDocRef, updates, { merge: true }).catch(e =>
+            const persistenceUpdates = { ...updates, sleep: newSleep };
+            setDoc(userDocRef, persistenceUpdates, { merge: true }).catch(e =>
                 console.error('[DataContext] Firestore Sync Error:', e)
             );
 
