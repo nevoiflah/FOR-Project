@@ -21,6 +21,22 @@ export const HeartScreen = () => {
 
     const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
+    // Generate Chart Labels (Last 24h)
+    const chartLabels = React.useMemo(() => {
+        const labels = [];
+        const currentHour = new Date().getHours();
+        for (let i = 0; i < 24; i++) {
+            // Show label every 6 hours, and start/end
+            if (i === 0 || i === 23 || i % 6 === 0) {
+                const hour = (currentHour - 23 + i + 24) % 24;
+                labels.push(`${hour}:00`);
+            } else {
+                labels.push('');
+            }
+        }
+        return labels;
+    }, []);
+
     // Wait for initial data to be ready before showing content
     useEffect(() => {
         if (data) {
@@ -90,6 +106,7 @@ export const HeartScreen = () => {
                                     </View>
                                     <Text style={styles.bigValue}>{isScanning ? data.heart.bpm || '--' : (data.heart.bpm || data.heart.resting || '--')}</Text>
                                     <Text style={styles.label}>{isScanning ? 'LIVE HR' : t('restingHr')}</Text>
+                                    <Text style={{ fontSize: 10, color: colors.textSecondary, marginTop: 4 }}>Tap to Measure</Text>
                                 </TouchableOpacity>
                             </GlassCard>
 
@@ -112,16 +129,15 @@ export const HeartScreen = () => {
                             <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>Heart Rate</Text>
                             <GlassCard
                                 style={{ alignItems: 'center', overflow: 'hidden' }}
-                                contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%' }}
+                                contentContainerStyle={{ paddingHorizontal: SPACING.m, paddingVertical: SPACING.s, alignItems: 'center', width: '100%' }}
                             >
                                 <GlassChart
                                     data={data.heart.trend}
                                     height={150}
-                                    width={Dimensions.get('window').width - 48}
+                                    width={Dimensions.get('window').width - 48 - (SPACING.m * 2)}
                                     color="#FF6B6B"
                                     gradientId="heart-hr-grad"
-                                    // @ts-ignore
-                                    showXAxis={true}
+                                    labels={chartLabels}
                                 />
                             </GlassCard>
                         </View>
@@ -131,14 +147,15 @@ export const HeartScreen = () => {
                             <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>HRV</Text>
                             <GlassCard
                                 style={{ alignItems: 'center', overflow: 'hidden' }}
-                                contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%' }}
+                                contentContainerStyle={{ paddingHorizontal: SPACING.m, paddingVertical: SPACING.s, alignItems: 'center', width: '100%' }}
                             >
                                 <GlassChart
                                     data={data.heart.hrvTrend || [0, 0, 0, 0, 0]}
                                     height={120}
-                                    width={Dimensions.get('window').width - 48}
+                                    width={Dimensions.get('window').width - 48 - (SPACING.m * 2)}
                                     color={colors.accent}
                                     gradientId="heart-hrv-grad"
+                                    labels={chartLabels}
                                 />
                             </GlassCard>
                         </View>
@@ -278,11 +295,11 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
         marginBottom: SPACING.s,
     },
     label: {
-        fontSize: 12,
+        fontSize: 10,
         color: colors.textSecondary,
         textAlign: 'center',
         textTransform: 'uppercase',
-        letterSpacing: 1,
+        letterSpacing: 0.5,
     },
     iconWrapper: {
         height: 40,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Dimensions } from 'react-native';
+import { View, Dimensions, Text } from 'react-native';
 import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { COLORS } from '../constants/theme';
 
@@ -11,6 +11,7 @@ interface GlassChartProps {
     strokeWidth?: number;
     gradientId?: string;
     showPoints?: boolean;
+    labels?: string[];
 }
 
 export const GlassChart = ({
@@ -20,7 +21,8 @@ export const GlassChart = ({
     color = COLORS.primary,
     strokeWidth = 3,
     gradientId = 'grad',
-    showPoints = true
+    showPoints = true,
+    labels = []
 }: GlassChartProps) => {
     if (!data || data.length === 0) return null;
 
@@ -43,8 +45,9 @@ export const GlassChart = ({
     // Create fill area (close the loop)
     const fillPathData = `${pathData} L ${width},${height} L 0,${height} Z`;
 
+    // Remove fixed height from outer View so valid children (like labels) are visible
     return (
-        <View style={{ height, width }}>
+        <View style={{ width }}>
             <Svg height={height} width={width}>
                 <Defs>
                     <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -81,6 +84,38 @@ export const GlassChart = ({
                     );
                 })}
             </Svg>
+
+            {/* Axis Labels (Absolutely positioned for precision) */}
+            {labels && labels.length > 0 && (
+                <View style={{ height: 20, width: width, marginTop: 4 }}>
+                    {labels.map((label, index) => {
+                        if (!label) return null;
+
+                        const divider = labels.length > 1 ? labels.length - 1 : 1;
+                        const x = (index / divider) * width;
+                        const labelWidth = 40; // Adequate width for "12:00"
+
+                        // Adjust x so label is centered
+                        const left = x - (labelWidth / 2);
+
+                        return (
+                            <Text
+                                key={index}
+                                style={{
+                                    position: 'absolute',
+                                    left: left,
+                                    width: labelWidth,
+                                    textAlign: 'center',
+                                    fontSize: 10,
+                                    color: COLORS.textSecondary
+                                }}
+                            >
+                                {label}
+                            </Text>
+                        );
+                    })}
+                </View>
+            )}
         </View>
     );
 };
