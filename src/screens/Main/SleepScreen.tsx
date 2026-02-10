@@ -68,57 +68,78 @@ const SleepScoreMeter = ({ score, size = 180, color }: { score: number, size?: n
     );
 };
 
-// Sleep Stages Pie Chart Component
+// Sleep Stages Donut Chart Component (Transparent Center)
 const SleepStagesPieChart = ({ deep, rem, total, size = 160, colors }: { deep: string, rem: string, total: string, size?: number, colors: any }) => {
     const totalMins = parseDurationToMinutes(total);
     const deepMins = parseDurationToMinutes(deep);
     const remMins = parseDurationToMinutes(rem);
     const lightMins = Math.max(0, totalMins - deepMins - remMins);
 
-    // Distinct colors
-    const DEEP_COLOR = colors.primary;
-    const REM_COLOR = '#818CF8'; // Indigo for REM (Dreaming)
+    // Distinct colors from Theme
+    const DEEP_COLOR = colors.primary; // Main Orange
+    const REM_COLOR = colors.accent;   // Gold/Amber
     const LIGHT_COLOR = 'rgba(255,255,255,0.2)';
 
-    // Calculate angles
-    const totalAngle = 360;
-    const deepAngle = (deepMins / totalMins) * totalAngle;
-    const remAngle = (remMins / totalMins) * totalAngle;
-    const lightAngle = (lightMins / totalMins) * totalAngle;
+    const strokeWidth = 20;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
 
-    // Helper for arc path
-    const createArc = (startAngle: number, endAngle: number, radius: number) => {
-        const start = polarToCartesian(size / 2, size / 2, radius, endAngle);
-        const end = polarToCartesian(size / 2, size / 2, radius, startAngle);
-        const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-        const d = [
-            "M", size / 2, size / 2,
-            "L", start.x, start.y,
-            "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
-            "L", size / 2, size / 2
-        ].join(" ");
-        return d;
-    };
-
-    const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
-        var angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
-        return {
-            x: centerX + (radius * Math.cos(angleInRadians)),
-            y: centerY + (radius * Math.sin(angleInRadians))
-        };
-    };
+    // Calculate stroke lengths
+    const deepStroke = (deepMins / totalMins) * circumference;
+    const remStroke = (remMins / totalMins) * circumference;
+    const lightStroke = (lightMins / totalMins) * circumference;
 
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            {/* Pie Chart */}
-            <View style={{ width: size, height: size }}>
-                <Svg width={size} height={size}>
-                    {deepMins > 0 && <Path d={createArc(0, deepAngle, size / 2)} fill={DEEP_COLOR} />}
-                    {remMins > 0 && <Path d={createArc(deepAngle, deepAngle + remAngle, size / 2)} fill={REM_COLOR} />}
-                    {lightMins > 0 && <Path d={createArc(deepAngle + remAngle, 360, size / 2)} fill={LIGHT_COLOR} />}
-                    {/* Inner hole for donut effect */}
-                    <SvgCircle cx={size / 2} cy={size / 2} r={size / 4} fill={colors.card} />
+            {/* Donut Chart */}
+            <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+                <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                    <G rotation="-90" origin={`${size / 2}, ${size / 2}`}>
+                        {/* Deep Sleep Segment */}
+                        {deepMins > 0 && (
+                            <SvgCircle
+                                cx={size / 2}
+                                cy={size / 2}
+                                r={radius}
+                                stroke={DEEP_COLOR}
+                                strokeWidth={strokeWidth}
+                                fill="none"
+                                strokeDasharray={`${deepStroke} ${circumference}`}
+                                strokeDashoffset={0}
+                                strokeLinecap="round"
+                            />
+                        )}
+                        {/* REM Sleep Segment */}
+                        {remMins > 0 && (
+                            <SvgCircle
+                                cx={size / 2}
+                                cy={size / 2}
+                                r={radius}
+                                stroke={REM_COLOR}
+                                strokeWidth={strokeWidth}
+                                fill="none"
+                                strokeDasharray={`${remStroke} ${circumference}`}
+                                strokeDashoffset={-deepStroke}
+                                strokeLinecap="round"
+                            />
+                        )}
+                        {/* Light Sleep Segment */}
+                        {lightMins > 0 && (
+                            <SvgCircle
+                                cx={size / 2}
+                                cy={size / 2}
+                                r={radius}
+                                stroke={LIGHT_COLOR}
+                                strokeWidth={strokeWidth}
+                                fill="none"
+                                strokeDasharray={`${lightStroke} ${circumference}`}
+                                strokeDashoffset={-(deepStroke + remStroke)}
+                                strokeLinecap="round"
+                            />
+                        )}
+                    </G>
                 </Svg>
+                {/* Center Text (Optional, currently empty for true donut) */}
             </View>
 
             {/* Legend */}
@@ -213,8 +234,8 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
                         <Path
                             key={`bar-${i}`}
                             d={`M ${i * stepX + (stepX - barWidth) / 2},${height} v -${barHeight} h ${barWidth} v ${barHeight} z`}
-                            fill={'#818CF8'} // Indigo/Purple
-                            opacity={0.6}
+                            fill={colors.primary} // Primary Orange for Duration
+                            opacity={0.8}
                         />
                     );
                 })}
@@ -223,7 +244,7 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
                 <Path
                     d={`M ${linePoints}`}
                     fill="none"
-                    stroke={colors.accent} // Gold/Orange
+                    stroke={colors.accent} // Gold/Amber for Quality
                     strokeWidth="3"
                 />
 
@@ -245,15 +266,39 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
                 })}
             </Svg>
 
-            {/* Axis Labels (Simplified) */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+            {/* Axis Labels (Absolute Position to prevent wrapping) */}
+            <View style={{ height: 20, width: width, marginTop: 8 }}>
                 {data.map((d, i) => {
-                    // Show every label if small dataset, or skip for larger
-                    const showLabel = data.length <= 10 || i % Math.ceil(data.length / 7) === 0;
-                    if (!showLabel) return <View key={i} style={{ width: width / data.length }} />;
+                    const step = Math.ceil(data.length / 7);
+                    const isFirst = i === 0;
+                    const isLast = i === data.length - 1;
+                    const isStep = i % step === 0;
+
+                    let showLabel = false;
+                    if (data.length <= 10) showLabel = true;
+                    else if (isFirst || isLast) showLabel = true;
+                    else if (isStep && i < data.length - 2) showLabel = true;
+
+                    if (!showLabel) return null;
+
+                    // Calculate position
+                    // Center the text on the "bar" slot which is at i*stepX
+                    // We widen the container to prevent wrapping for 2-digit dates
+                    const left = i * stepX;
+                    const extraWidth = 20;
 
                     return (
-                        <Text key={i} style={{ width: width / data.length, textAlign: 'center', fontSize: 10, color: colors.textSecondary }}>
+                        <Text
+                            key={i}
+                            style={{
+                                position: 'absolute',
+                                left: left - extraWidth / 2 + stepX / 2, // Center on the slot
+                                width: stepX + extraWidth,
+                                textAlign: 'center',
+                                fontSize: 10,
+                                color: colors.textSecondary
+                            }}
+                        >
                             {d.date || d.time}
                         </Text>
                     );
@@ -353,7 +398,7 @@ export const SleepScreen = () => {
         const Legend = () => (
             <View style={{ flexDirection: 'row', marginTop: SPACING.xl, justifyContent: 'center' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: SPACING.l }}>
-                    <View style={{ width: 10, height: 10, backgroundColor: '#818CF8', marginRight: 6 }} />
+                    <View style={{ width: 10, height: 10, backgroundColor: colors.primary, borderRadius: 5, marginRight: 6 }} />
                     <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
                         Duration {isDay ? '(min)' : '(h)'}
                     </Text>
@@ -364,7 +409,6 @@ export const SleepScreen = () => {
                 </View>
             </View>
         );
-
         if (selectedTab === 'Week') {
             return (
                 <View style={{ alignItems: 'center', width: '100%' }}>
@@ -391,12 +435,7 @@ export const SleepScreen = () => {
                         maxDurationVal={60}
                     />
                     <Legend />
-
-                    {/* Show Total Score below Day graph */}
-                    <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: SPACING.xl }}>
-                        <Text style={{ fontSize: 32, fontWeight: 'bold', color: colors.textPrimary }}>{data.sleep.score}</Text>
-                        <Text style={{ fontSize: 14, color: colors.textSecondary, marginLeft: 6 }}>Sleep Score</Text>
-                    </View>
+                    {/* Removed Sleep Score Display */}
                 </View>
             );
         }
