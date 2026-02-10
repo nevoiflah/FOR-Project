@@ -13,7 +13,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { Heart, Activity } from 'lucide-react-native';
 
 export const HeartScreen = () => {
-    const { data, isConnected, triggerHeartRateScan } = useData();
+    const { data, isConnected, triggerHeartRateScan, triggerSpO2Scan, triggerStressScan } = useData();
     const { t, isRTL } = useLanguage();
     const { colors, isDark } = useTheme();
     const [isMounted, setIsMounted] = useState(false);
@@ -94,43 +94,120 @@ export const HeartScreen = () => {
                             </GlassCard>
 
                             <GlassCard style={styles.mainCard} contentContainerStyle={{ padding: SPACING.l }}>
-                                <Activity size={32} color={colors.accent} style={{ marginBottom: 10 }} />
-                                <Text style={styles.bigValue}>{data.heart.variability} ms</Text>
-                                <Text style={styles.label}>{t('hrv')}</Text>
+                                <TouchableOpacity
+                                    style={{ alignItems: 'center', width: '100%' }}
+                                    onPress={triggerStressScan}
+                                    activeOpacity={0.7}
+                                >
+                                    <Activity size={32} color={colors.accent} style={{ marginBottom: 10 }} />
+                                    <Text style={styles.bigValue}>{data.heart.variability} ms</Text>
+                                    <Text style={styles.label}>{t('hrv')}</Text>
+                                    <Text style={{ fontSize: 10, color: colors.textSecondary, marginTop: 4 }}>Tap to Measure</Text>
+                                </TouchableOpacity>
                             </GlassCard>
                         </View>
 
                         {/* HR Trend Graph */}
                         <View style={{ marginBottom: SPACING.l }}>
-                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('hrTrend')}</Text>
+                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>Heart Rate</Text>
                             <GlassCard
                                 style={{ alignItems: 'center', overflow: 'hidden' }}
                                 contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%' }}
                             >
                                 <GlassChart
                                     data={data.heart.trend}
-                                    height={120}
+                                    height={150}
                                     width={Dimensions.get('window').width - 48}
                                     color="#FF6B6B"
                                     gradientId="heart-hr-grad"
+                                    // @ts-ignore
+                                    showXAxis={true}
                                 />
                             </GlassCard>
                         </View>
 
-                        <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('todaysRange')}</Text>
-                        <GlassCard style={styles.rangeCard} contentContainerStyle={{ padding: SPACING.l }}>
-                            <View style={styles.rangeBar}>
-                                <View style={[
-                                    styles.rangeFill,
-                                    {
-                                        left: `${Math.max(0, ((data.heart.resting - 5 - 40) / 80) * 100)}%`,
-                                        width: '40%'
-                                    }
-                                ]} />
+                        {/* HRV Trend Graph */}
+                        <View style={{ marginBottom: SPACING.l }}>
+                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>HRV</Text>
+                            <GlassCard
+                                style={{ alignItems: 'center', overflow: 'hidden' }}
+                                contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%' }}
+                            >
+                                <GlassChart
+                                    data={data.heart.hrvTrend || [0, 0, 0, 0, 0]}
+                                    height={120}
+                                    width={Dimensions.get('window').width - 48}
+                                    color={colors.accent}
+                                    gradientId="heart-hrv-grad"
+                                />
+                            </GlassCard>
+                        </View>
+
+                        {/* SpO2 Card */}
+                        <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>Blood Oxygen</Text>
+                        <GlassCard style={styles.fullWidthCard} contentContainerStyle={{ padding: SPACING.l, width: '100%' }}>
+                            <View style={{ width: '100%' }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                    <View>
+                                        <Text style={styles.bigValue}>{data.heart.spo2 > 0 ? `${data.heart.spo2}%` : '--'}</Text>
+                                        <Text style={[styles.label, { textAlign: 'left' }]}>LIVE SpO2</Text>
+                                    </View>
+                                    <TouchableOpacity
+                                        style={styles.actionButton}
+                                        onPress={triggerSpO2Scan}
+                                    >
+                                        <Text style={styles.actionButtonText}>Measure</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                {/* SpO2 Bar (90-100% normal range visualization) */}
+                                <View style={styles.rangeBar}>
+                                    <View style={[
+                                        styles.rangeFill,
+                                        {
+                                            left: 0,
+                                            width: data.heart.spo2 > 0 ? `${data.heart.spo2}%` : '0%',
+                                            backgroundColor: data.heart.spo2 < 90 ? '#FFC107' : '#4CAF50'
+                                        }
+                                    ]} />
+                                </View>
+                                <View style={[styles.rangeLabels, isRTL && { flexDirection: 'row-reverse' }]}>
+                                    <Text style={styles.rangeText}>0%</Text>
+                                    <Text style={styles.rangeText}>100%</Text>
+                                </View>
                             </View>
-                            <View style={[styles.rangeLabels, isRTL && { flexDirection: 'row-reverse' }]}>
-                                <Text style={styles.rangeText}>{t('min')} {data.heart.resting > 0 ? data.heart.resting - 5 : '--'}</Text>
-                                <Text style={styles.rangeText}>{t('max')} {data.heart.resting > 0 ? data.heart.resting + 45 : '--'}</Text>
+                        </GlassCard>
+
+                        {/* Stress Card */}
+                        <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>Stress</Text>
+                        <GlassCard style={styles.fullWidthCard} contentContainerStyle={{ padding: SPACING.l, width: '100%' }}>
+                            <View style={{ width: '100%' }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                    <View>
+                                        <Text style={styles.bigValue}>{data.heart.stress > 0 ? data.heart.stress : '--'}</Text>
+                                        <Text style={[styles.label, { textAlign: 'left' }]}>Stress Level</Text>
+                                    </View>
+                                    <TouchableOpacity
+                                        style={styles.actionButton}
+                                        onPress={triggerStressScan}
+                                    >
+                                        <Text style={styles.actionButtonText}>Measure</Text>
+                                    </TouchableOpacity>
+                                </View>
+
+                                {/* Stress Bar Visual */}
+                                <View style={styles.rangeBar}>
+                                    <View style={[
+                                        styles.rangeFill,
+                                        {
+                                            width: `${data.heart.stress}%`,
+                                            backgroundColor: data.heart.stress < 40 ? '#4CAF50' : data.heart.stress < 70 ? '#FFC107' : '#F44336'
+                                        }
+                                    ]} />
+                                </View>
+                                <View style={[styles.rangeLabels, isRTL && { flexDirection: 'row-reverse' }]}>
+                                    <Text style={styles.rangeText}>Relaxed</Text>
+                                    <Text style={styles.rangeText}>High</Text>
+                                </View>
                             </View>
                         </GlassCard>
 
@@ -186,6 +263,13 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         height: 160,
+    },
+    fullWidthCard: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: SPACING.l,
+        minHeight: 120, // Give it some height but let content drive it
     },
     bigValue: {
         fontSize: 32,
@@ -244,4 +328,29 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
         fontSize: 16,
         lineHeight: 24,
     },
+    actionButton: {
+        backgroundColor: 'rgba(255, 107, 107, 0.2)',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#FF6B6B',
+    },
+    actionButtonText: {
+        color: '#FF6B6B',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    stressBarContainer: {
+        height: 6,
+        width: 120,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 3,
+        marginTop: 8,
+        overflow: 'hidden',
+    },
+    stressBarFill: {
+        height: '100%',
+        borderRadius: 3,
+    }
 });

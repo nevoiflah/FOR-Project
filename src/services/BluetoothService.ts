@@ -368,6 +368,27 @@ class BluetoothService {
         }
     }
 
+    parseSpO2(base64Value: string): number | null {
+        try {
+            const data = this.decodeBase64(base64Value);
+            // MHCS SpO2 Packet usually starts with EF 03 or similar
+            // Format: [EF, 03, ..., SpO2, ...]
+            // Based on similar rings, SpO2 is often at index 6 or 7
+            if (data.length >= 7 && data[0] === 0xEF) {
+                // Heuristic: valid SpO2 is usually 80-100
+                // We'll search for a valid byte in the payload
+                // For now, let's assume it shares the structure of HR (index 6 or 7)
+                // but we need to verify with logs.
+                // Placeholder logic:
+                return null;
+            }
+            return null;
+        } catch (error) {
+            console.error('[BLE] SpO2 parse error:', error);
+            return null;
+        }
+    }
+
     /**
      * Activates continuous/dynamic measurement mode for heart rate and SpO2.
      * This ensures the green (HR) or red (SpO2) LEDs are active as long as the ring is connected.
@@ -407,33 +428,20 @@ class BluetoothService {
      * Triggers a manual single-point heart rate measurement
      */
     async triggerManualHeartRateScan(): Promise<void> {
-        const HR_SERVICE = '0000180d-0000-1000-8000-00805f9b34fb';
-        const HR_CONTROL_POINT = '00002a39-0000-1000-8000-00805f9b34fb';
+        console.log('[BLE] Manual trigger requested - Enabling Continuous Mode directly...');
+
+        if (!this.connectedDevice) {
+            console.log('[BLE] Cannot trigger scan: No device connected.');
+            return;
+        }
 
         try {
-            console.log('[BLE] Starting manual measurement triggers...');
-            console.trace('[BLE] Trace triggerHeartRateScan caller');
-
-            // 1. Standard GATT HR Start
-            try {
-                await this.writeCharacteristic(HR_SERVICE, HR_CONTROL_POINT, this.encodeBase64([0x01]));
-            } catch (e) { }
-            await this.delay(300);
-
-            // 2. Proprietary Manual HR Start (EF 11 01)
-            await this.sendProprietaryCommand(0xEF, 0x11, [0x01]);
-            await this.delay(300);
-
-            // 3. Proprietary Manual SpO2 Start (EF 12 01)
-            await this.sendProprietaryCommand(0xEF, 0x12, [0x01]);
-
-            // 4. Fallback 1-byte triggers only if needed (sending anyway to be safe)
-            await this.sendProprietaryCommand(0, 0, [0x01], true);
-            await this.sendProprietaryCommand(0, 0, [0x03], true);
-
-            console.log('[BLE] All manual measurement triggers sent');
+            // Simply re-enable the continuous monitoring commands
+            // This usually wakes up the green light if it went to sleep
+            await this.startLiveMonitoring();
+            console.log('[BLE] Manual trigger commands sent.');
         } catch (error) {
-            console.error('[BLE] Failed to trigger manual scan:', error);
+            console.error('[BLE] Manual trigger failed:', error);
         }
     }
 

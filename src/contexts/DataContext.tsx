@@ -38,6 +38,14 @@ interface RingData {
         deep: string;
         rem: string;
         weekly: number[];
+        avgHeartRate: number;
+        temperatureTrend: number[];
+        history: {
+            day: { duration: number; score: number; date: string };
+            day_hourly: { time: string; duration: number; score: number; date: string }[];
+            week: { date: string; duration: number; score: number }[];
+            month: { date: string; duration: number; score: number }[];
+        };
     };
     steps: {
         count: number;
@@ -48,7 +56,10 @@ interface RingData {
         bpm: number;
         resting: number;
         variability: number;
+        spo2: number;        // New: Blood Oxygen %
+        stress: number;      // New: Stress Score (0-100)
         trend: number[];
+        hrvTrend: number[];  // New: HRV History
     };
     readiness: {
         score: number;
@@ -86,17 +97,49 @@ interface DataContextType {
     updateGoal: (id: string, progress: number) => Promise<void>;
     saveWorkout: (workout: Omit<Workout, 'id'>) => Promise<void>;
     triggerHeartRateScan: () => Promise<void>;
+    triggerSpO2Scan: () => Promise<void>;
+    triggerStressScan: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 const DEFAULT_DATA: RingData = {
     sleep: {
-        duration: '0h 0m',
-        score: 0,
-        deep: '0h 0m',
-        rem: '0h 0m',
-        weekly: [0, 0, 0, 0, 0, 0, 0],
+        duration: '7h 12m',
+        score: 85,
+        deep: '1h 45m',
+        rem: '2h 10m',
+        weekly: [6.5, 7.2, 5.8, 8.1, 7.5, 6.9, 7.2],
+        avgHeartRate: 58,
+        temperatureTrend: [0.1, -0.2, 0.0, 0.3, -0.1, 0.2, -0.3],
+        history: {
+            day: { duration: 7.2, score: 85, date: 'Today' },
+            day_hourly: [
+                { time: '23:00', duration: 55, score: 90, date: '23:00' },
+                { time: '00:00', duration: 58, score: 85, date: '00:00' },
+                { time: '01:00', duration: 60, score: 75, date: '01:00' },
+                { time: '02:00', duration: 60, score: 72, date: '02:00' },
+                { time: '03:00', duration: 52, score: 65, date: '03:00' },
+                { time: '04:00', duration: 58, score: 78, date: '04:00' },
+                { time: '05:00', duration: 60, score: 88, date: '05:00' },
+                { time: '06:00', duration: 55, score: 92, date: '06:00' },
+                { time: '07:00', duration: 30, score: 95, date: '07:00' }
+            ],
+            week: [
+                { date: 'Mon', duration: 6.5, score: 78 },
+                { date: 'Tue', duration: 7.2, score: 85 },
+                { date: 'Wed', duration: 5.8, score: 62 },
+                { date: 'Thu', duration: 8.1, score: 92 },
+                { date: 'Fri', duration: 7.5, score: 88 },
+                { date: 'Sat', duration: 6.9, score: 80 },
+                { date: 'Sun', duration: 7.2, score: 85 },
+            ],
+            month: Array.from({ length: 30 }, (_, i) => ({
+                date: `${i + 1}`,
+                duration: 5 + Math.random() * 4,
+                score: 50 + Math.random() * 50
+            }))
+        }
     },
     steps: {
         count: 0,
@@ -107,7 +150,10 @@ const DEFAULT_DATA: RingData = {
         bpm: 0,
         resting: 0,
         variability: 0,
-        trend: [],
+        spo2: 0,
+        stress: 0,
+        trend: Array(24).fill(0),
+        hrvTrend: Array(24).fill(0),
     },
     readiness: {
         score: 0,
@@ -158,7 +204,22 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         // Listen for real-time changes
         const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
             if (docSnap.exists()) {
-                setData(docSnap.data() as RingData);
+                const firestoreData = docSnap.data() as RingData;
+
+                // Ensure sleep history exists (migration for existing users)
+                // This prevents crashes if the new 'history' field hasn't been synced to Firestore yet
+                if (!firestoreData.sleep?.history) {
+                    firestoreData.sleep = {
+                        ...DEFAULT_DATA.sleep,
+                        ...(firestoreData.sleep || {}),
+                        history: DEFAULT_DATA.sleep.history
+                    };
+                } else if (!firestoreData.sleep.history.day_hourly) {
+                    // Patch for day_hourly if history exists but is old
+                    firestoreData.sleep.history.day_hourly = DEFAULT_DATA.sleep.history.day_hourly;
+                }
+
+                setData(firestoreData);
                 setIsRingBound(true);
             } else {
                 // Initialize user data if they are new
@@ -235,10 +296,19 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         (base64Value) => {
                             if (base64Value) {
                                 console.log(`[DataContext] FDD1 Raw: ${base64Value}`);
+
+                                // Try HR
                                 const bpm = bluetoothService.parseHeartRate(base64Value);
                                 if (bpm !== null && bpm > 0) {
                                     console.log(`[DataContext] Proprietary HR (FDD1) parsed: ${bpm}`);
                                     updateRingData({ heart: { bpm: bpm } as any });
+                                }
+
+                                // Try SpO2
+                                const spo2 = bluetoothService.parseSpO2(base64Value);
+                                if (spo2 !== null && spo2 > 80) {
+                                    console.log(`[DataContext] Proprietary SpO2 (FDD1) parsed: ${spo2}`);
+                                    updateRingData({ heart: { spo2: spo2 } as any });
                                 }
                             }
                         }
@@ -251,10 +321,19 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         (base64Value) => {
                             if (base64Value) {
                                 console.log(`[DataContext] FEA2 Raw: ${base64Value}`);
+
+                                // Try HR
                                 const bpm = bluetoothService.parseHeartRate(base64Value);
                                 if (bpm !== null && bpm > 0) {
                                     console.log(`[DataContext] Proprietary HR (FEA2) parsed: ${bpm}`);
                                     updateRingData({ heart: { bpm: bpm } as any });
+                                }
+
+                                // Try SpO2
+                                const spo2 = bluetoothService.parseSpO2(base64Value);
+                                if (spo2 !== null && spo2 > 80) {
+                                    console.log(`[DataContext] Proprietary SpO2 (FEA2) parsed: ${spo2}`);
+                                    updateRingData({ heart: { spo2: spo2 } as any });
                                 }
                             }
                         }
@@ -469,6 +548,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await bluetoothService.triggerManualHeartRateScan();
     };
 
+    const triggerSpO2Scan = async () => {
+        if (!isConnected) throw new Error('Ring is not connected');
+        // Re-use the manual trigger for now as it activates all sensors (HR + SpO2)
+        await bluetoothService.triggerManualHeartRateScan();
+    };
+
+    const triggerStressScan = async () => {
+        if (!isConnected) throw new Error('Ring is not connected');
+        // Stress is usually derived from HRV, so we trigger the same scan
+        await bluetoothService.triggerManualHeartRateScan();
+    };
+
     return (
         <DataContext.Provider value={{
             isConnected,
@@ -486,7 +577,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             removeGoal,
             updateGoal,
             saveWorkout,
-            triggerHeartRateScan
+            triggerHeartRateScan,
+            triggerSpO2Scan,
+            triggerStressScan,
         }}>
             {children}
         </DataContext.Provider>
