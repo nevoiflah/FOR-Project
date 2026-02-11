@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { Alert } from 'react-native';
 import { bluetoothService } from '../services/BluetoothService';
 import { db } from '../config/firebase';
@@ -455,24 +455,97 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+
+    // Vitals Buffer for Batch Upload
+    const vitalsBuffer = useRef<any[]>([]);
+    const lastUploadTime = useRef<number>(Date.now());
+
+    const flushVitalsBuffer = async () => {
+        if (vitalsBuffer.current.length === 0) return;
+        if (!user) return;
+
+        const logsToUpload = [...vitalsBuffer.current];
+        vitalsBuffer.current = []; // Clear immediately to prevent double send
+        lastUploadTime.current = Date.now();
+
+        try {
+            console.log(`[DataContext] Uploading ${logsToUpload.length} vitals logs to Backend...`);
+            const token = await user.getIdToken();
+
+            // Allow dev loopback for Android (10.0.2.2) or localhost for iOS
+            // Replace with your actual machine IP if testing on real device!
+            // const API_URL = 'http://localhost:3000/vitals/batch'; 
+            // For now assuming iOS simulator or local web
+            const API_URL = 'http://localhost:3000/vitals/batch';
+
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ logs: logsToUpload })
+            });
+
+            if (!response.ok) {
+                console.error('[DataContext] Upload Failed:', await response.text());
+                // Optional: Re-queue failed logs? For now we drop to avoid memory leaks
+            } else {
+                console.log('[DataContext] Batch upload successful.');
+            }
+        } catch (e) {
+            console.error('[DataContext] Upload Error:', e);
+        }
+    };
+
+    // Auto-flush every 5 minutes
+    useEffect(() => {
+        const interval = setInterval(() => {
+            flushVitalsBuffer();
+        }, 5 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, [user]);
+
     const updateRingData = async (updates: Partial<RingData>) => {
         if (!user) return;
 
         // Set ring bound status
         setIsRingBound(true);
 
+        // 1. Add to Vitals Buffer (MongoDB)
+        // We only buffer if we have "Sense" data (HR, Steps, etc.)
+        if (updates.heart || updates.steps) {
+            const logEntry = {
+                timestamp: new Date().toISOString(),
+                data: {
+                    heartRate: updates.heart?.bpm,
+                    hrv: updates.heart?.variability,
+                    spo2: updates.heart?.spo2,
+                    stress: updates.heart?.stress,
+                    steps: updates.steps?.count
+                    // Add others as needed
+                }
+            };
+            vitalsBuffer.current.push(logEntry);
+
+            // Optional: Flush immediately if buffer gets too big
+            if (vitalsBuffer.current.length >= 60) { // e.g. 1 hour of minute-data
+                flushVitalsBuffer();
+            }
+        }
+
         setData(prev => {
             if (!prev) return null;
 
-            // Deep merge logic for heart to preserve trend
+            // 2. Update Local State (React) - Purely for UI display
             const newHeart = updates.heart ? {
                 ...prev.heart,
                 ...updates.heart,
                 trend: updates.heart.bpm
-                    ? [...(prev.heart.trend || []), updates.heart.bpm].slice(-10)
+                    ? [...(prev.heart.trend || []), updates.heart.bpm].slice(-24) // Keep simple 24-pt trend for UI
                     : prev.heart.trend,
                 hrvTrend: updates.heart.variability
-                    ? [...(prev.heart.hrvTrend || []), updates.heart.variability].slice(-10)
+                    ? [...(prev.heart.hrvTrend || []), updates.heart.variability].slice(-24)
                     : prev.heart.hrvTrend
             } : prev.heart;
 
@@ -484,7 +557,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 const bpm = updates.heart.bpm;
 
                 // Simple score calculation: Lower HR = Higher Sleep Score (inverted from 100)
-                // e.g. 60bpm -> 80 score, 80bpm -> 60 score. Clamped 0-100.
                 const calculatedScore = Math.max(0, Math.min(100, 140 - bpm));
 
                 // Initialize hourly array if missing
@@ -500,14 +572,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 if (existingEntryIndex >= 0) {
                     // Update existing hour
                     const entry = newSleep.history.day_hourly[existingEntryIndex];
-                    // Weighted average for score could be better, but simple overwrite is fine for "current status"
-                    // or maybe average it? Let's average it to be smoother.
                     const outputScore = Math.round((entry.score + calculatedScore) / 2);
 
                     newSleep.history.day_hourly[existingEntryIndex] = {
                         ...entry,
                         score: outputScore,
-                        duration: 60 // Assume full hour if we have data (or increment? let's stick to 60 for visibility)
+                        duration: 60
                     };
                 } else {
                     // Add new hour
@@ -517,8 +587,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         score: calculatedScore,
                         duration: 60
                     });
-                    // Sort by time?
-                    // newSleep.history.day_hourly.sort(...) // Optional
                 }
             }
 
@@ -529,14 +597,34 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 sleep: newSleep
             };
 
-            // Sync to Firestore
+            // 3. Sync "Latest State" to Firestore (Profile, Settings, Current Status)
+            // We NO LONGER sync the massive history arrays to Firestore here to save costs.
+            // We only merge the "top level" current values.
             const userDocRef = doc(db, 'users', user.uid);
-            const persistenceUpdates = { ...updates, sleep: newSleep };
+
+            // Create a "lean" update object for Firestore (exclude massive arrays)
+            const persistenceUpdates: any = { ...updates };
+
+            // If updating heart, only save the *current* metrics to Firestore, not the full history trend
+            if (updates.heart) {
+                persistenceUpdates.heart = {
+                    bpm: updates.heart.bpm,
+                    hrv: updates.heart.variability,
+                    spo2: updates.heart.spo2,
+                    stress: updates.heart.stress
+                    // timestamp: ... 
+                };
+            }
+
+            // Keep Sleep history in Firestore for now as it's low frequency (hourly/daily chunks)
+            // or move it to MongoDB too. For now let's keep it to ensure UI works.
+            persistenceUpdates.sleep = newSleep;
+
             setDoc(userDocRef, persistenceUpdates, { merge: true }).catch(e =>
                 console.error('[DataContext] Firestore Sync Error:', e)
             );
 
-            console.log('[DataContext] Updated ring data:', updates);
+            console.log('[DataContext] Updated ring data (Buffered for Mongo):', updates);
             return updated;
         });
     };
