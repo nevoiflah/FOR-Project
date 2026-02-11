@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { bluetoothService } from '../services/BluetoothService';
 import { db } from '../config/firebase';
@@ -450,7 +451,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             const end = new Date();
             const start = new Date(end.getTime() - 24 * 60 * 60 * 1000); // Last 24h
 
-            const API_URL = `http://localhost:3000/vitals/history?start=${start.toISOString()}&end=${end.toISOString()}`;
+            const API_URL = `https://for-project-8ris.onrender.com/vitals/history?start=${start.toISOString()}&end=${end.toISOString()}`;
 
             const response = await fetch(API_URL, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -558,24 +559,46 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     // Vitals Buffer for Batch Upload
     const vitalsBuffer = useRef<any[]>([]);
     const lastUploadTime = useRef<number>(Date.now());
+    const OFFLINE_STORAGE_KEY = '@offline_vitals_buffer';
 
     const flushVitalsBuffer = async () => {
-        if (vitalsBuffer.current.length === 0) return;
-        if (!user) return;
-
-        const logsToUpload = [...vitalsBuffer.current];
-        vitalsBuffer.current = []; // Clear immediately to prevent double send
+        // 1. Grab current in-memory logs and clear buffer immediately
+        let logsToUpload = [...vitalsBuffer.current];
+        vitalsBuffer.current = [];
         lastUploadTime.current = Date.now();
+
+        // 2. Check for previously failed (offline) logs
+        try {
+            const storedLogs = await AsyncStorage.getItem(OFFLINE_STORAGE_KEY);
+            if (storedLogs) {
+                const parsed = JSON.parse(storedLogs);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    console.log(`[DataContext] Found ${parsed.length} offline logs. Merging...`);
+                    // Prepend older logs
+                    logsToUpload = [...parsed, ...logsToUpload];
+                }
+            }
+        } catch (err) {
+            console.error('[DataContext] Error reading offline logs:', err);
+        }
+
+        // If nothing to upload after checking storage, exit
+        if (logsToUpload.length === 0) return;
+
+        if (!user) {
+            // User logged out? Save to storage and wait.
+            try {
+                await AsyncStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(logsToUpload));
+            } catch (e) { console.error(e); }
+            return;
+        }
 
         try {
             console.log(`[DataContext] Uploading ${logsToUpload.length} vitals logs to Backend...`);
             const token = await user.getIdToken();
 
-            // Allow dev loopback for Android (10.0.2.2) or localhost for iOS
-            // Replace with your actual machine IP if testing on real device!
-            // const API_URL = 'http://localhost:3000/vitals/batch'; 
-            // For now assuming iOS simulator or local web
-            const API_URL = 'http://localhost:3000/vitals/batch';
+            // Production API URL (Render)
+            const API_URL = 'https://for-project-8ris.onrender.com/vitals/batch';
 
             const response = await fetch(API_URL, {
                 method: 'POST',
@@ -587,18 +610,29 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             });
 
             if (!response.ok) {
-                console.error('[DataContext] Upload Failed:', await response.text());
-                // Optional: Re-queue failed logs? For now we drop to avoid memory leaks
-            } else {
-                console.log('[DataContext] Batch upload successful.');
+                throw new Error(`Server returned ${response.status}`);
             }
+
+            // Success! Clear offline storage
+            console.log('[DataContext] Batch upload successful.');
+            await AsyncStorage.removeItem(OFFLINE_STORAGE_KEY);
+
         } catch (e) {
-            console.error('[DataContext] Upload Error:', e);
+            console.error('[DataContext] Upload Failed. Saving to offline storage.', e);
+            // Save combined logs back to storage for next time
+            try {
+                await AsyncStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(logsToUpload));
+            } catch (storageErr) {
+                console.error('[DataContext] Failed to save offline logs:', storageErr);
+            }
         }
     };
 
     // Auto-flush every 5 minutes
     useEffect(() => {
+        // Run once on mount (to clear any pending offline logs)
+        flushVitalsBuffer();
+
         const interval = setInterval(() => {
             flushVitalsBuffer();
         }, 5 * 60 * 1000);
