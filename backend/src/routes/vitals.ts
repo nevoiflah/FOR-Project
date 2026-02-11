@@ -1,6 +1,6 @@
 import express from 'express';
-import VitalsLog from '../models/VitalsLog';
-import { checkAuth, AuthenticatedRequest } from '../middleware/auth';
+import VitalsLog from '../models/VitalsLog.js';
+import { checkAuth, AuthenticatedRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 

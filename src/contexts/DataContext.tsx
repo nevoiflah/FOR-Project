@@ -440,6 +440,105 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }, 800);
     };
 
+
+    // Fetch History from MongoDB (Backend)
+    const fetchHistory = async () => {
+        if (!user) return;
+        try {
+            console.log('[DataContext] Fetching history from Backend...');
+            const token = await user.getIdToken();
+            const end = new Date();
+            const start = new Date(end.getTime() - 24 * 60 * 60 * 1000); // Last 24h
+
+            const API_URL = `http://localhost:3000/vitals/history?start=${start.toISOString()}&end=${end.toISOString()}`;
+
+            const response = await fetch(API_URL, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch history');
+
+            const result = await response.json();
+            const logs = result.data;
+
+            if (logs && logs.length > 0) {
+                // Process logs into trend arrays (resample to ~24 points if needed, or just take raw)
+                // For simplicity, let's map raw. Chart can handle typical arrays.
+                // Or if too many points, we might want to sample. 
+                // Let's assume backend returns minute data -> 1440 points. Too much for UI?
+                // GlassChart might lag with 1440 points. Let's sample every 60th point (hourly) or similar.
+
+                // Process Heart Rate Trends
+                const hrTrend = logs
+                    .filter((l: any) => l.data?.heartRate)
+                    .map((l: any) => l.data.heartRate);
+
+                const hrvTrend = logs
+                    .filter((l: any) => l.data?.hrv)
+                    .map((l: any) => l.data.hrv);
+
+                // Process Steps History (Hourly Aggregation for "Day" View)
+                const hourlySteps: Record<string, { steps: number, calories: number }> = {};
+
+                logs.forEach((log: any) => {
+                    if (log.data?.steps || log.data?.calories) {
+                        const date = new Date(log.timestamp);
+                        const hourHost = `${date.getHours().toString().padStart(2, '0')}:00`;
+
+                        if (!hourlySteps[hourHost]) {
+                            hourlySteps[hourHost] = { steps: 0, calories: 0 };
+                        }
+                        hourlySteps[hourHost].steps += (log.data.steps || 0);
+                        hourlySteps[hourHost].calories += (log.data.calories || 0);
+                    }
+                });
+
+                // Convert map to array { time, steps, calories } and sort by time
+                const dayHistory = Object.keys(hourlySteps).map(time => ({
+                    time,
+                    steps: hourlySteps[time].steps,
+                    calories: hourlySteps[time].calories
+                })).sort((a, b) => a.time.localeCompare(b.time));
+
+                // Downsample HR/HRV for trends
+                const downsample = (arr: number[], target: number) => {
+                    if (arr.length <= target) return arr;
+                    const step = Math.ceil(arr.length / target);
+                    return arr.filter((_, i) => i % step === 0);
+                };
+
+                setData(prev => {
+                    if (!prev) return null;
+                    return {
+                        ...prev,
+                        heart: {
+                            ...prev.heart,
+                            trend: downsample(hrTrend, 50),
+                            hrvTrend: downsample(hrvTrend, 50)
+                        },
+                        steps: {
+                            ...prev.steps,
+                            history: {
+                                ...prev.steps.history,
+                                day: dayHistory.length > 0 ? dayHistory : prev.steps.history.day
+                            }
+                        }
+                    };
+                });
+                console.log(`[DataContext] History loaded: ${hrTrend.length} points (downsampled to ~50)`);
+            }
+        } catch (e) {
+            console.error('[DataContext] Fetch History Error:', e);
+        }
+    };
+
+    // Initial History Load
+    useEffect(() => {
+        if (user) {
+            fetchHistory();
+        }
+    }, [user]);
+
     const disconnectRing = async () => {
         if (!user) return;
         setIsSyncing(true);
