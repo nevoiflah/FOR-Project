@@ -22,8 +22,29 @@ FOR Project is a comprehensive smart ring companion application built with React
     - expo-blur and expo-linear-gradient for visual effects
     - react-native-svg for custom charts
     - lucide-react-native for vector icons
-- **Storage**: @react-native-async-storage/async-storage
-- **Device Features**: expo-haptics
+- **Storage**: @react-native-async-storage/async-storage (Device), Firebase Firestore (User Profiles), MongoDB Atlas (Vital History)
+- **Device Features**: expo-haptics, react-native-ble-plx (Bluetooth)
+
+## Hybrid Architecture
+
+The app uses a **Hybrid Backend** to balance cost and performance:
+*   **Firebase (Auth & Firestore)**: Handles User Authentication and low-frequency data like User Profiles and Settings.
+*   **Node.js + MongoDB (Express API)**: Handles high-frequency time-series data (Heart Rate, HRV, Steps) to avoid Firestore write limits.
+
+## Backend (Server)
+
+The backend is located in the `backend/` folder. It is a Node.js/Express app written in TypeScript.
+
+### Tech Stack
+*   **Runtime**: Node.js
+*   **Framework**: Express.js
+*   **Database**: MongoDB (via Mongoose)
+*   **Auth**: Firebase Admin SDK (verifies ID Tokens from App)
+*   **Deployment**: Render.com
+
+### API Endpoints
+*   `POST /vitals/batch`: Uploads a batch of buffered vital signs (Heart Rate, Steps) to MongoDB.
+*   `GET /vitals/history`: Fetches 24h of historical data for graphing.
 
 ## Installation
 
@@ -38,9 +59,32 @@ FOR Project is a comprehensive smart ring companion application built with React
     npm install
     ```
 
-3.  Start the application:
+3.  Start the application (Frontend):
     ```bash
     npm start
+    ```
+
+### Backend Setup
+
+1.  Navigate to the backend folder:
+    ```bash
+    cd backend
+    ```
+
+2.  Install backend dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Create a `.env` file in `backend/` with:
+    ```env
+    MONGODB_URI=your_mongodb_connection_string
+    PORT=3000
+    ```
+
+4.  Start the backend server:
+    ```bash
+    npm run dev
     ```
 
 ## Development
