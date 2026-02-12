@@ -42,6 +42,15 @@ export const translations = {
         height: "Height",
         weight: "Weight",
 
+        // Onboarding Slides
+        welcomeTitle: 'Welcome to F.O.R',
+        welcomeText: 'Your personal health companion. Track your vitals, understand your body, and optimize your wellness.',
+        privacyTitle: 'Privacy First',
+        privacyText: 'Your data is encrypted and yours alone. We store your health metrics securely on the cloud, accessible only by you.',
+        wearTitle: 'How to Wear',
+        wearText: 'For the best accuracy, wear your F.O.R Ring on your index finger. Ensure the sensors are on the palm side.',
+        getStarted: "Get Started",
+
         // Dashboard
         greeting: "Good Morning,",
         syncing: "Syncing Ring...",
@@ -277,6 +286,15 @@ export const translations = {
         female: "נקבה",
         height: "גובה",
         weight: "משקל",
+
+        // Onboarding Slides
+        welcomeTitle: 'ברוכים הבאים ל-F.O.R',
+        welcomeText: 'שותף הבריאות האישי שלך. עקוב אחר המדדים שלך, הבן את גופך, ושפר את בריאותך.',
+        privacyTitle: 'פרטיות מעל הכל',
+        privacyText: 'הנתונים שלך מוצפנים ושייכים רק לך. אנו שומרים את מדדי הבריאות שלך בענן בצורה מאובטחת, נגישים רק לך.',
+        wearTitle: 'איך לענוד',
+        wearText: 'לדיוק מרבי, ענוד את טבעת ה-F.O.R על האצבע המורה. וודא שהחיישנים פונים לצד כף היד.',
+        getStarted: "מתחילים",
 
         // Dashboard
         greeting: "בוקר טוב,",

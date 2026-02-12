@@ -22,6 +22,8 @@ import { EditProfileScreen } from '../screens/User/EditProfileScreen';
 import { WorkoutScreen } from '../screens/Main/WorkoutScreen';
 import { MindfulnessScreen } from '../screens/Main/MindfulnessScreen';
 import { HistoryScreen } from '../screens/User/HistoryScreen';
+import { PrivacyPolicyScreen } from '../screens/Legal/PrivacyPolicyScreen';
+import { TermsScreen } from '../screens/Legal/TermsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -148,8 +150,9 @@ export const AppNavigator = () => {
     }
 
     // Determine if onboarding is needed
-    // Safety check: if we have user but no data doc yet, or missing profile fields
-    const needsOnboarding = user && (!data?.userProfile?.age || !data?.userProfile?.weight);
+    // Strict check: User exists AND onboardingCompleted is false or undefined
+    // We treat undefined as false for existing users who migrated
+    const needsOnboarding = user && (data?.onboardingCompleted === false || data?.onboardingCompleted === undefined);
 
     return (
         <NavigationContainer theme={navigationTheme}>
@@ -170,6 +173,8 @@ export const AppNavigator = () => {
                     }}>
                         <Stack.Screen name="MainBase" component={MainTabs} />
                         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+                        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+                        <Stack.Screen name="Terms" component={TermsScreen} />
                         <Stack.Screen
                             name="EditProfile"
                             component={EditProfileScreen}

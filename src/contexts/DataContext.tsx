@@ -85,6 +85,7 @@ interface RingData {
     unitSystem?: 'metric' | 'imperial';
     notificationsEnabled?: boolean;
     appleHealthEnabled?: boolean;
+    onboardingCompleted?: boolean;
 }
 
 interface DataContextType {
@@ -106,6 +107,7 @@ interface DataContextType {
     triggerHeartRateScan: () => Promise<void>;
     triggerSpO2Scan: () => Promise<void>;
     triggerStressScan: () => Promise<void>;
+    refreshData: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -884,6 +886,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await bluetoothService.triggerManualHeartRateScan();
     };
 
+    const refreshData = async () => {
+        if (user) {
+            await fetchHistory();
+        }
+    };
+
     return (
         <DataContext.Provider value={{
             isConnected,
@@ -904,6 +912,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             triggerHeartRateScan,
             triggerSpO2Scan,
             triggerStressScan,
+            refreshData
         }}>
             {children}
         </DataContext.Provider>

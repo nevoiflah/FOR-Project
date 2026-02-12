@@ -45,6 +45,7 @@ export const RegisterScreen = () => {
     // Step 3: Account
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [agreed, setAgreed] = useState(false);
 
     const handleNext = () => {
         HapticFeedback.light();
@@ -89,6 +90,12 @@ export const RegisterScreen = () => {
             return;
         }
 
+        if (!agreed) {
+            setError("You must agree to the Terms and Privacy Policy.");
+            HapticFeedback.error();
+            return;
+        }
+
         setLoading(true);
         HapticFeedback.light();
 
@@ -112,6 +119,7 @@ export const RegisterScreen = () => {
                     height,
                     weight
                 },
+                onboardingCompleted: false, // Force Onboarding Flow
                 unitSystem,
                 sleep: { duration: '0h 0m', score: 0, deep: '0h 0m', rem: '0h 0m', weekly: [] },
                 steps: { count: 0, goal: 10000, calories: 0 },
@@ -248,7 +256,7 @@ export const RegisterScreen = () => {
                 );
             case 3: // Account
                 return (
-                    <>
+                    <View>
                         <Text style={styles.stepTitle}>{t('secureAccount') || "Secure your account"}</Text>
                         <Text style={styles.stepSubtitle}>{t('accountSubtitle') || "Save your progress and access it anywhere."}</Text>
 
@@ -283,7 +291,25 @@ export const RegisterScreen = () => {
                                 />
                             </View>
                         </View>
-                    </>
+
+                        {/* Legal Consent */}
+                        <View style={styles.consentContainer}>
+                            <TouchableOpacity
+                                style={[styles.checkbox, agreed && styles.checkboxSelected]}
+                                onPress={() => { setAgreed(!agreed); HapticFeedback.selection(); }}
+                            >
+                                {agreed && <View style={styles.checkboxInner} />}
+                            </TouchableOpacity>
+                            <View style={{ flex: 1, marginLeft: 12 }}>
+                                <Text style={styles.consentText}>
+                                    I agree to the{' '}
+                                    <Text style={styles.consentLink} onPress={() => navigation.navigate('Terms')}>Terms of Use</Text>
+                                    {' '}and{' '}
+                                    <Text style={styles.consentLink} onPress={() => navigation.navigate('PrivacyPolicy')}>Privacy Policy</Text>
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
                 );
             default:
                 return null;
@@ -547,5 +573,39 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     linkText: {
         color: colors.primary,
         fontWeight: 'bold',
+    },
+    consentContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: SPACING.m,
+        marginBottom: SPACING.s,
+    },
+    checkbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: colors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    checkboxSelected: {
+        backgroundColor: colors.primary,
+    },
+    checkboxInner: {
+        width: 12,
+        height: 12,
+        borderRadius: 2,
+        backgroundColor: isDark ? '#000' : '#fff',
+    },
+    consentText: {
+        fontSize: 14,
+        color: colors.textSecondary,
+        flexWrap: 'wrap',
+    },
+    consentLink: {
+        color: colors.primary,
+        fontWeight: 'bold',
+        textDecorationLine: 'underline',
     },
 });

@@ -1,289 +1,222 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { COLORS, SPACING, FONTS } from '../../constants/theme';
-import { useData } from '../../contexts/DataContext';
-import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { doc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../../config/firebase';
+import { useData } from '../../contexts/DataContext';
 // @ts-ignore
-import { ArrowRight, User, Ruler, Weight, Calendar } from 'lucide-react-native';
+import { Heart, Shield, Hand } from 'lucide-react-native';
 
-export const OnboardingScreen = ({ navigation, route }: any) => {
-    const { updateUserProfile, data } = useData();
-    const { t, isRTL } = useLanguage();
+import { TranslationKey } from '../../i18n/translations';
+
+interface SlideData {
+    id: number;
+    titleKey: TranslationKey;
+    textKey: TranslationKey;
+    icon: any;
+}
+
+const SLIDE_DATA: SlideData[] = [
+    {
+        id: 1,
+        titleKey: 'welcomeTitle',
+        textKey: 'welcomeText',
+        icon: Heart
+    },
+    {
+        id: 2,
+        titleKey: 'privacyTitle',
+        textKey: 'privacyText',
+        icon: Shield
+    },
+    {
+        id: 3,
+        titleKey: 'wearTitle',
+        textKey: 'wearText',
+        icon: Hand
+    }
+];
+
+export const OnboardingScreen = ({ navigation }: any) => {
+    const { width } = useWindowDimensions();
     const { colors, isDark } = useTheme();
+    const { t } = useLanguage();
+    const { refreshData } = useData();
+    const styles = React.useMemo(() => createStyles(colors, isDark, width), [colors, isDark, width]);
 
-    const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const flatListRef = useRef<FlatList>(null);
 
-    const isEditing = route?.params?.isEditing || false;
-    const initialData = route?.params?.currentProfile || {};
-
-    const [step, setStep] = useState(1);
-
-    // Form State
-    const [name, setName] = useState(initialData.name || '');
-    const [gender, setGender] = useState<'male' | 'female' | 'other'>(initialData.gender || 'male');
-    const [age, setAge] = useState(initialData.age || '');
-    const [height, setHeight] = useState(initialData.height || '');
-    const [weight, setWeight] = useState(initialData.weight || '');
-
-    const handleNext = () => {
-        if (step === 1) {
-            if (!name.trim() || !age.trim()) {
-                Alert.alert(t('error'), "Please enter your name and age.");
-                return;
-            }
-            setStep(2);
+    const handleNext = async () => {
+        if (currentIndex < SLIDE_DATA.length - 1) {
+            flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
         } else {
-            // Finish
-            if (!height.trim() || !weight.trim()) {
-                Alert.alert(t('error'), "Please enter your height and weight.");
-                return;
-            }
-
-            // Save Profile
-            updateUserProfile({
-                name,
-                gender,
-                age,
-                height,
-                weight
-            });
-
-            // Navigate
-            if (isEditing) {
-                navigation.goBack();
-            } else {
-                navigation.replace('MainBase');
-            }
+            await handleFinish();
         }
     };
 
-    const GenderOption = ({ value, label }: { value: 'male' | 'female' | 'other', label: string }) => (
-        <TouchableOpacity
-            onPress={() => setGender(value)}
-            style={[
-                styles.genderOption,
-                gender === value && styles.genderOptionSelected
-            ]}
-        >
-            <Text style={[
-                styles.genderText,
-                gender === value && styles.genderTextSelected
-            ]}>{label}</Text>
-        </TouchableOpacity>
-    );
+    const handleFinish = async () => {
+        try {
+            const user = auth.currentUser;
+            if (user) {
+                const userRef = doc(db, 'users', user.uid);
+                await updateDoc(userRef, { onboardingCompleted: true });
+                await refreshData();
+            }
+            navigation.replace('MainBase');
+        } catch (error) {
+            console.error("Error finishing onboarding:", error);
+            navigation.replace('MainBase');
+        }
+    };
+
+    const updateIndex = (e: any) => {
+        const contentOffsetX = e.nativeEvent.contentOffset.x;
+        const index = Math.round(contentOffsetX / width);
+        setCurrentIndex(index);
+    };
+
+    const renderItem = ({ item }: { item: typeof SLIDE_DATA[0] }) => {
+        const Icon = item.icon;
+        return (
+            <View style={styles.slide}>
+                <GlassCard style={styles.card} contentContainerStyle={styles.cardContent}>
+                    <View style={styles.iconContainer}>
+                        {/* Centered Icon with good size */}
+                        <Icon size={72} color={colors.primary} />
+                    </View>
+                    <Text style={styles.title}>{t(item.titleKey)}</Text>
+                    <Text style={styles.text}>{t(item.textKey)}</Text>
+                </GlassCard>
+            </View>
+        );
+    };
 
     return (
         <ScreenWrapper bgVariant="auth">
-            <ScrollView contentContainerStyle={styles.container}>
+            <FlatList
+                ref={flatListRef}
+                data={SLIDE_DATA}
+                renderItem={renderItem}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={updateIndex}
+                style={{ flex: 1 }}
+                keyExtractor={(item) => item.id.toString()}
+            />
 
-                {/* Progress Indicators */}
-                <View style={[styles.progressContainer, isRTL && { flexDirection: 'row-reverse' }]}>
-                    <View style={[styles.dot, step >= 1 && styles.dotActive]} />
-                    <View style={styles.line} />
-                    <View style={[styles.dot, step >= 2 && styles.dotActive]} />
+            <View style={styles.footer}>
+                {/* Pagination Dots */}
+                <View style={styles.pagination}>
+                    {SLIDE_DATA.map((_, index) => (
+                        <View
+                            key={index}
+                            style={[
+                                styles.dot,
+                                currentIndex === index && styles.dotActive
+                            ]}
+                        />
+                    ))}
                 </View>
 
-                <Text style={styles.title}>
-                    {step === 1 ? (isEditing ? "Edit Profile" : "Let's get to know you") : "Body Metrics"}
-                </Text>
-                <Text style={styles.subtitle}>
-                    {step === 1 ? "This helps us personalize your experience." : "Used for accurate calorie and recovery calculations."}
-                </Text>
-
-                <GlassCard style={styles.formCard}>
-                    {step === 1 ? (
-                        <>
-                            {/* Step 1: Identity */}
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('name') || 'Name'}</Text>
-                                <View style={[styles.inputWrapper, isRTL && { flexDirection: 'row-reverse' }]}>
-                                    <User size={20} color={colors.textSecondary} />
-                                    <TextInput
-                                        style={[styles.input, isRTL && { textAlign: 'right', marginRight: 10 }]}
-                                        placeholder="Your Name"
-                                        placeholderTextColor={colors.textSecondary}
-                                        value={name}
-                                        onChangeText={setName}
-                                    />
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('age') || 'Age'}</Text>
-                                <View style={[styles.inputWrapper, isRTL && { flexDirection: 'row-reverse' }]}>
-                                    <Calendar size={20} color={colors.textSecondary} />
-                                    <TextInput
-                                        style={[styles.input, isRTL && { textAlign: 'right', marginRight: 10 }]}
-                                        placeholder="Years"
-                                        placeholderTextColor={colors.textSecondary}
-                                        value={age}
-                                        onChangeText={setAge}
-                                        keyboardType="numeric"
-                                    />
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('gender') || 'Gender'}</Text>
-                                <View style={[styles.genderRow, isRTL && { flexDirection: 'row-reverse' }]}>
-                                    <GenderOption value="male" label="Male" />
-                                    <GenderOption value="female" label="Female" />
-                                    <GenderOption value="other" label="Other" />
-                                </View>
-                            </View>
-                        </>
-                    ) : (
-                        <>
-                            {/* Step 2: Metrics */}
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('height') || 'Height'} (cm)</Text>
-                                <View style={[styles.inputWrapper, isRTL && { flexDirection: 'row-reverse' }]}>
-                                    <Ruler size={20} color={colors.textSecondary} />
-                                    <TextInput
-                                        style={[styles.input, isRTL && { textAlign: 'right', marginRight: 10 }]}
-                                        placeholder="175"
-                                        placeholderTextColor={colors.textSecondary}
-                                        value={height}
-                                        onChangeText={setHeight}
-                                        keyboardType="numeric"
-                                    />
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, isRTL && { textAlign: 'right' }]}>{t('weight') || 'Weight'} (kg)</Text>
-                                <View style={[styles.inputWrapper, isRTL && { flexDirection: 'row-reverse' }]}>
-                                    <Weight size={20} color={colors.textSecondary} />
-                                    <TextInput
-                                        style={[styles.input, isRTL && { textAlign: 'right', marginRight: 10 }]}
-                                        placeholder="70"
-                                        placeholderTextColor={colors.textSecondary}
-                                        value={weight}
-                                        onChangeText={setWeight}
-                                        keyboardType="numeric"
-                                    />
-                                </View>
-                            </View>
-                        </>
-                    )}
-
-                    <TouchableOpacity style={styles.button} onPress={handleNext}>
-                        <Text style={styles.buttonText}>{step === 1 ? 'Next' : 'Finish Setup'}</Text>
-                        <ArrowRight size={20} color={colors.background} style={{ marginLeft: 8 }} />
-                    </TouchableOpacity>
-                </GlassCard>
-            </ScrollView>
+                {/* Button - Text Only as requested */}
+                <TouchableOpacity style={styles.button} onPress={handleNext}>
+                    <Text style={styles.buttonText}>
+                        {currentIndex === SLIDE_DATA.length - 1 ? t('getStarted') : t('next')}
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </ScreenWrapper>
     );
 };
 
-const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
-    container: {
-        padding: SPACING.l,
-        paddingTop: 60,
+const createStyles = (colors: any, isDark: boolean, width: number) => StyleSheet.create({
+    slide: {
+        width: width,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: SPACING.xl,
+    },
+    card: {
+        width: '100%',
+        overflow: 'hidden',
+        minHeight: 400, // Significantly increased for visibility
+        justifyContent: 'center',
+    },
+    cardContent: {
+        paddingVertical: 60, // increased padding
+        paddingHorizontal: SPACING.l,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+    },
+    iconContainer: {
+        width: 140, // Enlarged
+        height: 140, // Enlarged
+        borderRadius: 70,
+        backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: SPACING.xl,
     },
     title: {
-        fontSize: 28,
+        fontSize: 32, // Larger title
         fontWeight: 'bold',
         color: colors.textPrimary,
-        marginBottom: 8,
+        marginBottom: SPACING.m,
         textAlign: 'center',
     },
-    subtitle: {
-        fontSize: 14,
+    text: {
+        fontSize: 18, // Larger text
         color: colors.textSecondary,
         textAlign: 'center',
-        marginBottom: SPACING.xl,
-    },
-    formCard: {
-        padding: SPACING.l,
-    },
-    inputGroup: {
-        marginBottom: SPACING.l,
-    },
-    label: {
-        color: colors.textSecondary,
-        marginBottom: 8,
-        fontSize: 14,
-    },
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.cardBackground,
-        borderRadius: 12,
+        lineHeight: 28,
         paddingHorizontal: SPACING.m,
-        height: 50,
-        borderWidth: 1,
-        borderColor: colors.divider,
     },
-    input: {
-        flex: 1,
-        color: colors.textPrimary,
-        marginLeft: 10,
-        fontSize: 16,
-    },
-    genderRow: {
-        flexDirection: 'row',
+    footer: {
+        height: 140,
         justifyContent: 'space-between',
-    },
-    genderOption: {
-        flex: 1,
-        paddingVertical: 10,
         alignItems: 'center',
-        backgroundColor: colors.cardBackground,
-        borderRadius: 8,
-        marginHorizontal: 4,
-        borderWidth: 1,
-        borderColor: 'transparent',
+        paddingVertical: 30,
+        paddingHorizontal: SPACING.xl,
     },
-    genderOptionSelected: {
-        backgroundColor: colors.primary,
-        borderColor: colors.primary,
-    },
-    genderText: {
-        color: colors.textSecondary,
-    },
-    genderTextSelected: {
-        color: colors.background,
-        fontWeight: 'bold',
-    },
-    button: {
-        backgroundColor: colors.primary,
+    pagination: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        borderRadius: 12,
-        marginTop: SPACING.m,
-    },
-    buttonText: {
-        color: colors.background,
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    progressContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: SPACING.xl,
+        height: 20,
     },
     dot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
         backgroundColor: colors.divider,
+        marginHorizontal: 4,
     },
     dotActive: {
         backgroundColor: colors.primary,
-        transform: [{ scale: 1.2 }],
+        width: 24,
     },
-    line: {
-        width: 40,
-        height: 2,
-        backgroundColor: colors.divider,
-        marginHorizontal: 8,
-    }
+    button: {
+        backgroundColor: colors.primary,
+        paddingVertical: 16,
+        paddingHorizontal: 48,
+        borderRadius: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: 160,
+        elevation: 4,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+    },
+    buttonText: {
+        color: colors.background,
+        fontSize: 18, // Slightly larger text
+        fontWeight: 'bold',
+    },
 });
