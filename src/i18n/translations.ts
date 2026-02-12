@@ -247,6 +247,27 @@ export const translations = {
         legal: "Legal",
         termsOfUse: "Terms of Use",
         privacyPolicy: "Privacy Policy",
+        lastUpdated: "Last updated: February 12, 2026",
+
+        // Terms Content
+        termsSection1Title: "1. Not a Medical Device",
+        termsSection1Text: "The F.O.R Project app and associated hardware are designed for general wellness and informational purposes only. They are NOT intended to diagnose, treat, cure, or prevent any disease or medical condition. Always consult a physician before making any changes to your diet, exercise, or health regimen.",
+        termsSection2Title: "2. Acceptance of Terms",
+        termsSection2Text: "By creating an account and using this application, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the application.",
+        termsSection3Title: "3. User Accounts",
+        termsSection3Text: "You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password.",
+        termsSection4Title: "4. Liability",
+        termsSection4Text: "We help you track your wellness, but we are not responsible for how you interpret or use this data. Use common sense and listen to your body.",
+
+        // Privacy Content
+        privacySection1Title: "1. Data Security",
+        privacySection1Text: "Your privacy is our top priority. All personal health data (Heart Rate, HRV, Activity) is stored securely on MongoDB Atlas using industry-standard encryption.",
+        privacySection2Title: "2. Data Ownership",
+        privacySection2Text: "You own your data. Your health records are accessible ONLY by your authenticated user account. We do not sell, share, or analyze your data for third-party advertising.",
+        privacySection3Title: "3. Local Storage",
+        privacySection3Text: "For offline access, some data is cached locally on your device using secure storage. This data is automatically synchronized with the cloud when an internet connection is available.",
+        privacySection4Title: "4. Contact Us",
+        privacySection4Text: "If you have any questions about this Privacy Policy, please contact us at support@for-project.com.",
     },
     he: {
         // Auth
@@ -493,6 +514,27 @@ export const translations = {
         legal: "משפטי",
         termsOfUse: "תנאי שימוש",
         privacyPolicy: "מדיניות פרטיות",
+        lastUpdated: "עודכן לאחרונה: 12 בפברואר 2026",
+
+        // Terms Content
+        termsSection1Title: "1. לא מכשיר רפואי",
+        termsSection1Text: "אפליקציית F.O.R והחומרה הנלווית מיועדים למטרות בריאות כללית ומידע בלבד. הם אינם מיועדים לאבחון, טיפול, ריפוי או מניעה של מחלה כלשהי. התייעץ תמיד עם רופא לפני ביצוע שינויים בדיאטה, אימון או משטר הבריאות שלך.",
+        termsSection2Title: "2. קבלת התנאים",
+        termsSection2Text: "על ידי יצירת חשבון ושימוש באפליקציה זו, אתה מסכים להיות מחויב לתנאים אלה. אם אינך מסכים לתנאים אלה, אינך רשאי לגשת או להשתמש באפליקציה.",
+        termsSection3Title: "3. חשבונות משתמש",
+        termsSection3Text: "אתה אחראי לשמירה על הסיסמה המשמשת אותך לגישה לשירות ולכל פעילות המתבצעת תחת הסיסמה שלך.",
+        termsSection4Title: "4. אחריות",
+        termsSection4Text: "אנו עוזרים לך לעקוב אחר הבריאות שלך, אך איננו אחראים לאופן שבו אתה מפרש או משתמש בנתונים אלה. הפעל שיקול דעת והקשב לגופך.",
+
+        // Privacy Content
+        privacySection1Title: "1. אבטחת מידע",
+        privacySection1Text: "הפרטיות שלך היא בראש סדר העדיפויות שלנו. כל נתוני הבריאות האישיים (דופק, HRV, פעילות) מאוחסנים בצורה מאובטחת ב-MongoDB Atlas באמצעות הצפנה בסטנדרט תעשייתי.",
+        privacySection2Title: "2. בעלות על הנתונים",
+        privacySection2Text: "הנתונים שייכים לך. רשומות הבריאות שלך נגישות רק לחשבון המשתמש המאומת שלך. אנו לא מוכרים, משתפים או מנתחים את הנתונים שלך למטרות פרסום צד שלישי.",
+        privacySection3Title: "3. אחסון מקומי",
+        privacySection3Text: "לצורך גישה לא מקוונת, חלק מהנתונים נשמרים במטמון במכשיר שלך באמצעות אחסון מאובטח. נתונים אלה מסונכרנים אוטומטית עם הענן כאשר ישנו חיבור אינטרנט זמין.",
+        privacySection4Title: "4. צור קשר",
+        privacySection4Text: "אם יש לך שאלות לגבי מדיניות פרטיות זו, אנא צור קשר בכתובת support@for-project.com.",
     },
 };
 

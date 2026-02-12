@@ -15,26 +15,26 @@ export const TermsScreen = () => {
         <ScreenWrapper>
             <ScrollView contentContainerStyle={styles.container}>
                 <Text style={styles.title}>{t('termsOfUse') || 'Terms of Use'}</Text>
-                <Text style={styles.subtitle}>Last updated: February 12, 2026</Text>
+                <Text style={styles.subtitle}>{t('lastUpdated') || 'Last updated: February 12, 2026'}</Text>
 
-                <Text style={styles.sectionTitle}>1. Not a Medical Device</Text>
+                <Text style={styles.sectionTitle}>{t('termsSection1Title')}</Text>
                 <Text style={styles.paragraph}>
-                    The F.O.R Project app and associated hardware are designed for general wellness and informational purposes only. They are NOT intended to diagnose, treat, cure, or prevent any disease or medical condition. Always consult a physician before making any changes to your diet, exercise, or health regimen.
+                    {t('termsSection1Text')}
                 </Text>
 
-                <Text style={styles.sectionTitle}>2. Acceptance of Terms</Text>
+                <Text style={styles.sectionTitle}>{t('termsSection2Title')}</Text>
                 <Text style={styles.paragraph}>
-                    By creating an account and using this application, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the application.
+                    {t('termsSection2Text')}
                 </Text>
 
-                <Text style={styles.sectionTitle}>3. User Accounts</Text>
+                <Text style={styles.sectionTitle}>{t('termsSection3Title')}</Text>
                 <Text style={styles.paragraph}>
-                    You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password.
+                    {t('termsSection3Text')}
                 </Text>
 
-                <Text style={styles.sectionTitle}>4. Liability</Text>
+                <Text style={styles.sectionTitle}>{t('termsSection4Title')}</Text>
                 <Text style={styles.paragraph}>
-                    We help you track your wellness, but we are not responsible for how you interpret or use this data. Use common sense and listen to your body.
+                    {t('termsSection4Text')}
                 </Text>
             </ScrollView>
         </ScreenWrapper>
