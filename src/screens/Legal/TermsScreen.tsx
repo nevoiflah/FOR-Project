@@ -1,44 +1,41 @@
 import React from 'react';
 import { Text, ScrollView, StyleSheet } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { GlassCard } from '../../components/GlassCard';
 import { COLORS, SPACING } from '../../constants/theme';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export const TermsScreen = () => {
     const { colors, isDark } = useTheme();
-    const { isRTL } = useLanguage();
+    const { isRTL, t } = useLanguage();
 
     const styles = React.useMemo(() => createStyles(colors, isDark, isRTL), [colors, isDark, isRTL]);
 
     return (
-        <ScreenWrapper bgVariant="auth">
+        <ScreenWrapper>
             <ScrollView contentContainerStyle={styles.container}>
-                <GlassCard style={styles.card}>
-                    <Text style={styles.title}>Terms of Use</Text>
-                    <Text style={styles.subtitle}>Last updated: February 12, 2026</Text>
+                <Text style={styles.title}>{t('termsOfUse') || 'Terms of Use'}</Text>
+                <Text style={styles.subtitle}>Last updated: February 12, 2026</Text>
 
-                    <Text style={styles.sectionTitle}>1. Not a Medical Device</Text>
-                    <Text style={styles.paragraph}>
-                        The FOR Project app and associated hardware are designed for general wellness and informational purposes only. They are NOT intended to diagnose, treat, cure, or prevent any disease or medical condition. Always consult a physician before making any changes to your diet, exercise, or health regimen.
-                    </Text>
+                <Text style={styles.sectionTitle}>1. Not a Medical Device</Text>
+                <Text style={styles.paragraph}>
+                    The F.O.R Project app and associated hardware are designed for general wellness and informational purposes only. They are NOT intended to diagnose, treat, cure, or prevent any disease or medical condition. Always consult a physician before making any changes to your diet, exercise, or health regimen.
+                </Text>
 
-                    <Text style={styles.sectionTitle}>2. Acceptance of Terms</Text>
-                    <Text style={styles.paragraph}>
-                        By creating an account and using this application, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the application.
-                    </Text>
+                <Text style={styles.sectionTitle}>2. Acceptance of Terms</Text>
+                <Text style={styles.paragraph}>
+                    By creating an account and using this application, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the application.
+                </Text>
 
-                    <Text style={styles.sectionTitle}>3. User Accounts</Text>
-                    <Text style={styles.paragraph}>
-                        You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password.
-                    </Text>
+                <Text style={styles.sectionTitle}>3. User Accounts</Text>
+                <Text style={styles.paragraph}>
+                    You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password.
+                </Text>
 
-                    <Text style={styles.sectionTitle}>4. Liability</Text>
-                    <Text style={styles.paragraph}>
-                        We help you track your wellness, but we are not responsible for how you interpret or use this data. Use common sense and listen to your body.
-                    </Text>
-                </GlassCard>
+                <Text style={styles.sectionTitle}>4. Liability</Text>
+                <Text style={styles.paragraph}>
+                    We help you track your wellness, but we are not responsible for how you interpret or use this data. Use common sense and listen to your body.
+                </Text>
             </ScrollView>
         </ScreenWrapper>
     );

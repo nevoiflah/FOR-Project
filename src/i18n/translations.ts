@@ -234,7 +234,7 @@ export const translations = {
 
         // Notification Test keys
         testNotifTitle: "Test Notification 🧪",
-        testNotifBody: "This is a test from the FOR app!",
+        testNotifBody: "This is a test from the F.O.R app!",
         testNotifSuccess: "Test notification scheduled for 1 minute from now.",
 
         // Activity Screen
@@ -243,6 +243,10 @@ export const translations = {
         day: "Day",
         week: "Week",
         month: "Month",
+        // Legal
+        legal: "Legal",
+        termsOfUse: "Terms of Use",
+        privacyPolicy: "Privacy Policy",
     },
     he: {
         // Auth
@@ -476,7 +480,7 @@ export const translations = {
 
         // Notification Test keys
         testNotifTitle: "התראת ניסיון 🧪",
-        testNotifBody: "זוהי בדיקה מאפליקציית FOR!",
+        testNotifBody: "זוהי בדיקה מאפליקציית F.O.R!",
         testNotifSuccess: "התראת הניסיון תוזמנה לעוד דקה מעכשיו.",
 
         // Activity Screen
@@ -485,6 +489,10 @@ export const translations = {
         day: "יום",
         week: "שבוע",
         month: "חודש",
+        // Legal
+        legal: "משפטי",
+        termsOfUse: "תנאי שימוש",
+        privacyPolicy: "מדיניות פרטיות",
     },
 };
 

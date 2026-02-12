@@ -1,44 +1,41 @@
 import React from 'react';
 import { Text, ScrollView, StyleSheet } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { GlassCard } from '../../components/GlassCard';
 import { COLORS, SPACING, FONTS } from '../../constants/theme';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export const PrivacyPolicyScreen = () => {
     const { colors, isDark } = useTheme();
-    const { isRTL } = useLanguage();
+    const { isRTL, t } = useLanguage();
 
     const styles = React.useMemo(() => createStyles(colors, isDark, isRTL), [colors, isDark, isRTL]);
 
     return (
-        <ScreenWrapper bgVariant="auth">
+        <ScreenWrapper>
             <ScrollView contentContainerStyle={styles.container}>
-                <GlassCard style={styles.card}>
-                    <Text style={styles.title}>Privacy Policy</Text>
-                    <Text style={styles.subtitle}>Last updated: February 12, 2026</Text>
+                <Text style={styles.title}>{t('privacyPolicy') || 'Privacy Policy'}</Text>
+                <Text style={styles.subtitle}>Last updated: February 12, 2026</Text>
 
-                    <Text style={styles.sectionTitle}>1. Data Security</Text>
-                    <Text style={styles.paragraph}>
-                        Your privacy is our top priority. All personal health data (Heart Rate, HRV, Activity) is stored securely on MongoDB Atlas using industry-standard encryption.
-                    </Text>
+                <Text style={styles.sectionTitle}>1. Data Security</Text>
+                <Text style={styles.paragraph}>
+                    Your privacy is our top priority. All personal health data (Heart Rate, HRV, Activity) is stored securely on MongoDB Atlas using industry-standard encryption.
+                </Text>
 
-                    <Text style={styles.sectionTitle}>2. Data Ownership</Text>
-                    <Text style={styles.paragraph}>
-                        You own your data. Your health records are accessible ONLY by your authenticated user account. We do not sell, share, or analyze your data for third-party advertising.
-                    </Text>
+                <Text style={styles.sectionTitle}>2. Data Ownership</Text>
+                <Text style={styles.paragraph}>
+                    You own your data. Your health records are accessible ONLY by your authenticated user account. We do not sell, share, or analyze your data for third-party advertising.
+                </Text>
 
-                    <Text style={styles.sectionTitle}>3. Local Storage</Text>
-                    <Text style={styles.paragraph}>
-                        For offline access, some data is cached locally on your device using secure storage. This data is automatically synchronized with the cloud when an internet connection is available.
-                    </Text>
+                <Text style={styles.sectionTitle}>3. Local Storage</Text>
+                <Text style={styles.paragraph}>
+                    For offline access, some data is cached locally on your device using secure storage. This data is automatically synchronized with the cloud when an internet connection is available.
+                </Text>
 
-                    <Text style={styles.sectionTitle}>4. Contact Us</Text>
-                    <Text style={styles.paragraph}>
-                        If you have any questions about this Privacy Policy, please contact us at support@for-project.com.
-                    </Text>
-                </GlassCard>
+                <Text style={styles.sectionTitle}>4. Contact Us</Text>
+                <Text style={styles.paragraph}>
+                    If you have any questions about this Privacy Policy, please contact us at support@for-project.com.
+                </Text>
             </ScrollView>
         </ScreenWrapper>
     );

@@ -8,7 +8,7 @@ import { useData } from '../../contexts/DataContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { LanguageToggle } from '../../components/LanguageToggle';
 // @ts-ignore
-import { User, Bell, Smartphone, Shield, LogOut, ChevronRight, Activity, Calendar, Ruler, Weight, Bluetooth, Signal, RefreshCw, X, CheckCircle } from 'lucide-react-native';
+import { User, Bell, Smartphone, Shield, LogOut, ChevronRight, Activity, Calendar, Ruler, Weight, Bluetooth, Signal, RefreshCw, X, CheckCircle, FileText } from 'lucide-react-native';
 import { Device } from 'react-native-ble-plx';
 import { bluetoothService } from '../../services/BluetoothService';
 
@@ -503,6 +503,24 @@ export const ProfileScreen = ({ navigation }: any) => {
                         isToggle
                         toggleValue={!!data?.appleHealthEnabled}
                         onToggle={toggleAppleHealth}
+                    />
+                </GlassCard>
+
+                {/* Settings Section: Legal */}
+                <Text style={[styles.sectionHeader, isRTL && { textAlign: 'right', marginRight: SPACING.s, marginLeft: 0 }]}>{t('legal') || 'Legal'}</Text>
+                <GlassCard style={styles.settingsGroup}>
+                    <SettingRow
+                        icon={FileText}
+                        title={t('termsOfUse') || 'Terms of Use'}
+                        onPress={() => navigation.navigate('Terms')}
+                        showChevron
+                    />
+                    <View style={styles.divider} />
+                    <SettingRow
+                        icon={Shield}
+                        title={t('privacyPolicy') || 'Privacy Policy'}
+                        onPress={() => navigation.navigate('PrivacyPolicy')}
+                        showChevron
                     />
                 </GlassCard>
 
