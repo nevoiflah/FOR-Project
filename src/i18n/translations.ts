@@ -52,7 +52,10 @@ export const translations = {
         getStarted: "Get Started",
 
         // Dashboard
-        greeting: "Good Morning,",
+        goodMorning: "Good Morning,",
+        goodAfternoon: "Good Afternoon,",
+        goodEvening: "Good Evening,",
+        goodNight: "Good Night,",
         syncing: "Syncing Ring...",
         ringConnected: "Ring Connected",
         notConnected: "Not Connected",
@@ -192,6 +195,7 @@ export const translations = {
         stressRelief: 'Stress Relief',
         powerNap: 'Power Nap',
         mindfulMinutes: 'Mindful Minutes',
+        mins: 'mins',
 
         // Units
         metric: "Metric (kg/km)",
@@ -237,6 +241,16 @@ export const translations = {
         goalUnitPlaceholder: "mins",
         tapToUpdate: "Tap to update",
         monthlyInsightBody: "Your recovery has improved by 12% compared to last week. Keep focusing on your bedtime routine to maintain this trend.",
+        biologicalClock: "Biological Clock",
+        energyForecast: "Energy Forecast",
+        keyMilestones: "Key Milestones",
+        sleepStreak: "Sleep Streak",
+        rhrLowBadge: "New RHR Low",
+        recoveryChamp: "Recovery Champ",
+        energyHigh: "High Energy",
+        energyModerate: "Moderate Energy",
+        energyLow: "Low Energy",
+        biologicalClockMsg: "Your energy peaks around 2:00 PM today.",
 
         // Notification Test keys
         testNotifTitle: "Test Notification 🧪",
@@ -388,7 +402,10 @@ export const translations = {
         getStarted: "מתחילים",
 
         // Dashboard
-        greeting: "בוקר טוב,",
+        goodMorning: "בוקר טוב,",
+        goodAfternoon: "צהריים טובים,",
+        goodEvening: "ערב טוב,",
+        goodNight: "לילה טוב,",
         syncing: "מסתנכרן...",
         ringConnected: "טבעת מחוברת",
         notConnected: "לא מחוברת",
@@ -525,6 +542,7 @@ export const translations = {
         stressRelief: 'שחרור לחצים',
         powerNap: 'נמנום כוח',
         mindfulMinutes: 'דקות מודעות',
+        mins: 'דק׳',
 
         // Units
         metric: "מטרי (ק״ג/ק״מ)",
@@ -618,6 +636,16 @@ export const translations = {
         startActivitySubtitle: "התחל אימון חדש כעת",
         gpsWarning: "לדיוק במעקב GPS, אנא שא את הטלפון בחגורת מותן או רצועת יד.",
         selectActivity: 'בחר פעילות',
+        biologicalClock: "שעון ביולוגי",
+        energyForecast: "תחזית אנרגיה",
+        keyMilestones: "אבני דרך מרכזיות",
+        sleepStreak: "סדרת שינה",
+        rhrLowBadge: "דופק מנוחה נמוך",
+        recoveryChamp: "אלוף התאוששות",
+        energyHigh: "אנרגיה גבוהה",
+        energyModerate: "אנרגיה ממוצעת",
+        energyLow: "אנרגיה נמוכה",
+        biologicalClockMsg: "שיא האנרגיה שלך צפוי סביב השעה 14:00 היום.",
         outdoorGPS: 'GPS',
         indoorNoGPS: 'ללא GPS',
 

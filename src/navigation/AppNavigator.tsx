@@ -19,7 +19,6 @@ import { HeartScreen } from '../screens/Main/HeartScreen';
 import { TrendsScreen } from '../screens/Main/TrendsScreen';
 import { ProfileScreen } from '../screens/User/ProfileScreen';
 import { EditProfileScreen } from '../screens/User/EditProfileScreen';
-import { WorkoutScreen } from '../screens/Main/WorkoutScreen';
 import { MindfulnessScreen } from '../screens/Main/MindfulnessScreen';
 import { HistoryScreen } from '../screens/User/HistoryScreen';
 import { PrivacyPolicyScreen } from '../screens/Legal/PrivacyPolicyScreen';
@@ -179,14 +178,6 @@ export const AppNavigator = () => {
                         <Stack.Screen
                             name="EditProfile"
                             component={EditProfileScreen}
-                            options={{
-                                presentation: 'modal',
-                                animation: 'slide_from_bottom',
-                            }}
-                        />
-                        <Stack.Screen
-                            name="Workout"
-                            component={WorkoutScreen}
                             options={{
                                 presentation: 'modal',
                                 animation: 'slide_from_bottom',

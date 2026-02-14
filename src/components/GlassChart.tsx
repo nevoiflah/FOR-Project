@@ -12,17 +12,19 @@ interface GlassChartProps {
     gradientId?: string;
     showPoints?: boolean;
     labels?: string[];
+    liveIndex?: number;
 }
 
 export const GlassChart = ({
     data,
     height = 150,
-    width = Dimensions.get('window').width - 48, // Default padding adjusted
+    width = Dimensions.get('window').width - 48,
     color = COLORS.primary,
     strokeWidth = 3,
     gradientId = 'grad',
     showPoints = true,
-    labels = []
+    labels = [],
+    liveIndex
 }: GlassChartProps) => {
     if (!data || data.length === 0) return null;
 
@@ -83,6 +85,38 @@ export const GlassChart = ({
                         />
                     );
                 })}
+
+                {/* Live Indicator */}
+                {liveIndex !== undefined && liveIndex >= 0 && liveIndex < data.length && (() => {
+                    const divider = data.length > 1 ? data.length - 1 : 1;
+                    const x = (liveIndex / divider) * width;
+
+                    // Linear interpolation for Y position
+                    const idx = Math.floor(liveIndex);
+                    const frac = liveIndex - idx;
+                    const v1 = data[idx];
+                    const v2 = idx + 1 < data.length ? data[idx + 1] : v1;
+                    const val = v1 + (v2 - v1) * frac;
+                    const y = height - ((val - min) / range) * (height * 0.6) - (height * 0.2);
+
+                    return (
+                        <>
+                            <Path
+                                d={`M ${x} 0 L ${x} ${height}`}
+                                stroke={color}
+                                strokeWidth={1}
+                                strokeDasharray="4,4"
+                                opacity={0.5}
+                            />
+                            <Path
+                                d={`M ${x} ${y} m -5 0 a 5 5 0 1 0 10 0 a 5 5 0 1 0 -10 0`}
+                                fill={color}
+                                stroke="#fff"
+                                strokeWidth={2}
+                            />
+                        </>
+                    );
+                })()}
             </Svg>
 
             {/* Axis Labels (Absolutely positioned for precision) */}

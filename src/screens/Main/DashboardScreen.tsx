@@ -8,7 +8,7 @@ import { LoadingRing } from '../../components/LoadingRing';
 import { COLORS, FONTS, FONT_SIZE, SPACING, LAYOUT } from '../../constants/theme';
 import { useLanguage } from '../../contexts/LanguageContext';
 // @ts-ignore
-import { Bell, Battery, CheckCircle, Target, Plus, X, Play, Zap, Wind, Moon, Sun, CloudRain, Flame, Activity, Circle, Footprints, PersonStanding, Sparkles } from 'lucide-react-native';
+import { Bell, Battery, CheckCircle, Target, Plus, X, Play, Zap, Wind, Moon, Sun, CloudRain, Flame, Activity, Circle, Footprints, PersonStanding, Sparkles, Trophy, Brain } from 'lucide-react-native';
 import { HapticFeedback } from '../../utils/haptics';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -174,7 +174,15 @@ export const DashboardScreen = () => {
         <ScreenWrapper bgContext="dashboard">
             <ScrollView contentContainerStyle={styles.container}>
                 <View style={[styles.header, isRTL && { alignItems: 'flex-end' }]}>
-                    <Text style={styles.greeting}>{t('greeting')}</Text>
+                    <Text style={styles.greeting}>
+                        {(() => {
+                            const hours = new Date().getHours();
+                            if (hours >= 5 && hours < 12) return t('goodMorning');
+                            if (hours >= 12 && hours < 17) return t('goodAfternoon');
+                            if (hours >= 17 && hours < 21) return t('goodEvening');
+                            return t('goodNight');
+                        })()}
+                    </Text>
                     <Text style={styles.username}>{data?.userProfile?.name || 'User'}</Text>
                 </View>
 
@@ -238,113 +246,106 @@ export const DashboardScreen = () => {
                     </View>
                 )}
 
-                {/* Quick Actions (Start Workout) */}
-                <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }]}>
-                    <Activity size={20} color={colors.primary} style={isRTL ? { marginLeft: 10 } : { marginRight: 10 }} />
-                    <Text style={styles.sectionTitle}>{t('startActivity')}</Text>
-                </View>
-
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={[styles.actionScroll, isRTL && { flexDirection: 'row-reverse' }]}
-                >
-                    {(['run', 'walk', 'hiit', 'yoga'] as const).map((type) => (
-                        <TouchableOpacity
-                            key={type}
-                            style={[
-                                styles.actionCard,
-                                { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.6)' }
-                            ]}
-                            onPress={() => navigation.navigate('Workout', { type })}
-                        >
-                            <View style={[styles.iconCircle, { backgroundColor: colors.background }]}>
-                                {type === 'run' && <Footprints size={24} color={colors.primary} />}
-                                {type === 'walk' && <PersonStanding size={24} color={colors.accent} />}
-                                {type === 'hiit' && <Flame size={24} color="#FF6B6B" />}
-                                {type === 'yoga' && <Sparkles size={24} color="#FFD93D" />}
-                            </View>
-                            <Text style={[styles.actionText, { color: colors.textPrimary }]}>
-                                {t(type as any)}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-
                 {/* Mindfulness Zone */}
                 <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }]}>
-                    <Wind size={20} color={colors.primary} style={isRTL ? { marginLeft: 10 } : { marginRight: 10 }} />
+                    <Brain size={20} color={colors.primary} style={isRTL ? { marginLeft: 10 } : { marginRight: 10 }} />
                     <Text style={styles.sectionTitle}>{t('mindfulnessZone')}</Text>
                 </View>
 
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={[styles.actionScroll, isRTL && { flexDirection: 'row-reverse' }]}
-                >
+                <View style={styles.milestonesGrid}>
                     <TouchableOpacity
-                        style={[styles.mindfulnessCard, { backgroundColor: '#E3F2FD' }]}
-                        onPress={() => navigation.navigate('Mindfulness', { type: 'focus' })}
+                        style={[styles.milestoneCard, { backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#E3F2FD', width: '31%' }]}
+                        onPress={() => navigation.navigate('Mindfulness', { type: 'morning_focus' })}
                     >
-                        <View style={[styles.playIconOverlay, { backgroundColor: 'rgba(255,255,255,0.8)' }]}>
-                            <Play size={16} color="#1565C0" fill="#1565C0" />
-                        </View>
-                        <Text style={[styles.mindfulnessTitle, { color: '#1565C0' }]}>{t('morningFocus')}</Text>
-                        <Text style={[styles.mindfulnessSubtitle, { color: '#1976D2' }]}>10 min</Text>
+                        <Wind size={20} color="#3b82f6" style={{ marginBottom: 8 }} />
+                        <Text style={[styles.milestoneTitle, { color: isDark ? '#93c5fd' : '#1565C0', fontSize: 12, textAlign: 'center' }]}>{t('morningFocus')}</Text>
+                        <Text style={[styles.milestoneValue, { color: isDark ? colors.textPrimary : '#1976D2', fontSize: 14 }]}>10{t('mins')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.mindfulnessCard, { backgroundColor: '#F3E5F5' }]}
+                        style={[styles.milestoneCard, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#FFEBEE', width: '31%' }]}
+                        onPress={() => navigation.navigate('Mindfulness', { type: 'stress_relief' })}
+                    >
+                        <Zap size={20} color="#ef4444" style={{ marginBottom: 8 }} />
+                        <Text style={[styles.milestoneTitle, { color: isDark ? '#fca5a5' : '#C62828', fontSize: 12, textAlign: 'center' }]}>{t('stressRelief')}</Text>
+                        <Text style={[styles.milestoneValue, { color: isDark ? colors.textPrimary : '#D32F2F', fontSize: 14 }]}>15{t('mins')}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.milestoneCard, { backgroundColor: isDark ? 'rgba(34, 197, 94, 0.1)' : '#E8F5E9', width: '31%' }]}
                         onPress={() => navigation.navigate('Mindfulness', { type: 'deep_sleep' })}
                     >
-                        <View style={[styles.playIconOverlay, { backgroundColor: 'rgba(255,255,255,0.8)' }]}>
-                            <Play size={16} color="#7B1FA2" fill="#7B1FA2" />
-                        </View>
-                        <Text style={[styles.mindfulnessTitle, { color: '#4A148C' }]}>{t('deepSleep')}</Text>
-                        <Text style={[styles.mindfulnessSubtitle, { color: '#6A1B9A' }]}>20 min</Text>
+                        <Moon size={20} color="#22c55e" style={{ marginBottom: 8 }} />
+                        <Text style={[styles.milestoneTitle, { color: isDark ? '#86efac' : '#2E7D32', fontSize: 12, textAlign: 'center' }]}>{t('powerNap')}</Text>
+                        <Text style={[styles.milestoneValue, { color: isDark ? colors.textPrimary : '#388E3C', fontSize: 14 }]}>20{t('mins')}</Text>
                     </TouchableOpacity>
+                </View>
 
-                    <TouchableOpacity
-                        style={[styles.mindfulnessCard, { backgroundColor: '#E8F5E9' }]}
-                        onPress={() => navigation.navigate('Mindfulness', { type: 'stress' })}
-                    >
-                        <View style={[styles.playIconOverlay, { backgroundColor: 'rgba(255,255,255,0.8)' }]}>
-                            <Play size={16} color="#2E7D32" fill="#2E7D32" />
-                        </View>
-                        <Text style={[styles.mindfulnessTitle, { color: '#1B5E20' }]}>{t('stressRelief')}</Text>
-                        <Text style={[styles.mindfulnessSubtitle, { color: '#2E7D32' }]}>5 min</Text>
-                    </TouchableOpacity>
-                </ScrollView>
+                {/* Key Milestones Section */}
+                <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                    <Trophy size={20} color={colors.primary} style={isRTL ? { marginLeft: 10 } : { marginRight: 10 }} />
+                    <Text style={styles.sectionTitle}>{t('keyMilestones')}</Text>
+                </View>
 
-                {/* Daily Insight */}
-                {data && (
-                    <GlassCard style={styles.largeCard} contentContainerStyle={{ padding: 0 }}>
-                        <View style={[styles.insightHeader, isRTL && { flexDirection: 'row-reverse' }]}>
-                            <Text style={[styles.cardTitle, isRTL && { textAlign: 'right' }]}>{t('dailyInsight')}</Text>
-                        </View>
+                <View style={styles.milestonesGrid}>
+                    <View style={[styles.milestoneCard, { backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#E3F2FD' }]}>
+                        <Moon size={24} color="#3b82f6" />
+                        <Text style={[styles.milestoneTitle, { color: isDark ? '#93c5fd' : '#1565C0' }]}>{t('sleepStreak')}</Text>
+                        <Text style={[styles.milestoneValue, { color: isDark ? colors.textPrimary : '#1976D2' }]}>5 {t('day')}</Text>
+                    </View>
+                    <View style={[styles.milestoneCard, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#FFEBEE' }]}>
+                        <Activity size={24} color="#ef4444" />
+                        <Text style={[styles.milestoneTitle, { color: isDark ? '#fca5a5' : '#C62828' }]}>{t('rhrLowBadge')}</Text>
+                        <Text style={[styles.milestoneValue, { color: isDark ? colors.textPrimary : '#D32F2F' }]}>58 BPM</Text>
+                    </View>
+                    <View style={[styles.milestoneCard, { backgroundColor: isDark ? 'rgba(34, 197, 94, 0.1)' : '#E8F5E9' }]}>
+                        <Trophy size={24} color="#22c55e" />
+                        <Text style={[styles.milestoneTitle, { color: isDark ? '#86efac' : '#2E7D32' }]}>{t('recoveryChamp')}</Text>
+                        <Text style={[styles.milestoneValue, { color: isDark ? colors.textPrimary : '#388E3C' }]}>Top 5%</Text>
+                    </View>
+                </View>
 
-                        <Text style={[
-                            styles.insightText,
-                            { color: colors.textSecondary, marginBottom: SPACING.l },
-                            isRTL && { textAlign: 'right' }
-                        ]}>
-                            {data.readiness.score >= 80
-                                ? t('readinessTipHigh')
-                                : t('readinessTipLow')
-                            }
-                        </Text>
+                {/* Biological Clock Section */}
+                {data && (() => {
+                    // 13 points for 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24 hours
+                    const clockData = [30, 40, 50, 65, 80, 95, 85, 75, 60, 50, 40, 35, 30];
+                    const clockLabels = ["00:00", "06:00", "12:00", "18:00", "24:00"];
+                    const now = new Date();
+                    // Each index is 2 hours. Index = H / 2.
+                    const liveIndex = (now.getHours() + now.getMinutes() / 60) / 2;
 
-                        <View style={{ marginTop: 0 }}>
-                            <GlassChart
-                                data={[70, 75, 78, 85, 82, 90, data.readiness.score]}
-                                height={120}
-                                width={Dimensions.get('window').width - 48}
-                                color={data.readiness.score >= 80 ? colors.primary : colors.accent}
-                                gradientId="dash-ready-grad"
-                            />
-                        </View>
-                    </GlassCard>
-                )}
+                    return (
+                        <GlassCard style={styles.largeCard} contentContainerStyle={{ padding: 0 }}>
+                            <View style={[styles.insightHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Sparkles size={20} color={colors.primary} style={{ marginRight: 8 }} />
+                                    <Text style={[styles.cardTitle, { marginBottom: 0 }]}>{t('biologicalClock')}</Text>
+                                </View>
+                                <Text style={styles.sourceText}>{t('energyForecast')}</Text>
+                            </View>
+
+                            <Text style={[
+                                styles.insightText,
+                                { color: colors.textSecondary, marginBottom: SPACING.l, marginTop: SPACING.s },
+                                isRTL && { textAlign: 'right' }
+                            ]}>
+                                {data.readiness.score >= 80 ? t('energyHigh') : t('energyModerate')} - {t('biologicalClockMsg') || 'Your energy peaks around 2:00 PM today.'}
+                            </Text>
+
+                            <View style={{ marginTop: 0, paddingBottom: SPACING.l }}>
+                                <GlassChart
+                                    data={clockData}
+                                    height={140}
+                                    width={Dimensions.get('window').width - 48}
+                                    color={colors.primary}
+                                    gradientId="energy-wave-grad"
+                                    labels={clockLabels}
+                                    liveIndex={liveIndex}
+                                />
+                            </View>
+                        </GlassCard>
+                    );
+                })()}
 
                 {/* Daily Goals Section */}
                 {data && (
@@ -661,6 +662,32 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
         marginLeft: 10,
+    },
+    milestonesGrid: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: SPACING.l,
+    },
+    milestoneCard: {
+        width: '31%',
+        padding: SPACING.m,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.divider,
+    },
+    milestoneTitle: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        marginTop: 8,
+        textAlign: 'center',
+        textTransform: 'uppercase',
+    },
+    milestoneValue: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginTop: 2,
     },
     modalOverlay: {
         flex: 1,
