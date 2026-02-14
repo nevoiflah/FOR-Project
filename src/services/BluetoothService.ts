@@ -259,6 +259,7 @@ class BluetoothService {
         console.log(`[BLE] Monitoring ${characteristicUUID}...`);
         return this.connectedDevice.monitorCharacteristicForService(serviceUUID, characteristicUUID, (error, char) => {
             if (error) {
+                if (error.message?.includes('cancelled')) return;
                 console.error(`[BLE] Monitor Error (${characteristicUUID}):`, error);
                 return;
             }

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Modal, Animated, Pressable, Dimensions, Easing, ActivityIndicator } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
@@ -19,8 +20,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { convertHeight, convertWeight } from '../../utils/units';
 import { biometricService } from '../../services/BiometricService';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Moon, Sun, Monitor } from 'lucide-react-native';
+import { Moon, Sun, Monitor, MapPin } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
+import * as Location from 'expo-location';
+import { Linking } from 'react-native';
 
 export const ProfileScreen = ({ navigation }: any) => {
     const { isConnected, disconnectRing, data, toggleUnitSystem, toggleNotifications: setGlobalNotifications, updateRingData, toggleAppleHealth } = useData();
@@ -40,6 +43,28 @@ export const ProfileScreen = ({ navigation }: any) => {
     // Animation Values for Connect Ring Modal
     const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    const [locationStatus, setLocationStatus] = useState<string>('denied');
+
+    const checkLocationPermission = async () => {
+        try {
+            const { status, canAskAgain } = await Location.getForegroundPermissionsAsync();
+            if (status === 'granted') {
+                const { status: alwaysStatus } = await Location.getBackgroundPermissionsAsync();
+                setLocationStatus(alwaysStatus === 'granted' ? 'always' : 'whileUsing');
+            } else {
+                setLocationStatus('denied');
+            }
+        } catch (error) {
+            console.error('[ProfileScreen] Error checking location status:', error);
+        }
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            checkLocationPermission();
+        }, [])
+    );
 
     const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
@@ -488,6 +513,13 @@ export const ProfileScreen = ({ navigation }: any) => {
                         value={isConnected ? t('connected') : t('disconnected')}
                         showChevron
                         onPress={openConnectRingModal}
+                    />
+                    <View style={styles.divider} />
+                    <SettingRow
+                        icon={MapPin}
+                        title={t('locationAccess')}
+                        value={t(`locationStatus${locationStatus.charAt(0).toUpperCase() + locationStatus.slice(1)}` as any)}
+                        onPress={() => Linking.openSettings()}
                     />
                     <View style={styles.divider} />
                     <SettingRow

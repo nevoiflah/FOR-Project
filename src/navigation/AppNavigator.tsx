@@ -24,6 +24,7 @@ import { MindfulnessScreen } from '../screens/Main/MindfulnessScreen';
 import { HistoryScreen } from '../screens/User/HistoryScreen';
 import { PrivacyPolicyScreen } from '../screens/Legal/PrivacyPolicyScreen';
 import { TermsScreen } from '../screens/Legal/TermsScreen';
+import { ActiveSessionScreen } from '../screens/Activity/ActiveSessionScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -204,6 +205,15 @@ export const AppNavigator = () => {
                             component={HistoryScreen}
                             options={{
                                 animation: 'slide_from_right',
+                            }}
+                        />
+                        <Stack.Screen
+                            name="ActiveSession"
+                            component={ActiveSessionScreen}
+                            options={{
+                                headerShown: false,
+                                animation: 'slide_from_bottom',
+                                gestureEnabled: false, // Prevent swiping back during workout
                             }}
                         />
                     </Stack.Group>

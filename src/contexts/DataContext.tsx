@@ -73,6 +73,11 @@ interface RingData {
         status: string;
         weekly: number[];
     };
+    hydration?: {
+        intake: number; // in glasses (250ml)
+        goal: number;   // in glasses
+        history: { date: string, intake: number }[];
+    };
     userProfile?: {
         name: string;
         age: string;
@@ -104,6 +109,7 @@ interface DataContextType {
     removeGoal: (id: string) => Promise<void>;
     updateGoal: (id: string, progress: number) => Promise<void>;
     saveWorkout: (workout: Omit<Workout, 'id'>) => Promise<void>;
+    logWater: (amount: number) => Promise<void>; // New
     triggerHeartRateScan: () => Promise<void>;
     triggerSpO2Scan: () => Promise<void>;
     triggerStressScan: () => Promise<void>;
@@ -199,6 +205,11 @@ const DEFAULT_DATA: RingData = {
         score: 0,
         status: 'No Data',
         weekly: [0, 0, 0, 0, 0, 0, 0],
+    },
+    hydration: {
+        intake: 0,
+        goal: 8,
+        history: []
     },
     goals: [
         { id: '1', title: 'Daily Steps', target: 10000, current: 0, unit: 'steps', color: COLORS.primary, type: 'numeric' },
@@ -743,10 +754,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             // If updating heart, only save the *current* metrics to Firestore, not the full history trend
             if (updates.heart) {
                 persistenceUpdates.heart = {
-                    bpm: updates.heart.bpm,
-                    hrv: updates.heart.variability,
-                    spo2: updates.heart.spo2,
-                    stress: updates.heart.stress
+                    bpm: updates.heart.bpm || prev.heart.bpm,
+                    hrv: updates.heart.variability ?? prev.heart.variability ?? 0,
+                    spo2: updates.heart.spo2 ?? prev.heart.spo2 ?? 0,
+                    stress: updates.heart.stress ?? prev.heart.stress ?? 0
                     // timestamp: ... 
                 };
             }
@@ -867,6 +878,38 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         await setDoc(userDocRef, { history: updatedHistory }, { merge: true });
     };
 
+    const logWater = async (amount: number) => {
+        if (!user || !data) return;
+
+        // Calculate new intake
+        const currentIntake = data.hydration?.intake || 0;
+        const newIntake = Math.max(0, currentIntake + amount);
+
+        // Update local state
+        setData(prev => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                hydration: {
+                    ...prev.hydration,
+                    intake: newIntake,
+                    goal: prev.hydration?.goal || 8, // Ensure goal exists
+                    history: prev.hydration?.history || []
+                }
+            } as RingData;
+        });
+
+        // Update Firestore
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, {
+            hydration: {
+                intake: newIntake,
+                goal: data.hydration?.goal || 8,
+                lastUpdated: new Date().toISOString()
+            }
+        }, { merge: true });
+    };
+
     const triggerHeartRateScan = async () => {
         if (!isConnected) {
             throw new Error('Ring is not connected');
@@ -909,6 +952,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             removeGoal,
             updateGoal,
             saveWorkout,
+            logWater, // Export
             triggerHeartRateScan,
             triggerSpO2Scan,
             triggerStressScan,

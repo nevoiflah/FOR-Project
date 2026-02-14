@@ -25,7 +25,9 @@
         "NSHealthShareUsageDescription": "FOR needs access to your health data to analyze Sleep and Activity trends.",
         "NSHealthUpdateUsageDescription": "FOR uses health data for personalized recovery coaching.",
         "NSBluetoothAlwaysUsageDescription": "FOR uses Bluetooth to connect to your smart ring for real-time health data.",
-        "NSBluetoothPeripheralUsageDescription": "FOR uses Bluetooth to connect to your smart ring for real-time health data."
+        "NSBluetoothPeripheralUsageDescription": "FOR uses Bluetooth to connect to your smart ring for real-time health data.",
+        "NSLocationWhenInUseUsageDescription": "FOR needs access to your location to track your outdoor activities and routes.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "FOR needs access to your location to track your workouts."
       },
       "entitlements": {
         "com.apple.developer.healthkit": true,
