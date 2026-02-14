@@ -7,7 +7,6 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { GlassCard } from '../../components/GlassCard';
 import { LanguageToggle } from '../../components/LanguageToggle';
 import { COLORS, FONTS, SPACING, LAYOUT } from '../../constants/theme';
 import { HapticFeedback } from '../../utils/haptics';
@@ -333,7 +332,7 @@ export const RegisterScreen = () => {
                         <Text style={styles.logoText}>F.O.R</Text>
                     </View>
 
-                    <GlassCard style={styles.cardContainer}>
+                    <View style={styles.cardContainer}>
                         {/* Progress Bar */}
                         <View style={styles.progressContainer}>
                             <View style={[styles.progressBar, { width: `${(step / 3) * 100}%`, backgroundColor: colors.primary }]} />
@@ -373,7 +372,7 @@ export const RegisterScreen = () => {
                             </View>
                         )}
 
-                    </GlassCard>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </ScreenWrapper>

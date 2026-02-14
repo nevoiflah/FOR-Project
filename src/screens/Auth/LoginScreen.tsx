@@ -6,7 +6,6 @@ import { auth } from '../../config/firebase';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { GlassCard } from '../../components/GlassCard';
 import { LanguageToggle } from '../../components/LanguageToggle';
 import { COLORS, FONTS, SPACING, LAYOUT } from '../../constants/theme';
 import { HapticFeedback } from '../../utils/haptics';
@@ -103,7 +102,7 @@ export const LoginScreen = () => {
                         <Text style={styles.subtitle}>{t('loginSubtitle')}</Text>
                     </View>
 
-                    <GlassCard style={styles.formContainer}>
+                    <View style={styles.formContainer}>
                         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
                         <View style={styles.inputContainer}>
@@ -162,7 +161,7 @@ export const LoginScreen = () => {
                                 <Text style={styles.linkText}>{t('registerLink')}</Text>
                             </TouchableOpacity>
                         </View>
-                    </GlassCard>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </ScreenWrapper>
