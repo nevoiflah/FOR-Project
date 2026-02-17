@@ -119,7 +119,7 @@ export const ProfileScreen = ({ navigation }: any) => {
     const startScan = async () => {
         const hasPermissions = await bluetoothService.requestPermissions();
         if (!hasPermissions) {
-            Alert.alert('Permission Error', 'Bluetooth permissions are required to scan.');
+            Alert.alert(t('permissionError'), t('bluetoothPermissionRequired'));
             return;
         }
 
@@ -250,7 +250,7 @@ export const ProfileScreen = ({ navigation }: any) => {
             // Check hardware first
             const available = await biometricService.checkAvailability();
             if (!available) {
-                Alert.alert(t('error'), 'Biometrics not supported or not enrolled on this device.');
+                Alert.alert(t('error'), t('biometricsNotSupported'));
                 return;
             }
 
@@ -260,7 +260,7 @@ export const ProfileScreen = ({ navigation }: any) => {
             // so we show an alert instruction.
             Alert.prompt(
                 t('enableBiometrics'),
-                "Please enter your password to enable Face ID login.",
+                t('enterPasswordBiometrics'),
                 [
                     { text: t('cancel'), style: 'cancel' },
                     {
@@ -270,9 +270,9 @@ export const ProfileScreen = ({ navigation }: any) => {
                                 const success = await biometricService.saveCredentials(user.email, password);
                                 if (success) {
                                     setBiometricsEnabled(true);
-                                    Alert.alert(t('success'), 'Biometric login enabled.');
+                                    Alert.alert(t('biometricsEnabled'));
                                 } else {
-                                    Alert.alert(t('error'), 'Failed to save credentials.');
+                                    Alert.alert(t('error'), t('failedSaveCredentials'));
                                 }
                             }
                         }
@@ -412,7 +412,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                     </View>
                     <View style={isRTL && { alignItems: 'flex-end' }}>
                         <Text style={styles.profileName}>{data?.userProfile?.name || user?.displayName || 'Guest'}</Text>
-                        <Text style={styles.profileEmail}>{user?.email || 'user@example.com'}</Text>
+                        <Text style={styles.profileEmail}>{user?.email || ''}</Text>
                     </View>
                 </GlassCard>
 
@@ -427,7 +427,7 @@ export const ProfileScreen = ({ navigation }: any) => {
                                 onPress={() => navigation.navigate('EditProfile')}
                                 style={{ padding: 4, marginRight: isRTL ? 0 : SPACING.s, marginLeft: isRTL ? SPACING.s : 0 }}
                             >
-                                <Text style={{ color: colors.primary, fontWeight: 'bold' }}>{t('edit') || 'Edit'}</Text>
+                                <Text style={{ color: colors.primary, fontWeight: 'bold' }}>{t('edit')}</Text>
                             </TouchableOpacity>
                         </View>
                         <GlassCard style={styles.settingsGroup}>

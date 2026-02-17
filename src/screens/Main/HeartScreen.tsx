@@ -105,8 +105,8 @@ export const HeartScreen = () => {
                                         )}
                                     </View>
                                     <Text style={styles.bigValue}>{isScanning ? data.heart.bpm || '--' : (data.heart.bpm || data.heart.resting || '--')}</Text>
-                                    <Text style={styles.label}>{isScanning ? 'LIVE HR' : t('restingHr')}</Text>
-                                    <Text style={{ fontSize: 10, color: colors.textSecondary, marginTop: 4 }}>Tap to Measure</Text>
+                                    <Text style={styles.label}>{isScanning ? t('liveHR') : t('restingHr')}</Text>
+                                    <Text style={{ fontSize: 10, color: colors.textSecondary, marginTop: 4 }}>{t('tapToMeasure')}</Text>
                                 </TouchableOpacity>
                             </GlassCard>
 
@@ -119,14 +119,14 @@ export const HeartScreen = () => {
                                     <Activity size={32} color={colors.accent} style={{ marginBottom: 10 }} />
                                     <Text style={styles.bigValue}>{data.heart.variability} ms</Text>
                                     <Text style={styles.label}>{t('hrv')}</Text>
-                                    <Text style={{ fontSize: 10, color: colors.textSecondary, marginTop: 4 }}>Tap to Measure</Text>
+                                    <Text style={{ fontSize: 10, color: colors.textSecondary, marginTop: 4 }}>{t('tapToMeasure')}</Text>
                                 </TouchableOpacity>
                             </GlassCard>
                         </View>
 
                         {/* HR Trend Graph */}
                         <View style={{ marginBottom: SPACING.l }}>
-                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>Heart Rate</Text>
+                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('heart')}</Text>
                             <GlassCard
                                 style={{ alignItems: 'center', overflow: 'hidden' }}
                                 contentContainerStyle={{ paddingHorizontal: SPACING.m, paddingVertical: SPACING.s, alignItems: 'center', width: '100%' }}
@@ -144,7 +144,7 @@ export const HeartScreen = () => {
 
                         {/* HRV Trend Graph */}
                         <View style={{ marginBottom: SPACING.l }}>
-                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>HRV</Text>
+                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('hrv')}</Text>
                             <GlassCard
                                 style={{ alignItems: 'center', overflow: 'hidden' }}
                                 contentContainerStyle={{ paddingHorizontal: SPACING.m, paddingVertical: SPACING.s, alignItems: 'center', width: '100%' }}
@@ -161,19 +161,19 @@ export const HeartScreen = () => {
                         </View>
 
                         {/* SpO2 Card */}
-                        <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>Blood Oxygen</Text>
+                        <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('bloodOxygen')}</Text>
                         <GlassCard style={styles.fullWidthCard} contentContainerStyle={{ padding: SPACING.l, width: '100%' }}>
                             <View style={{ width: '100%' }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                                     <View>
                                         <Text style={styles.bigValue}>{data.heart.spo2 > 0 ? `${data.heart.spo2}%` : '--'}</Text>
-                                        <Text style={[styles.label, { textAlign: 'left' }]}>LIVE SpO2</Text>
+                                        <Text style={[styles.label, { textAlign: 'left' }]}>{t('liveSpO2')}</Text>
                                     </View>
                                     <TouchableOpacity
                                         style={styles.actionButton}
                                         onPress={triggerSpO2Scan}
                                     >
-                                        <Text style={styles.actionButtonText}>Measure</Text>
+                                        <Text style={styles.actionButtonText}>{t('measure')}</Text>
                                     </TouchableOpacity>
                                 </View>
                                 {/* SpO2 Bar (90-100% normal range visualization) */}
@@ -195,19 +195,19 @@ export const HeartScreen = () => {
                         </GlassCard>
 
                         {/* Stress Card */}
-                        <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>Stress</Text>
+                        <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('stressRelief')}</Text>
                         <GlassCard style={styles.fullWidthCard} contentContainerStyle={{ padding: SPACING.l, width: '100%' }}>
                             <View style={{ width: '100%' }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                                     <View>
                                         <Text style={styles.bigValue}>{data.heart.stress > 0 ? data.heart.stress : '--'}</Text>
-                                        <Text style={[styles.label, { textAlign: 'left' }]}>Stress Level</Text>
+                                        <Text style={[styles.label, { textAlign: 'left' }]}>{t('stressLevel')}</Text>
                                     </View>
                                     <TouchableOpacity
                                         style={styles.actionButton}
                                         onPress={triggerStressScan}
                                     >
-                                        <Text style={styles.actionButtonText}>Measure</Text>
+                                        <Text style={styles.actionButtonText}>{t('measure')}</Text>
                                     </TouchableOpacity>
                                 </View>
 
@@ -222,8 +222,8 @@ export const HeartScreen = () => {
                                     ]} />
                                 </View>
                                 <View style={[styles.rangeLabels, isRTL && { flexDirection: 'row-reverse' }]}>
-                                    <Text style={styles.rangeText}>Relaxed</Text>
-                                    <Text style={styles.rangeText}>High</Text>
+                                    <Text style={styles.rangeText}>{t('relaxed')}</Text>
+                                    <Text style={styles.rangeText}>{t('high')}</Text>
                                 </View>
                             </View>
                         </GlassCard>

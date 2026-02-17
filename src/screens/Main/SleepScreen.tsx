@@ -22,6 +22,7 @@ const parseDurationToMinutes = (durationStr: string): number => {
 
 // Sleep Score Meter Component
 const SleepScoreMeter = ({ score, size = 180, color }: { score: number, size?: number, color: string }) => {
+    const { t } = useLanguage();
     const strokeWidth = 15;
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
@@ -62,7 +63,7 @@ const SleepScoreMeter = ({ score, size = 180, color }: { score: number, size?: n
             </Svg>
             <View style={[StyleSheet.absoluteFillObject, { alignItems: 'center', justifyContent: 'center' }]}>
                 <Text style={{ fontSize: 48, fontWeight: 'bold', color }}>{score}</Text>
-                <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>Sleep Score</Text>
+                <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>{t('sleepScore')}</Text>
             </View>
         </View>
     );
@@ -70,6 +71,7 @@ const SleepScoreMeter = ({ score, size = 180, color }: { score: number, size?: n
 
 // Sleep Stages Donut Chart Component (Transparent Center)
 const SleepStagesPieChart = ({ deep, rem, total, size = 160, colors }: { deep: string, rem: string, total: string, size?: number, colors: any }) => {
+    const { t } = useLanguage();
     const totalMins = parseDurationToMinutes(total);
     const deepMins = parseDurationToMinutes(deep);
     const remMins = parseDurationToMinutes(rem);
@@ -147,22 +149,22 @@ const SleepStagesPieChart = ({ deep, rem, total, size = 160, colors }: { deep: s
                 <View style={legendStyles.row}>
                     <View style={[legendStyles.dot, { backgroundColor: DEEP_COLOR }]} />
                     <View>
-                        <Text style={[legendStyles.label, { color: colors.textSecondary }]}>Deep Sleep</Text>
+                        <Text style={[legendStyles.label, { color: colors.textSecondary }]}>{t('deepSleep')}</Text>
                         <Text style={[legendStyles.value, { color: colors.textPrimary }]}>{deep} ({Math.round(deepMins / totalMins * 100)}%)</Text>
                     </View>
                 </View>
                 <View style={legendStyles.row}>
                     <View style={[legendStyles.dot, { backgroundColor: REM_COLOR }]} />
                     <View>
-                        <Text style={[legendStyles.label, { color: colors.textSecondary }]}>REM Sleep</Text>
+                        <Text style={[legendStyles.label, { color: colors.textSecondary }]}>{t('remSleep')}</Text>
                         <Text style={[legendStyles.value, { color: colors.textPrimary }]}>{rem} ({Math.round(remMins / totalMins * 100)}%)</Text>
                     </View>
                 </View>
                 <View style={legendStyles.row}>
                     <View style={[legendStyles.dot, { backgroundColor: LIGHT_COLOR }]} />
                     <View>
-                        <Text style={[legendStyles.label, { color: colors.textSecondary }]}>Light Sleep</Text>
-                        <Text style={[legendStyles.value, { color: colors.textPrimary }]}>{Math.floor(lightMins / 60)}h {lightMins % 60}m ({Math.round(lightMins / totalMins * 100)}%)</Text>
+                        <Text style={[legendStyles.label, { color: colors.textSecondary }]}>{t('lightSleep')}</Text>
+                        <Text style={[legendStyles.value, { color: colors.textPrimary }]}>{Math.floor(lightMins / 60)}{t('h')} {lightMins % 60}{t('m')} ({Math.round(lightMins / totalMins * 100)}%)</Text>
                     </View>
                 </View>
             </View>
@@ -203,6 +205,7 @@ const TabSelector = ({ tabs, activeTab, onTabChange, colors }: { tabs: string[],
 
 // Dual Axis Chart (Bars + Line)
 const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 }: { data: any[], width: number, height?: number, colors: any, maxDurationVal?: number }) => {
+    const { t } = useLanguage();
     const maxScore = 100;
     // Allow maxDuration to be passed in (e.g. 60 for minutes, 10 for hours)
     const maxDuration = maxDurationVal;
@@ -210,7 +213,7 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
     // Guard against empty data
     if (!data || data.length === 0) return (
         <View style={{ height, width, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ color: colors.textSecondary }}>No data available</Text>
+            <Text style={{ color: colors.textSecondary }}>{t('awaitingData')}</Text>
         </View>
     );
 
@@ -400,12 +403,12 @@ export const SleepScreen = () => {
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: SPACING.l }}>
                     <View style={{ width: 10, height: 10, backgroundColor: colors.primary, borderRadius: 5, marginRight: 6 }} />
                     <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                        Duration {isDay ? '(min)' : '(h)'}
+                        {t('duration')} {isDay ? `(${t('m')})` : `(${t('h')})`}
                     </Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View style={{ width: 10, height: 10, backgroundColor: colors.accent, borderRadius: 5, marginRight: 6 }} />
-                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>Quality Score</Text>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{t('qualityScore')}</Text>
                 </View>
             </View>
         );
@@ -451,9 +454,13 @@ export const SleepScreen = () => {
                         {/* 1. Main Toggleable Sleep Card */}
                         <GlassCard style={styles.scoreCard} contentContainerStyle={{ alignItems: 'center', padding: SPACING.xl }}>
                             <TabSelector
-                                tabs={['Day', 'Week', 'Month']}
-                                activeTab={selectedTab}
-                                onTabChange={setSelectedTab}
+                                tabs={[t('dayTab'), t('weekTab'), t('monthTab')]}
+                                activeTab={selectedTab === 'Day' ? t('dayTab') : selectedTab === 'Week' ? t('weekTab') : t('monthTab')}
+                                onTabChange={(tab) => {
+                                    if (tab === t('dayTab')) setSelectedTab('Day');
+                                    else if (tab === t('weekTab')) setSelectedTab('Week');
+                                    else setSelectedTab('Month');
+                                }}
                                 colors={colors}
                             />
                             {renderMainContent()}
@@ -474,7 +481,7 @@ export const SleepScreen = () => {
 
                         {/* 3. Avg Sleep Heart Rate Graph */}
                         <View style={{ marginBottom: SPACING.xl }}>
-                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>Avg Sleep Heart Rate</Text>
+                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('avgSleepHR')}</Text>
                             <GlassCard
                                 style={{ alignItems: 'center', overflow: 'hidden' }}
                                 contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%' }}
@@ -491,15 +498,15 @@ export const SleepScreen = () => {
                                     showPoints={true}
                                 />
                                 <View style={{ padding: SPACING.m, position: 'absolute', top: 10, left: 10 }}>
-                                    <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: 'bold' }}>{data.sleep.avgHeartRate} <Text style={{ fontSize: 14, color: colors.textSecondary }}>bpm</Text></Text>
-                                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>Average</Text>
+                                    <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: 'bold' }}>{data.sleep.avgHeartRate} {t('bpm')}</Text>
+                                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{t('avg')}</Text>
                                 </View>
                             </GlassCard>
                         </View>
 
                         {/* 4. Temperature Graph */}
                         <View style={{ marginBottom: SPACING.xl }}>
-                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>Skin Temperature</Text>
+                            <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('skinTemp')}</Text>
                             <GlassCard
                                 style={{ alignItems: 'center', overflow: 'hidden' }}
                                 contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%' }}
@@ -514,7 +521,7 @@ export const SleepScreen = () => {
                                 />
                                 <View style={{ padding: SPACING.m, position: 'absolute', top: 10, left: 10 }}>
                                     <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: 'bold' }}>+0.2°</Text>
-                                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>Deviation</Text>
+                                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{t('deviation')}</Text>
                                 </View>
                             </GlassCard>
                         </View>

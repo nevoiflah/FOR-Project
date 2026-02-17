@@ -226,7 +226,7 @@ export const DashboardScreen = () => {
                             <View style={styles.iconContainer}>
                                 <Circle size={24} color="#FF6B6B" />
                             </View>
-                            <Text style={styles.metricValue}>{data.heart.bpm} bpm</Text>
+                            <Text style={styles.metricValue}>{data.heart.bpm} {t('bpm')}</Text>
                             <Text style={styles.metricLabel}>{t('avgHr')}</Text>
                         </GlassCard>
 
@@ -236,7 +236,12 @@ export const DashboardScreen = () => {
                                 <Circle size={24} color={colors.primary} />
                             </View>
                             <Text style={styles.metricValue}>{data.readiness.score}</Text>
-                            <Text style={styles.metricLabel}>{data.readiness.status}</Text>
+                            <Text style={styles.metricLabel}>
+                                {data.readiness.status === 'Good' ? t('goodStatus') :
+                                    data.readiness.status === 'Fair' ? t('fairStatus') :
+                                        data.readiness.status === 'Poor' ? t('poorStatus') :
+                                            data.readiness.status}
+                            </Text>
                         </GlassCard>
                     </View>
                 ) : (
@@ -296,12 +301,12 @@ export const DashboardScreen = () => {
                     <View style={[styles.milestoneCard, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#FFEBEE' }]}>
                         <Activity size={24} color="#ef4444" />
                         <Text style={[styles.milestoneTitle, { color: isDark ? '#fca5a5' : '#C62828' }]}>{t('rhrLowBadge')}</Text>
-                        <Text style={[styles.milestoneValue, { color: isDark ? colors.textPrimary : '#D32F2F' }]}>58 BPM</Text>
+                        <Text style={[styles.milestoneValue, { color: isDark ? colors.textPrimary : '#D32F2F' }]}>58 {t('bpm')}</Text>
                     </View>
                     <View style={[styles.milestoneCard, { backgroundColor: isDark ? 'rgba(34, 197, 94, 0.1)' : '#E8F5E9' }]}>
                         <Trophy size={24} color="#22c55e" />
                         <Text style={[styles.milestoneTitle, { color: isDark ? '#86efac' : '#2E7D32' }]}>{t('recoveryChamp')}</Text>
-                        <Text style={[styles.milestoneValue, { color: isDark ? colors.textPrimary : '#388E3C' }]}>Top 5%</Text>
+                        <Text style={[styles.milestoneValue, { color: isDark ? colors.textPrimary : '#388E3C' }]}>{t('topPercent', { percent: '5' })}</Text>
                     </View>
                 </View>
 
@@ -329,7 +334,7 @@ export const DashboardScreen = () => {
                                 { color: colors.textSecondary, marginBottom: SPACING.l, marginTop: SPACING.s },
                                 isRTL && { textAlign: 'right' }
                             ]}>
-                                {data.readiness.score >= 80 ? t('energyHigh') : t('energyModerate')} - {t('biologicalClockMsg') || 'Your energy peaks around 2:00 PM today.'}
+                                {data.readiness.score >= 80 ? t('energyHigh') : t('energyModerate')} - {t('biologicalClockMsg')}
                             </Text>
 
                             <View style={{ marginTop: 0, paddingBottom: SPACING.l }}>

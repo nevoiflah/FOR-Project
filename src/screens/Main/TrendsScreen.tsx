@@ -53,7 +53,7 @@ export const TrendsScreen = () => {
         return {
             count,
             calories: totalCals,
-            duration: `${hours}h ${minutes}m`
+            duration: `${hours}${t('h')} ${minutes}${t('m')}`
         };
     }, [data?.history]);
 
@@ -142,7 +142,7 @@ export const TrendsScreen = () => {
                             <View style={[styles.sectionHeader, isRTL && { flexDirection: 'row-reverse' }, { justifyContent: 'space-between' }]}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <TrendingUp size={20} color={colors.accent} />
-                                    <Text style={styles.sectionHeaderTitle}>{t('activityLevel') || 'Activity Level'}</Text>
+                                    <Text style={styles.sectionHeaderTitle}>{t('activityLevel')}</Text>
                                 </View>
                             </View>
 
@@ -155,7 +155,7 @@ export const TrendsScreen = () => {
                                             style={[styles.tabButton, selectedActivityTab === tab && { backgroundColor: colors.primary }]}
                                         >
                                             <Text style={[styles.tabText, selectedActivityTab === tab && { color: '#FFF' }]}>
-                                                {t(tab.toLowerCase() as any) || tab}
+                                                {t(tab.toLowerCase() as any)}
                                             </Text>
                                         </TouchableOpacity>
                                     ))}
@@ -316,7 +316,7 @@ export const TrendsScreen = () => {
                     </>
                 ) : (
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>{t('connectToSee') || 'Sync your data to see trends'}</Text>
+                        <Text style={styles.emptyText}>{t('syncTrendsMsg')}</Text>
                     </View>
                 )}
             </ScrollView>

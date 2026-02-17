@@ -167,7 +167,7 @@ export const ActiveSessionScreen = () => {
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                             <ActivityIcon size={16} color={colors.textSecondary} />
                             <Text style={{ color: colors.textSecondary, marginLeft: 6, fontSize: 12 }}>
-                                {activity.gps ? 'GPS' : 'Non-GPS'}
+                                {activity.gps ? t('gps') : t('nonGps')}
                             </Text>
                         </View>
                     </View>
@@ -202,7 +202,7 @@ export const ActiveSessionScreen = () => {
                                 </MapView>
                             ) : (
                                 <View style={styles.mapPlaceholder}>
-                                    <Text style={{ color: colors.textSecondary }}>Getting Location...</Text>
+                                    <Text style={{ color: colors.textSecondary }}>{t('gettingLocation')}</Text>
                                 </View>
                             )}
                             {/* Overlay Timer for GPS */}
@@ -218,7 +218,7 @@ export const ActiveSessionScreen = () => {
                                 <Text style={[styles.caloriesText, { color: colors.textPrimary, fontSize: 48 }]}>
                                     {formatTime(seconds)}
                                 </Text>
-                                <Text style={{ color: colors.textSecondary, marginTop: 4 }}>DURATION</Text>
+                                <Text style={{ color: colors.textSecondary, marginTop: 4 }}>{t('durTitle')}</Text>
                             </View>
                         </View>
                     )}
@@ -231,7 +231,7 @@ export const ActiveSessionScreen = () => {
                         <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                             {heartRate > 0 ? heartRate : '--'}
                         </Text>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>BPM</Text>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('bpm')}</Text>
                     </View>
 
                     <View style={[styles.statCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.5)', borderWidth: 1, borderColor: colors.divider }]}>
@@ -239,7 +239,7 @@ export const ActiveSessionScreen = () => {
                         <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                             {Math.floor(seconds * 0.15)}
                         </Text>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Kcal</Text>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('kcal')}</Text>
                     </View>
 
                     {activity.gps && (
@@ -248,7 +248,7 @@ export const ActiveSessionScreen = () => {
                             <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                                 {(distance / 1000).toFixed(2)}
                             </Text>
-                            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>km</Text>
+                            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('km') || 'km'}</Text>
                         </View>
                     )}
                 </View>
@@ -261,7 +261,7 @@ export const ActiveSessionScreen = () => {
                             onPress={() => setStatus('running')}
                         >
                             <Play size={32} color="#FFF" fill="#FFF" />
-                            <Text style={styles.controlText}>{t('start') || 'START'}</Text>
+                            <Text style={styles.controlText}>{t('start')}</Text>
                         </TouchableOpacity>
                     ) : (
                         <View style={{ flexDirection: 'row', gap: 24 }}>

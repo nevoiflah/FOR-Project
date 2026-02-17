@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { View, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { TranslationKey } from '../i18n/translations';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 // Icons
@@ -30,19 +32,31 @@ const Stack = createNativeStackNavigator();
 
 const MainTabs = () => {
     const { colors, isDark } = useTheme();
+    const { t, isRTL } = useLanguage();
 
     return (
         <Tab.Navigator
             id="main-tabs"
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: styles.tabBar,
-                tabBarShowLabel: false,
-                tabBarBackground: () => (
-                    <BlurView tint={isDark ? "dark" : "light"} intensity={30} style={StyleSheet.absoluteFill} />
-                ),
+                tabBarStyle: {
+                    backgroundColor: colors.surface,
+                    borderTopWidth: 0,
+                    elevation: 0,
+                    shadowOpacity: 0,
+                    height: 80,
+                    paddingBottom: 20,
+                    paddingTop: 10,
+                    flexDirection: isRTL ? 'row-reverse' : 'row'
+                },
+                tabBarShowLabel: true,
                 tabBarActiveTintColor: colors.primary,
                 tabBarInactiveTintColor: colors.textSecondary,
+                tabBarLabelStyle: {
+                    fontFamily: 'Inter_600SemiBold',
+                    fontSize: 10,
+                    marginTop: 4,
+                },
             }}
         >
             <Tab.Screen
@@ -56,7 +70,8 @@ const MainTabs = () => {
                     },
                 }}
                 options={{
-                    tabBarIcon: ({ color }) => <Home color={color} size={24} />
+                    tabBarIcon: ({ color }) => <Home color={color} size={24} />,
+                    tabBarLabel: t('homeTab')
                 }}
             />
             <Tab.Screen
@@ -70,7 +85,8 @@ const MainTabs = () => {
                     },
                 }}
                 options={{
-                    tabBarIcon: ({ color }) => <Moon color={color} size={24} />
+                    tabBarIcon: ({ color }) => <Moon color={color} size={24} />,
+                    tabBarLabel: t('sleepTab')
                 }}
             />
             <Tab.Screen
@@ -84,7 +100,8 @@ const MainTabs = () => {
                     },
                 }}
                 options={{
-                    tabBarIcon: ({ color }) => <Heart color={color} size={24} />
+                    tabBarIcon: ({ color }) => <Heart color={color} size={24} />,
+                    tabBarLabel: t('heartTab')
                 }}
             />
             <Tab.Screen
@@ -98,7 +115,8 @@ const MainTabs = () => {
                     },
                 }}
                 options={{
-                    tabBarIcon: ({ color }) => <TrendingUp color={color} size={24} />
+                    tabBarIcon: ({ color }) => <TrendingUp color={color} size={24} />,
+                    tabBarLabel: t('trendsTab')
                 }}
             />
             <Tab.Screen
@@ -112,7 +130,8 @@ const MainTabs = () => {
                     },
                 }}
                 options={{
-                    tabBarIcon: ({ color }) => <User color={color} size={24} />
+                    tabBarIcon: ({ color }) => <User color={color} size={24} />,
+                    tabBarLabel: t('profile')
                 }}
             />
         </Tab.Navigator>
