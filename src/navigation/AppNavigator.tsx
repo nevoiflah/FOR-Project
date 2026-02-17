@@ -40,7 +40,8 @@ const MainTabs = () => {
             screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: colors.surface,
+                    backgroundColor: 'transparent',
+                    position: 'absolute',
                     borderTopWidth: 0,
                     elevation: 0,
                     shadowOpacity: 0,
@@ -49,6 +50,13 @@ const MainTabs = () => {
                     paddingTop: 10,
                     flexDirection: isRTL ? 'row-reverse' : 'row'
                 },
+                tabBarBackground: () => (
+                    <BlurView
+                        tint={isDark ? 'dark' : 'light'}
+                        intensity={80}
+                        style={StyleSheet.absoluteFill}
+                    />
+                ),
                 tabBarShowLabel: true,
                 tabBarActiveTintColor: colors.primary,
                 tabBarInactiveTintColor: colors.textSecondary,
