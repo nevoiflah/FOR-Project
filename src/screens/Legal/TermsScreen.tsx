@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { COLORS, SPACING } from '../../constants/theme';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -15,27 +15,26 @@ export const TermsScreen = () => {
         <ScreenWrapper>
             <ScrollView contentContainerStyle={styles.container}>
                 <Text style={styles.title}>{t('termsOfUse') || 'Terms of Use'}</Text>
-                <Text style={styles.subtitle}>{t('lastUpdated') || 'Last updated: February 12, 2026'}</Text>
+                <Text style={styles.subtitle}>{t('lastUpdated') || 'Last updated: February 18, 2026'}</Text>
 
-                <Text style={styles.sectionTitle}>{t('termsSection1Title')}</Text>
-                <Text style={styles.paragraph}>
-                    {t('termsSection1Text')}
-                </Text>
+                <Text style={styles.paragraph}>{t('legalWelcome')}</Text>
 
-                <Text style={styles.sectionTitle}>{t('termsSection2Title')}</Text>
-                <Text style={styles.paragraph}>
-                    {t('termsSection2Text')}
-                </Text>
-
-                <Text style={styles.sectionTitle}>{t('termsSection3Title')}</Text>
-                <Text style={styles.paragraph}>
-                    {t('termsSection3Text')}
-                </Text>
-
-                <Text style={styles.sectionTitle}>{t('termsSection4Title')}</Text>
-                <Text style={styles.paragraph}>
-                    {t('termsSection4Text')}
-                </Text>
+                {[
+                    { title: 'legalAccessTitle', body: 'legalAccessBody' },
+                    { title: 'legalResponsibilityTitle', body: 'legalResponsibilityBody' },
+                    { title: 'legalMedicalTitle', body: 'legalMedicalBody' },
+                    { title: 'legalDataTitle', body: 'legalDataBody' },
+                    { title: 'legalIPTitle', body: 'legalIPBody' },
+                    { title: 'legalWarrantyTitle', body: 'legalWarrantyBody' },
+                    { title: 'legalLimitationTitle', body: 'legalLimitationBody' },
+                    { title: 'legalPrecautionsTitle', body: 'legalPrecautionsBody' },
+                    { title: 'legalTerminationTitle', body: 'legalTerminationBody' },
+                ].map((section, index) => (
+                    <View key={index} style={styles.section}>
+                        <Text style={styles.sectionTitle}>{t(section.title as any)}</Text>
+                        <Text style={styles.paragraph}>{t(section.body as any)}</Text>
+                    </View>
+                ))}
             </ScrollView>
         </ScreenWrapper>
     );
@@ -76,5 +75,8 @@ const createStyles = (colors: any, isDark: boolean, isRTL: boolean) => StyleShee
         lineHeight: 22,
         marginBottom: SPACING.s,
         textAlign: isRTL ? 'right' : 'left',
+    },
+    section: {
+        marginBottom: SPACING.m,
     },
 });

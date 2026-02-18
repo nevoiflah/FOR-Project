@@ -317,24 +317,58 @@ export const translations = {
         lastUpdated: "Last updated: February 12, 2026",
 
         // Terms Content
-        termsSection1Title: "1. Not a Medical Device",
-        termsSection1Text: "The F.O.R Project app and associated hardware are designed for general wellness and informational purposes only. They are NOT intended to diagnose, treat, cure, or prevent any disease or medical condition. Always consult a physician before making any changes to your diet, exercise, or health regimen.",
-        termsSection2Title: "2. Acceptance of Terms",
-        termsSection2Text: "By creating an account and using this application, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the application.",
-        termsSection3Title: "3. User Accounts",
-        termsSection3Text: "You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password.",
-        termsSection4Title: "4. Liability",
-        termsSection4Text: "We help you track your wellness, but we are not responsible for how you interpret or use this data. Use common sense and listen to your body.",
+        legalWelcome: "Welcome to F.O.R PROJECT! These Terms of Use (the \"Agreement\") describe the terms and conditions applicable to your use of the F.O.R Ring, charger, and the FOR mobile application (collectively, the \"Services\"). By using the Services, you agree to be bound by this Agreement and our Privacy Policy.",
+
+        legalAccessTitle: "1. Access and Use",
+        legalAccessBody: "F.O.R PROJECT grants you a limited license to access and use the Services. You represent that you are at least 18 years of age. You shall not copy, modify, reverse engineer, or attempt to derive the source code of the FOR App. Malicious use, security probing, or automated scraping without authorization is strictly prohibited.",
+
+        legalResponsibilityTitle: "2. Customer Responsibilities",
+        legalResponsibilityBody: "You are solely responsible for your use of the Services and compliance with all applicable laws. You must maintain the security of your account credentials provided via Firebase. F.O.R PROJECT is not responsible for data loss due to your failure to secure your device or account.",
+
+        legalMedicalTitle: "3. Not a Medical Device",
+        legalMedicalBody: "THE SERVICES ARE NOT A MEDICAL DEVICE. F.O.R PROJECT DOES NOT PROVIDE MEDICAL ADVICE. The Services, including Sleep Score, Readiness, SpO2, HRV, and Stress metrics, are for informational purposes only and are not intended to diagnose, treat, cure, or prevent any disease. Always consult a physician before making changes to your health regimen.",
+
+        legalDataTitle: "4. Data and Communications",
+        legalDataBody: "You consent to the collection and processing of your health data as described in our Privacy Policy. This includes synchronization with Firebase cloud services and optional integration with Apple Health. We may contact you regarding your account, updates, or technical issues.",
+
+        legalIPTitle: "5. Intellectual Property",
+        legalIPBody: "All content, including the FOR App interface, F.O.R Ring design, and underlying algorithms, are exclusively owned by F.O.R PROJECT. Any feedback provided may be used by us without compensation to you.",
+
+        legalWarrantyTitle: "6. Warranty Disclaimer",
+        legalWarrantyBody: "THE SERVICES ARE PROVIDED \"AS IS\". F.O.R PROJECT warrants to the original purchaser that new F.O.R Rings are free from defects in material and workmanship for one (1) year from the date of purchase. This warranty does not cover normal wear and tear, misuse, or unauthorized alterations.",
+
+        legalLimitationTitle: "7. Limitation of Liability",
+        legalLimitationBody: "IN NO EVENT SHALL F.O.R PROJECT BE LIABLE FOR ANY INDIRECT, SPECIAL, OR CONSEQUENTIAL DAMAGES. Our total liability for any claim shall not exceed $100. This does not affect liability which cannot be excluded under applicable law.",
+
+        legalPrecautionsTitle: "8. Precautions",
+        legalPrecautionsBody: "Ensure the F.O.R Ring does not get caught on heavy objects. Remove the ring immediately if you experience skin irritation or redness. The Ring is not a toy and pose a choking hazard for children.",
+
+        legalTerminationTitle: "9. Termination",
+        legalTerminationBody: "We reserve the right to suspend or terminate your access to the Services for violation of this Agreement. You may terminate your account at any time through the app settings.",
 
         // Privacy Content
-        privacySection1Title: "1. Data Security",
-        privacySection1Text: "Your privacy is our top priority. All personal health data (Heart Rate, HRV, Activity) is stored securely on MongoDB Atlas using industry-standard encryption.",
-        privacySection2Title: "2. Data Ownership",
-        privacySection2Text: "You own your data. Your health records are accessible ONLY by your authenticated user account. We do not sell, share, or analyze your data for third-party advertising.",
-        privacySection3Title: "3. Local Storage",
-        privacySection3Text: "For offline access, some data is cached locally on your device using secure storage. This data is automatically synchronized with the cloud when an internet connection is available.",
-        privacySection4Title: "4. Contact Us",
-        privacySection4Text: "If you have any questions about this Privacy Policy, please contact us at support@for-project.com.",
+        privacyWelcome: "At F.O.R PROJECT, protecting your personal data is a task we take seriously. This Privacy Policy (\"Policy\") applies to your use of the F.O.R Ring, the FOR App, and our services.",
+
+        privacyCollectionTitle: "1. Data Collection",
+        privacyCollectionBody: "We collect data generated by your F.O.R Ring (Heart Rate, SpO2, Temperature, Movement) and data you input into the FOR App (User Profile, Goals). We also process technical data like device model and IP address.",
+
+        privacyProcessingTitle: "2. Processing Purposes",
+        privacyProcessingBody: "We process your data to provide health insights (Sleep Score, Readiness), improve our algorithms, and provide customer support. We do NOT sell your personal health data to third-party advertisers.",
+
+        privacySharingTitle: "3. Data Sharing",
+        privacySharingBody: "Your data is stored securely on Google Firebase Cloud Services. If you enable it, we utilize Apple HealthKit integration to sync your activity data. We only share data with service providers necessary to operate the service.",
+
+        privacySecurityTitle: "4. Data Security",
+        privacySecurityBody: "We use industry-standard encryption for data in transit and at rest. Your health metrics are stored in a secured Firebase Firestore database, with strict access controls.",
+
+        privacyRightsTitle: "5. Your Rights",
+        privacyRightsBody: "You have the right to access, correct, or delete your personal data. You can export your health data or delete your account directly via the FOR App settings.",
+
+        privacyRetentionTitle: "6. Data Retention",
+        privacyRetentionBody: "We retain your personal data only as long as your account is active. Upon account deletion, all personal health identifiers are removed from our systems.",
+
+        privacyContactTitle: "7. Contact Us",
+        privacyContactBody: "If you have questions about this Privacy Policy, please contact our Data Protection Officer at support@for-project.com.",
         // Activity Revamp
         workoutRecords: "Workout Records",
         totalWorkouts: "Total Workouts",
@@ -702,24 +736,58 @@ export const translations = {
         lastUpdated: "עודכן לאחרונה: 12 בפברואר 2026",
 
         // Terms Content
-        termsSection1Title: "1. לא מכשיר רפואי",
-        termsSection1Text: "אפליקציית F.O.R והחומרה הנלווית מיועדים למטרות בריאות כללית ומידע בלבד. הם אינם מיועדים לאבחון, טיפול, ריפוי או מניעה של מחלה כלשהי. התייעץ תמיד עם רופא לפני ביצוע שינויים בדיאטה, אימון או משטר הבריאות שלך.",
-        termsSection2Title: "2. קבלת התנאים",
-        termsSection2Text: "על ידי יצירת חשבון ושימוש באפליקציה זו, אתה מסכים להיות מחויב לתנאים אלה. אם אינך מסכים לתנאים אלה, אינך רשאי לגשת או להשתמש באפליקציה.",
-        termsSection3Title: "3. חשבונות משתמש",
-        termsSection3Text: "אתה אחראי לשמירה על הסיסמה המשמשת אותך לגישה לשירות ולכל פעילות המתבצעת תחת הסיסמה שלך.",
-        termsSection4Title: "4. אחריות",
-        termsSection4Text: "אנו עוזרים לך לעקוב אחר הבריאות שלך, אך איננו אחראים לאופן שבו אתה מפרש או משתמש בנתונים אלה. הפעל שיקול דעת והקשב לגופך.",
+        legalWelcome: "ברוכים הבאים ל-F.O.R PROJECT! תנאי שימוש אלה (\"ההסכם\") מתארים את התנאים וההתניות החלים על שימושך בטבעת F.O.R, במטען ובאפליקציית FOR (ביחד, \"השירותים\"). על ידי שימוש בשירותים, אתה מסכים להיות מחויב להסכם זה ולמדיניות הפרטיות שלנו.",
+
+        legalAccessTitle: "1. גישה ושימוש",
+        legalAccessBody: "F.O.R PROJECT מעניקה לך רישיון מוגבל לגשת ולהשתמש בשירותים. אתה מצהיר כי אתה בן 18 לפחות. אין להעתיק, לשנות, לבצע הנדסה לאחור או לנסות להפיק את קוד המקור של אפליקציית FOR. שימוש זדוני, בדיקת אבטחה או סריקה אוטומטית ללא הרשאה אסורים בהחלט.",
+
+        legalResponsibilityTitle: "2. אחריות הלקוח",
+        legalResponsibilityBody: "אתה האחראי הבלעדי לשימושך בשירותים ולציות לכל החוקים החלים. עליך לשמור על אבטחת פרטי הגישה לחשבונך המסופקים באמצעות Firebase. F.O.R PROJECT אינה אחראית לאובדן נתונים עקב כישלון שלך באבטחת המכשיר או החשבון שלך.",
+
+        legalMedicalTitle: "3. לא מכשיר רפואי",
+        legalMedicalBody: "השירותים אינם מכשיר רפואי. F.O.R PROJECT אינה מספקת ייעוץ רפואי. השירותים, כולל ציוני שינה, מוכנות, SpO2, HRV ומדדי מתח, נועדו למטרות מידע בלבד ואינם מיועדים לאבחון, טיפול, ריפוי או מניעה של מחלה כלשהי. התייעץ תמיד עם רופא לפני ביצוע שינויים במשטר הבריאות שלך.",
+
+        legalDataTitle: "4. נתונים ותקשורת",
+        legalDataBody: "אתה מסכים לאיסוף ועיבוד נתוני הבריאות שלך כפי שמתואר במדיניות הפרטיות שלנו. זה כולל סנכרון עם שירותי הענן של Firebase ואינטגרציה אופציונלית עם Apple Health. אנו עשויים ליצור איתך קשר בנוגע לחשבונך, עדכונים או בעיות טכניות.",
+
+        legalIPTitle: "5. קניין רוחני",
+        legalIPBody: "כל התוכן, כולל ממשק אפליקציית FOR, עיצוב טבעת F.O.R והאלגוריתמים הבסיסיים, נמצא בבעלותה הבלעדית של F.O.R PROJECT. כל משוב שיינתן עשוי לשמש אותנו ללא פיצוי עבורך.",
+
+        legalWarrantyTitle: "6. ויתור על אחריות",
+        legalWarrantyBody: "השירותים מסופקים \"כפי שהם\". F.O.R PROJECT מבטיחה לרוכש המקורי כי טבעות F.O.R חדשות יהיו נקיות מפגמים בחומר ובעבודה למשך שנה אחת (1) מיום הרכישה. אחריות זו אינה מכסה בלאי רגיל, שימוש לרעה או שינויים לא מורשים.",
+
+        legalLimitationTitle: "7. הגבלת אחריות",
+        legalLimitationBody: "בשום מקרה F.O.R PROJECT לא תהיה אחראית לכל נזק עקיף, מיוחד או תוצאתי. האחריות הכוללת שלנו לכל תביעה לא תעלה על 100 דולר. זה לא משפיע על אחריות שלא ניתן להחריגה על פי החוק החל.",
+
+        legalPrecautionsTitle: "8. אמצעי זהירות",
+        legalPrecautionsBody: "ודא שטבעת F.O.R אינה נתפסת במבנים קבועים או בחפצים כבדים. הסר את הטבעת מיד אם אתה חווה גירוי בעור או אדמומיות. הטבעת אינה צעצוע ועלולה להוות סכנת חנק לילדים.",
+
+        legalTerminationTitle: "9. סיום",
+        legalTerminationBody: "אנו שומרים לעצמנו את הזכות להשעות או לסגור את גישתך לשירותים בשל הפרת הסכם זה. אתה רשאי לסגור את חשבונך בכל עת דרך הגדרות האפליקציה.",
 
         // Privacy Content
-        privacySection1Title: "1. אבטחת מידע",
-        privacySection1Text: "הפרטיות שלך היא בראש סדר העדיפויות שלנו. כל נתוני הבריאות האישיים (דופק, HRV, פעילות) מאוחסנים בצורה מאובטחת ב-MongoDB Atlas באמצעות הצפנה בסטנדרט תעשייתי.",
-        privacySection2Title: "2. בעלות על הנתונים",
-        privacySection2Text: "הנתונים שייכים לך. רשומות הבריאות שלך נגישות רק לחשבון המשתמש המאומת שלך. אנו לא מוכרים, משתפים או מנתחים את הנתונים שלך למטרות פרסום צד שלישי.",
-        privacySection3Title: "3. אחסון מקומי",
-        privacySection3Text: "לצורך גישה לא מקוונת, חלק מהנתונים נשמרים במטמון במכשיר שלך באמצעות אחסון מאובטח. נתונים אלה מסונכרנים אוטומטית עם הענן כאשר ישנו חיבור אינטרנט זמין.",
-        privacySection4Title: "4. צור קשר",
-        privacySection4Text: "אם יש לך שאלות לגבי מדיניות פרטיות זו, אנא צור קשר בכתובת support@for-project.com.",
+        privacyWelcome: "ב-F.O.R PROJECT, אנו לוקחים את ההגנה על הנתונים האישיים שלך ברצינות רבה. מדיניות פרטיות זו (\"המדיניות\") חלה על שימושך בטבעת F.O.R, באפליקציית FOR ובשירותים שלנו.",
+
+        privacyCollectionTitle: "1. איסוף נתונים",
+        privacyCollectionBody: "אנו אוספים נתונים המיוצרים על ידי טבעת F.O.R שלך (דופק, SpO2, טמפרטורה, תנועה) ונתונים שאתה מזין באפליקציית FOR (פרופיל משתמש, יעדים). אנו מעבדים גם נתונים טכניים כמו דגם המכשיר וכתובת IP.",
+
+        privacyProcessingTitle: "2. מטרות העיבוד",
+        privacyProcessingBody: "אנו מעבדים את הנתונים שלך כדי לספק תובנות בריאותיות (ציון שינה, מוכנות), לשפר את האלגוריתמים שלנו ולספק שירות לקוחות. איננו מוכרים את נתוני הבריאות האישיים שלך למפרסמים צד שלישי.",
+
+        privacySharingTitle: "3. שיתוף נתונים",
+        privacySharingBody: "הנתונים שלך מאוחסנים בצורה מאובטחת בשירותי הענן של Google Firebase. אם תבחר בכך, נשתמש באינטגרציה עם Apple HealthKit לסנכרון נתוני הפעילות שלך. אנו משתפים נתונים רק עם ספקי שירות הנחוצים לתפעול השירות.",
+
+        privacySecurityTitle: "4. אבטחת מידע",
+        privacySecurityBody: "אנו משתמשים בהצפנה בסטנדרט תעשייתי לנתונים במעבר ובמנוחה. מדדי הבריאות שלך מאוחסנים במסד נתונים מאובטח של Firebase Firestore, עם בקרות גישה קפדניות.",
+
+        privacyRightsTitle: "5. הזכויות שלך",
+        privacyRightsBody: "יש לך זכות לגשת, לתקן או למחוק את הנתונים האישיים שלך. אתה יכול לייצא את נתוני הבריאות שלך או למחוק את חשבונך ישירות דרך הגדרות אפליקציית FOR.",
+
+        privacyRetentionTitle: "6. שמירת נתונים",
+        privacyRetentionBody: "אנו שומרים את הנתונים האישיים שלך רק כל עוד חשבונך פעיל. עם מחיקת החשבון, כל מזהי הבריאות האישיים מוסרים מהמערכות שלנו.",
+
+        privacyContactTitle: "7. צור קשר",
+        privacyContactBody: "אם יש לך שאלות לגבי מדיניות פרטיות זו, אנא צור קשר עם קצין הגנת הנתונים שלנו בכתובת support@for-project.com.",
 
         // Activity Revamp
         workoutRecords: "סיכום אימונים",

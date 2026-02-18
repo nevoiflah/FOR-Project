@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { COLORS, SPACING, FONTS } from '../../constants/theme';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -15,27 +15,24 @@ export const PrivacyPolicyScreen = () => {
         <ScreenWrapper>
             <ScrollView contentContainerStyle={styles.container}>
                 <Text style={styles.title}>{t('privacyPolicy') || 'Privacy Policy'}</Text>
-                <Text style={styles.subtitle}>{t('lastUpdated') || 'Last updated: February 12, 2026'}</Text>
+                <Text style={styles.subtitle}>{t('lastUpdated') || 'Last updated: February 18, 2026'}</Text>
 
-                <Text style={styles.sectionTitle}>{t('privacySection1Title')}</Text>
-                <Text style={styles.paragraph}>
-                    {t('privacySection1Text')}
-                </Text>
+                <Text style={styles.paragraph}>{t('privacyWelcome')}</Text>
 
-                <Text style={styles.sectionTitle}>{t('privacySection2Title')}</Text>
-                <Text style={styles.paragraph}>
-                    {t('privacySection2Text')}
-                </Text>
-
-                <Text style={styles.sectionTitle}>{t('privacySection3Title')}</Text>
-                <Text style={styles.paragraph}>
-                    {t('privacySection3Text')}
-                </Text>
-
-                <Text style={styles.sectionTitle}>{t('privacySection4Title')}</Text>
-                <Text style={styles.paragraph}>
-                    {t('privacySection4Text')}
-                </Text>
+                {[
+                    { title: 'privacyCollectionTitle', body: 'privacyCollectionBody' },
+                    { title: 'privacyProcessingTitle', body: 'privacyProcessingBody' },
+                    { title: 'privacySharingTitle', body: 'privacySharingBody' },
+                    { title: 'privacySecurityTitle', body: 'privacySecurityBody' },
+                    { title: 'privacyRightsTitle', body: 'privacyRightsBody' },
+                    { title: 'privacyRetentionTitle', body: 'privacyRetentionBody' },
+                    { title: 'privacyContactTitle', body: 'privacyContactBody' },
+                ].map((section, index) => (
+                    <View key={index} style={styles.section}>
+                        <Text style={styles.sectionTitle}>{t(section.title as any)}</Text>
+                        <Text style={styles.paragraph}>{t(section.body as any)}</Text>
+                    </View>
+                ))}
             </ScrollView>
         </ScreenWrapper>
     );
@@ -76,5 +73,8 @@ const createStyles = (colors: any, isDark: boolean, isRTL: boolean) => StyleShee
         lineHeight: 22,
         marginBottom: SPACING.s,
         textAlign: isRTL ? 'right' : 'left',
+    },
+    section: {
+        marginBottom: SPACING.m,
     },
 });
