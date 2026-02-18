@@ -230,7 +230,7 @@ export const GlassChart = ({
                         const divider = labels.length > 1 ? labels.length - 1 : 1;
                         const x = (index / divider) * width;
                         const labelWidth = 40;
-                        const left = x - (labelWidth / 2);
+                        const left = Math.max(0, Math.min(width - labelWidth, x - (labelWidth / 2)));
                         return (
                             <Text
                                 key={index}

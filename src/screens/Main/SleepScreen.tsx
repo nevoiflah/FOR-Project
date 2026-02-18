@@ -10,6 +10,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 // @ts-ignore
 import Svg, { Circle as SvgCircle, G, Path, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { ChevronRight } from 'lucide-react-native';
 
 // Helper to parse "Xh Ym" to minutes
 const parseDurationToMinutes = (durationStr: string): number => {
@@ -261,9 +262,46 @@ const TabSelector = ({ tabs, activeTab, onTabChange, colors }: { tabs: string[],
     </View>
 );
 
+const DayLegend = ({ colors, stageColors }: { colors: any, stageColors: any }) => {
+    return (
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 15, flexWrap: 'wrap' }}>
+            {Object.entries(stageColors).map(([stage, color]) => (
+                <View key={stage} style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 10, marginVertical: 5 }}>
+                    <View style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: color as string, marginRight: 6 }} />
+                    <Text style={{ color: colors.textSecondary, fontSize: 12, textTransform: 'capitalize' }}>
+                        {stage}
+                    </Text>
+                </View>
+            ))}
+        </View>
+    );
+};
+
 // Dual Axis Chart (Bars + Line)
-const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 }: { data: any[], width: number, height?: number, colors: any, maxDurationVal?: number }) => {
+const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10, isMonth = false, isDay = false }: { data: any[], width: number, height?: number, colors: any, maxDurationVal?: number, isMonth?: boolean, isDay?: boolean }) => {
     const { t } = useLanguage();
+
+    const STAGE_COLORS = {
+        deep: colors.primary,  // Orange-Red
+        rem: colors.accent,    // Golden Amber
+        light: colors.success  // Green (maximum contrast)
+    };
+
+    // Helper to format date as DD/MM
+    const formatDate = (dateStr: string) => {
+        if (!isMonth) return dateStr;
+
+        // Try parsing as ISO date
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+            const day = d.getDate().toString().padStart(2, '0');
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            return `${day}/${month}`;
+        }
+
+        return dateStr;
+    };
+
     const maxScore = 100;
     const maxDuration = maxDurationVal;
 
@@ -276,10 +314,12 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
         setShowTooltip(false);
     }, [data]);
 
+    const totalChartWidth = data.length > 7 ? data.length * 60 : width;
+    const stepX = totalChartWidth / data.length;
+
     const handlePress = (evt: any) => {
         const x = evt.nativeEvent.locationX;
-        const divider = data.length;
-        const index = Math.floor((x / width) * divider);
+        const index = Math.floor((x / totalChartWidth) * data.length);
 
         if (index >= 0 && index < data.length) {
             // Toggle off if tapping already active point
@@ -294,19 +334,13 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
         }
     };
 
-
-    const toggleTooltip = () => {
-        setShowTooltip(!showTooltip);
-    };
-
     if (!data || data.length === 0) return (
         <View style={{ height, width, justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ color: colors.textSecondary }}>{t('awaitingData')}</Text>
         </View>
     );
 
-    const barWidth = (width / data.length) * 0.6;
-    const stepX = width / data.length;
+    const barWidth = stepX * 0.6;
 
     const linePoints = data.map((d, i) => {
         const x = i * stepX + stepX / 2;
@@ -315,112 +349,127 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
     }).join(' ');
 
     return (
-        <View style={{ height: height + 60, width }}>
-            <Pressable
-                onPress={handlePress}
-                style={{ paddingTop: 40 }} // Add room for tooltip
+        <View style={{ width }}>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={true}
+                contentContainerStyle={{ width: totalChartWidth }}
             >
-                <Svg width={width} height={height} pointerEvents="none">
-                    {/* Duration Bars */}
-                    {data.map((d, i) => {
-                        const barHeight = (d.duration / maxDuration) * height;
-                        return (
-                            <Path
-                                key={`bar-${i}`}
-                                d={`M ${i * stepX + (stepX - barWidth) / 2},${height} v -${barHeight} h ${barWidth} v ${barHeight} z`}
-                                fill={colors.primary}
-                                opacity={activeIndex === i && showTooltip ? 1 : 0.6}
-                            />
-                        );
-                    })}
-
-                    {/* Score Line */}
-                    <Path
-                        d={`M ${linePoints}`}
-                        fill="none"
-                        stroke={colors.accent}
-                        strokeWidth="3"
-                        opacity={showTooltip ? 0.3 : 1}
-                    />
-
-                    {/* Score Points */}
-                    {data.map((d, i) => {
-                        const x = i * stepX + stepX / 2;
-                        const y = height - (d.score / maxScore) * height;
-                        return (
-                            <SvgCircle
-                                key={`point-${i}`}
-                                cx={x}
-                                cy={y}
-                                r="4"
-                                fill={colors.card}
-                                stroke={colors.accent}
-                                strokeWidth="2"
-                                opacity={activeIndex === i && showTooltip ? 1 : (showTooltip ? 0.3 : 1)}
-                            />
-                        );
-                    })}
-                </Svg>
-
-                {/* Tooltip */}
-                {showTooltip && activeIndex !== null && data[activeIndex] && (
+                <View style={{ height: height + 100, width: totalChartWidth, overflow: 'visible' }}>
                     <Pressable
-                        onPress={() => setShowTooltip(false)}
-                        style={[
-                            chartStyles.tooltip,
-                            {
-                                left: Math.max(0, Math.min(width - 100, (activeIndex * stepX) + stepX / 2 - 50)),
-                                borderColor: colors.primary,
-                                top: -10, // Move up into the padded area
-                            }
-                        ]}
+                        onPress={handlePress}
+                        style={{ paddingTop: 60, overflow: 'visible' }} // Increase room for tooltip
                     >
-                        <Text style={chartStyles.tooltipDate}>{data[activeIndex].date || data[activeIndex].time}</Text>
-                        <Text style={chartStyles.tooltipLabel}>
-                            {t('duration')}: <Text style={{ color: colors.primary }}>{data[activeIndex].duration}h</Text>
-                        </Text>
-                        <Text style={chartStyles.tooltipLabel}>
-                            {t('qualityScore')}: <Text style={{ color: colors.accent }}>{data[activeIndex].score}</Text>
-                        </Text>
+                        <Svg width={totalChartWidth} height={height} pointerEvents="none">
+                            {/* Duration Bars */}
+                            {data.map((d, i) => {
+                                const barHeight = (d.duration / maxDuration) * height;
+                                return (
+                                    <Path
+                                        key={`bar-${i}`}
+                                        d={`M ${i * stepX + (stepX - barWidth) / 2},${height} v -${barHeight} h ${barWidth} v ${barHeight} z`}
+                                        fill={isDay && d.stage ? STAGE_COLORS[d.stage as keyof typeof STAGE_COLORS] : colors.primary}
+                                        opacity={activeIndex === i && showTooltip ? 1 : (isDay ? 0.9 : 0.6)}
+                                    />
+                                );
+                            })}
+
+                            {/* Score Line and Points - Only show if not Day view */}
+                            {!isDay && (
+                                <>
+                                    <Path
+                                        d={`M ${linePoints}`}
+                                        fill="none"
+                                        stroke={colors.accent}
+                                        strokeWidth="3"
+                                        opacity={showTooltip ? 0.3 : 1}
+                                    />
+
+                                    {data.map((d, i) => {
+                                        const x = i * stepX + stepX / 2;
+                                        const y = height - (d.score / maxScore) * height;
+                                        return (
+                                            <SvgCircle
+                                                key={`point-${i}`}
+                                                cx={x}
+                                                cy={y}
+                                                r="4"
+                                                fill={colors.card}
+                                                stroke={colors.accent}
+                                                strokeWidth="2"
+                                                opacity={activeIndex === i && showTooltip ? 1 : (showTooltip ? 0.3 : 1)}
+                                            />
+                                        );
+                                    })}
+                                </>
+                            )}
+                        </Svg>
+
+                        {/* Tooltip */}
+                        {showTooltip && activeIndex !== null && data[activeIndex] && (
+                            <Pressable
+                                onPress={() => setShowTooltip(false)}
+                                style={[
+                                    chartStyles.tooltip,
+                                    {
+                                        left: Math.max(0, Math.min(totalChartWidth - 100, (activeIndex * stepX) + stepX / 2 - 50)),
+                                        borderColor: colors.primary,
+                                        top: 0, // Stay within the padded area
+                                    }
+                                ]}
+                            >
+                                <Text style={chartStyles.tooltipDate}>
+                                    {formatDate(data[activeIndex].date || data[activeIndex].time)}
+                                    {isDay && data[activeIndex].stage && ` - ${data[activeIndex].stage.toUpperCase()}`}
+                                </Text>
+                                <Text style={chartStyles.tooltipLabel}>
+                                    {isDay ? 'Duration' : t('duration')}: <Text style={{ color: isDay && data[activeIndex].stage ? STAGE_COLORS[data[activeIndex].stage as keyof typeof STAGE_COLORS] : colors.primary }}>
+                                        {isDay ? `${Math.round(data[activeIndex].duration)}m` : `${Math.round(data[activeIndex].duration)}h`}
+                                    </Text>
+                                </Text>
+                                {!isDay && (
+                                    <Text style={chartStyles.tooltipLabel}>
+                                        {t('qualityScore')}: <Text style={{ color: colors.accent }}>{Math.round(data[activeIndex].score)}</Text>
+                                    </Text>
+                                )}
+                            </Pressable>
+                        )}
                     </Pressable>
-                )}
-            </Pressable>
 
-            {/* Axis Labels */}
-            <View style={{ height: 20, width: width, marginTop: 8 }}>
-                {data.map((d, i) => {
-                    const step = Math.ceil(data.length / 7);
-                    const isFirst = i === 0;
-                    const isLast = i === data.length - 1;
-                    const isStep = i % step === 0;
+                    {/* Axis Labels */}
+                    <View style={{ height: 20, width: totalChartWidth, marginTop: 8 }}>
+                        {data.map((d, i) => {
+                            const left = i * stepX;
+                            const labelText = formatDate(d.date || d.time);
 
-                    let showLabel = false;
-                    if (data.length <= 10) showLabel = true;
-                    else if (isFirst || isLast) showLabel = true;
-                    else if (isStep && i < data.length - 2) showLabel = true;
+                            return (
+                                <Text
+                                    key={i}
+                                    style={{
+                                        position: 'absolute',
+                                        left: left,
+                                        width: stepX,
+                                        textAlign: 'center',
+                                        fontSize: 9,
+                                        color: colors.textSecondary,
+                                        fontWeight: activeIndex === i ? 'bold' : 'normal',
+                                        opacity: activeIndex === i ? 1 : 0.8
+                                    }}
+                                >
+                                    {labelText}
+                                </Text>
+                            );
+                        })}
+                    </View>
+                </View>
+            </ScrollView>
 
-                    if (!showLabel) return null;
-
-                    const left = i * stepX;
-                    const extraWidth = 20;
-
-                    return (
-                        <Text
-                            key={i}
-                            style={{
-                                position: 'absolute',
-                                left: left - extraWidth / 2 + stepX / 2,
-                                width: stepX + extraWidth,
-                                textAlign: 'center',
-                                fontSize: 10,
-                                color: colors.textSecondary
-                            }}
-                        >
-                            {d.date || d.time}
-                        </Text>
-                    );
-                })}
-            </View>
+            {totalChartWidth > width && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 }}>
+                    <Text style={{ color: colors.textSecondary, fontSize: 10, opacity: 0.7 }}>{t('swipeForMore') || 'Swipe for more'}</Text>
+                    <ChevronRight size={12} color={colors.textSecondary} style={{ opacity: 0.7 }} />
+                </View>
+            )}
         </View>
     );
 };
@@ -434,7 +483,6 @@ const HourlyChart = ({ data, width, height = 200, colors }: { data: any[], width
     const range = maxVal - minVal;
 
     // Create smooth path (bezier or simple line)
-    // For simplicity, using simple line with points
     const stepX = width / (data.length - 1);
 
     const points = data.map((d, i) => {
@@ -452,8 +500,6 @@ const HourlyChart = ({ data, width, height = 200, colors }: { data: any[], width
                     stroke={colors.primary}
                     strokeWidth="3"
                 />
-                {/* Gradient Area under curve could be added here */}
-
                 {/* Points */}
                 {data.map((d, i) => {
                     const x = i * stepX;
@@ -529,14 +575,14 @@ export const SleepScreen = () => {
         if (selectedTab === 'Week') {
             return (
                 <View style={{ alignItems: 'center', width: '100%' }}>
-                    <DualAxisChart data={data.sleep.history?.week || []} width={chartWidth} colors={colors} maxDurationVal={10} />
+                    <DualAxisChart data={data.sleep.history?.week || []} width={chartWidth} colors={colors} maxDurationVal={10} isMonth={false} />
                     <Legend />
                 </View>
             );
         } else if (selectedTab === 'Month') {
             return (
                 <View style={{ alignItems: 'center', width: '100%' }}>
-                    <DualAxisChart data={data.sleep.history?.month || []} width={chartWidth} colors={colors} maxDurationVal={10} />
+                    <DualAxisChart data={data.sleep.history?.month || []} width={chartWidth} colors={colors} maxDurationVal={10} isMonth={true} />
                     <Legend />
                 </View>
             );
@@ -544,15 +590,22 @@ export const SleepScreen = () => {
             // Day View (Now using DualAxisChart)
             return (
                 <View style={{ alignItems: 'center', width: '100%' }}>
-                    {/* Reuse DualAxisChart with hourly data. Max duration 60 mins. */}
                     <DualAxisChart
                         data={data.sleep.history?.day_hourly || []}
                         width={chartWidth}
                         colors={colors}
-                        maxDurationVal={60}
+                        maxDurationVal={360} // Max duration for a segment
+                        isMonth={false}
+                        isDay={true}
                     />
-                    <Legend />
-                    {/* Removed Sleep Score Display */}
+                    <DayLegend
+                        colors={colors}
+                        stageColors={{
+                            deep: colors.primary,
+                            rem: colors.accent,
+                            light: colors.success
+                        }}
+                    />
                 </View>
             );
         }
@@ -661,7 +714,7 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     },
     scoreCard: {
         marginBottom: SPACING.xl,
-        overflow: 'hidden',
+        overflow: 'visible',
     },
     totalDurationValue: {
         fontSize: 24,

@@ -98,6 +98,7 @@ export const translations = {
         weeklyDuration: "Weekly Duration",
         last7Days: "Last 7 Days (Hours)",
         sleepRec: "Excellent sleep quality. Maintaining this rhythm will improve your recovery score tomorrow.",
+        swipeForMore: "Swipe for more",
 
         // Heart
         heartHealth: "Heart Health",
@@ -492,6 +493,7 @@ export const translations = {
         weeklyDuration: "משך שבועי",
         last7Days: "7 ימים אחרונים (שעות)",
         sleepRec: "איכות שינה מצוינת. שמירה על קצב זה תשפר את ציון ההתאוששות שלך מחר.",
+        swipeForMore: "החלק לצפייה נוספת",
 
         // Heart
         heartHealth: "בריאות הלב",

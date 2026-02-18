@@ -43,7 +43,7 @@ interface RingData {
         temperatureTrend: number[];
         history: {
             day: { duration: number; score: number; date: string };
-            day_hourly: { time: string; duration: number; score: number; date: string }[];
+            day_hourly: { time: string; duration: number; score: number; date: string; stage?: 'light' | 'deep' | 'rem' }[];
             week: { date: string; duration: number; score: number }[];
             month: { date: string; duration: number; score: number }[];
         };
@@ -130,15 +130,9 @@ const DEFAULT_DATA: RingData = {
         history: {
             day: { duration: 7.2, score: 85, date: 'Today' },
             day_hourly: [
-                { time: '23:00', duration: 55, score: 90, date: '23:00' },
-                { time: '00:00', duration: 58, score: 85, date: '00:00' },
-                { time: '01:00', duration: 60, score: 75, date: '01:00' },
-                { time: '02:00', duration: 60, score: 72, date: '02:00' },
-                { time: '03:00', duration: 52, score: 65, date: '03:00' },
-                { time: '04:00', duration: 58, score: 78, date: '04:00' },
-                { time: '05:00', duration: 60, score: 88, date: '05:00' },
-                { time: '06:00', duration: 55, score: 92, date: '06:00' },
-                { time: '07:00', duration: 30, score: 95, date: '07:00' }
+                { time: '21:00', duration: 180, score: 70, date: '21:00', stage: 'light' },
+                { time: '00:00', duration: 300, score: 90, date: '00:00', stage: 'deep' },
+                { time: '05:00', duration: 180, score: 85, date: '05:00', stage: 'rem' }
             ],
             week: [
                 { date: 'Mon', duration: 6.5, score: 78 },
@@ -149,11 +143,15 @@ const DEFAULT_DATA: RingData = {
                 { date: 'Sat', duration: 6.9, score: 80 },
                 { date: 'Sun', duration: 7.2, score: 85 },
             ],
-            month: Array.from({ length: 30 }, (_, i) => ({
-                date: `${i + 1}`,
-                duration: 5 + Math.random() * 4,
-                score: 50 + Math.random() * 50
-            }))
+            month: Array.from({ length: 30 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (29 - i));
+                return {
+                    date: d.toISOString(),
+                    duration: 5 + Math.random() * 4,
+                    score: 50 + Math.random() * 50
+                };
+            })
         }
     },
     steps: {
@@ -185,11 +183,15 @@ const DEFAULT_DATA: RingData = {
                 { date: 'Sat', steps: 11500, calories: 580 },
                 { date: 'Sun', steps: 5400, calories: 270 },
             ],
-            month: Array.from({ length: 30 }, (_, i) => ({
-                date: `${i + 1}`,
-                steps: 5000 + Math.floor(Math.random() * 7000),
-                calories: 250 + Math.floor(Math.random() * 350)
-            }))
+            month: Array.from({ length: 30 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (29 - i));
+                return {
+                    date: d.toISOString(),
+                    steps: 5000 + Math.floor(Math.random() * 7000),
+                    calories: 250 + Math.floor(Math.random() * 350)
+                };
+            })
         }
     },
     heart: {
@@ -258,16 +260,33 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                 const firestoreData = docSnap.data() as RingData;
 
                 // Ensure sleep history exists (migration for existing users)
-                // This prevents crashes if the new 'history' field hasn't been synced to Firestore yet
                 if (!firestoreData.sleep?.history) {
                     firestoreData.sleep = {
                         ...DEFAULT_DATA.sleep,
                         ...(firestoreData.sleep || {}),
                         history: DEFAULT_DATA.sleep.history
                     };
-                } else if (!firestoreData.sleep.history.day_hourly) {
-                    // Patch for day_hourly if history exists but is old
-                    firestoreData.sleep.history.day_hourly = DEFAULT_DATA.sleep.history.day_hourly;
+                } else {
+                    // Patch for day_hourly if history exists but is old (legacy hourly vs new 3-segment)
+                    if (!firestoreData.sleep.history.day_hourly || firestoreData.sleep.history.day_hourly.length > 3) {
+                        firestoreData.sleep.history.day_hourly = DEFAULT_DATA.sleep.history.day_hourly;
+                    }
+
+                    // Patch for month dates (Legacy "1-30" logic)
+                    if (firestoreData.sleep.history.month &&
+                        firestoreData.sleep.history.month.length > 0 &&
+                        !firestoreData.sleep.history.month[0].date.includes('-')) {
+                        console.log('[DataContext] Legacy sleep month dates detected. Migrating...');
+                        firestoreData.sleep.history.month = DEFAULT_DATA.sleep.history.month;
+                    }
+                }
+
+                // Also patch steps history if it's legacy
+                if (firestoreData.steps?.history?.month &&
+                    firestoreData.steps.history.month.length > 0 &&
+                    !firestoreData.steps.history.month[0].date.includes('-')) {
+                    console.log('[DataContext] Legacy steps month dates detected. Migrating...');
+                    firestoreData.steps.history.month = DEFAULT_DATA.steps.history.month;
                 }
 
                 setData(firestoreData);
