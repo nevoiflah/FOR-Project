@@ -346,6 +346,8 @@ export const DashboardScreen = () => {
                                     gradientId="energy-wave-grad"
                                     labels={clockLabels}
                                     liveIndex={liveIndex}
+                                    unit="%"
+                                    unitKey="energy"
                                 />
                             </View>
                         </GlassCard>

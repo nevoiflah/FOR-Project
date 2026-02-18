@@ -138,6 +138,7 @@ export const HeartScreen = () => {
                                     color="#FF6B6B"
                                     gradientId="heart-hr-grad"
                                     labels={chartLabels}
+                                    unit={` ${t('bpm')}`}
                                 />
                             </GlassCard>
                         </View>
@@ -156,6 +157,7 @@ export const HeartScreen = () => {
                                     color={colors.accent}
                                     gradientId="heart-hrv-grad"
                                     labels={chartLabels}
+                                    unit={` ${t('ms')}`}
                                 />
                             </GlassCard>
                         </View>

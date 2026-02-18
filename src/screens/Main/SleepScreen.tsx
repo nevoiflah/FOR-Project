@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Pressable } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
@@ -11,6 +11,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 // @ts-ignore
 import Svg, { Circle as SvgCircle, G, Path, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { ChevronRight } from 'lucide-react-native';
+import { TranslationKey } from '../../i18n/translations';
 
 // Helper to parse "Xh Ym" to minutes
 const parseDurationToMinutes = (durationStr: string): number => {
@@ -263,13 +264,14 @@ const TabSelector = ({ tabs, activeTab, onTabChange, colors }: { tabs: string[],
 );
 
 const DayLegend = ({ colors, stageColors }: { colors: any, stageColors: any }) => {
+    const { t } = useLanguage();
     return (
         <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 15, flexWrap: 'wrap' }}>
             {Object.entries(stageColors).map(([stage, color]) => (
                 <View key={stage} style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 10, marginVertical: 5 }}>
                     <View style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: color as string, marginRight: 6 }} />
-                    <Text style={{ color: colors.textSecondary, fontSize: 12, textTransform: 'capitalize' }}>
-                        {stage}
+                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                        {stage === 'deep' ? t('deepSleep') : stage === 'rem' ? t('remSleep') : t('lightSleep')}
                     </Text>
                 </View>
             ))}
@@ -279,7 +281,8 @@ const DayLegend = ({ colors, stageColors }: { colors: any, stageColors: any }) =
 
 // Dual Axis Chart (Bars + Line)
 const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10, isMonth = false, isDay = false }: { data: any[], width: number, height?: number, colors: any, maxDurationVal?: number, isMonth?: boolean, isDay?: boolean }) => {
-    const { t } = useLanguage();
+    const { t, locale } = useLanguage();
+    const isWeek = !isDay && !isMonth;
 
     const STAGE_COLORS = {
         deep: colors.primary,  // Orange-Red
@@ -287,16 +290,30 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10,
         light: colors.success  // Green (maximum contrast)
     };
 
-    // Helper to format date as DD/MM
+    // Helper to format date as DD/MM (Month) or Localized Day (Week)
     const formatDate = (dateStr: string) => {
-        if (!isMonth) return dateStr;
+        if (!dateStr) return '';
+
+        // Robust fallback for legacy strings "Mon", "Tue" etc.
+        const lower = dateStr.toLowerCase();
+        const legacyKeys: TranslationKey[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        if (legacyKeys.includes(lower as any)) {
+            return t(lower as TranslationKey);
+        }
 
         // Try parsing as ISO date
         const d = new Date(dateStr);
         if (!isNaN(d.getTime())) {
-            const day = d.getDate().toString().padStart(2, '0');
-            const month = (d.getMonth() + 1).toString().padStart(2, '0');
-            return `${day}/${month}`;
+            if (isMonth) {
+                const day = d.getDate().toString().padStart(2, '0');
+                const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                return `${day}/${month}`;
+            }
+            if (isWeek) {
+                const dayIndex = d.getDay();
+                const dayKeys: TranslationKey[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                return t(dayKeys[dayIndex]);
+            }
         }
 
         return dateStr;
@@ -420,11 +437,14 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10,
                             >
                                 <Text style={chartStyles.tooltipDate}>
                                     {formatDate(data[activeIndex].date || data[activeIndex].time)}
-                                    {isDay && data[activeIndex].stage && ` - ${data[activeIndex].stage.toUpperCase()}`}
+                                    {isDay && data[activeIndex].stage && ` - ${data[activeIndex].stage === 'deep' ? t('deepSleep') :
+                                        data[activeIndex].stage === 'rem' ? t('remSleep') :
+                                            t('lightSleep')
+                                        }`}
                                 </Text>
                                 <Text style={chartStyles.tooltipLabel}>
-                                    {isDay ? 'Duration' : t('duration')}: <Text style={{ color: isDay && data[activeIndex].stage ? STAGE_COLORS[data[activeIndex].stage as keyof typeof STAGE_COLORS] : colors.primary }}>
-                                        {isDay ? `${Math.round(data[activeIndex].duration)}m` : `${Math.round(data[activeIndex].duration)}h`}
+                                    {t('duration')}: <Text style={{ color: isDay && data[activeIndex].stage ? STAGE_COLORS[data[activeIndex].stage as keyof typeof STAGE_COLORS] : colors.primary }}>
+                                        {isDay ? `${Math.round(data[activeIndex].duration)}${t('m')}` : `${Math.round(data[activeIndex].duration)}${t('h')}`}
                                     </Text>
                                 </Text>
                                 {!isDay && (
@@ -462,7 +482,7 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10,
                         })}
                     </View>
                 </View>
-            </ScrollView>
+            </ScrollView >
 
             {totalChartWidth > width && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 }}>
@@ -470,7 +490,7 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10,
                     <ChevronRight size={12} color={colors.textSecondary} style={{ opacity: 0.7 }} />
                 </View>
             )}
-        </View>
+        </View >
     );
 };
 
@@ -536,6 +556,18 @@ export const SleepScreen = () => {
     const [selectedTab, setSelectedTab] = useState('Day');
 
     const styles = React.useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+
+    const weeklyLabels = useMemo(() => {
+        if (!data?.sleep?.history?.week) return [];
+        const dayKeys: TranslationKey[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        return data.sleep.history.week.map(d => {
+            const lower = d.date.toLowerCase();
+            if (dayKeys.includes(lower as any)) return t(lower as any);
+            const date = new Date(d.date);
+            if (!isNaN(date.getTime())) return t(dayKeys[date.getDay()]);
+            return d.date;
+        });
+    }, [data?.sleep?.history?.week, t]);
 
     useEffect(() => {
         if (data) {
@@ -663,6 +695,8 @@ export const SleepScreen = () => {
                                     color="#FF6B6B"
                                     gradientId="sleep-hr-grad"
                                     showPoints={true}
+                                    unit={` ${t('bpm')}`}
+                                    labels={weeklyLabels}
                                 />
                                 <View style={{ padding: SPACING.m, position: 'absolute', top: 10, left: 10 }}>
                                     <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: 'bold' }}>{data.sleep.avgHeartRate} {t('bpm')}</Text>
@@ -685,6 +719,7 @@ export const SleepScreen = () => {
                                     color="#FFA726"
                                     gradientId="sleep-temp-grad"
                                     showPoints={true}
+                                    labels={weeklyLabels}
                                 />
                                 <View style={{ padding: SPACING.m, position: 'absolute', top: 10, left: 10 }}>
                                     <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: 'bold' }}>+0.2°</Text>

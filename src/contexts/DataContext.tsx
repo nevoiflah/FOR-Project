@@ -134,15 +134,17 @@ const DEFAULT_DATA: RingData = {
                 { time: '00:00', duration: 300, score: 90, date: '00:00', stage: 'deep' },
                 { time: '05:00', duration: 180, score: 85, date: '05:00', stage: 'rem' }
             ],
-            week: [
-                { date: 'Mon', duration: 6.5, score: 78 },
-                { date: 'Tue', duration: 7.2, score: 85 },
-                { date: 'Wed', duration: 5.8, score: 62 },
-                { date: 'Thu', duration: 8.1, score: 92 },
-                { date: 'Fri', duration: 7.5, score: 88 },
-                { date: 'Sat', duration: 6.9, score: 80 },
-                { date: 'Sun', duration: 7.2, score: 85 },
-            ],
+            week: Array.from({ length: 7 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (6 - i));
+                const durations = [6.5, 7.2, 5.8, 8.1, 7.5, 6.9, 7.2];
+                const scores = [78, 85, 62, 92, 88, 80, 85];
+                return {
+                    date: d.toISOString(),
+                    duration: durations[i],
+                    score: scores[i]
+                };
+            }),
             month: Array.from({ length: 30 }, (_, i) => {
                 const d = new Date();
                 d.setDate(d.getDate() - (29 - i));
@@ -174,15 +176,17 @@ const DEFAULT_DATA: RingData = {
                 { time: '16:00', steps: 1100, calories: 60 },
                 { time: '17:00', steps: 200, calories: 15 }
             ],
-            week: [
-                { date: 'Mon', steps: 6500, calories: 320 },
-                { date: 'Tue', steps: 8200, calories: 410 },
-                { date: 'Wed', steps: 7800, calories: 390 },
-                { date: 'Thu', steps: 9500, calories: 480 },
-                { date: 'Fri', steps: 10200, calories: 510 },
-                { date: 'Sat', steps: 11500, calories: 580 },
-                { date: 'Sun', steps: 5400, calories: 270 },
-            ],
+            week: Array.from({ length: 7 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (6 - i));
+                const stepsValues = [6500, 8200, 7800, 9500, 10200, 11500, 5400];
+                const caloriesValues = [320, 410, 390, 480, 510, 580, 270];
+                return {
+                    date: d.toISOString(),
+                    steps: stepsValues[i],
+                    calories: caloriesValues[i]
+                };
+            }),
             month: Array.from({ length: 30 }, (_, i) => {
                 const d = new Date();
                 d.setDate(d.getDate() - (29 - i));
@@ -279,14 +283,30 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         console.log('[DataContext] Legacy sleep month dates detected. Migrating...');
                         firestoreData.sleep.history.month = DEFAULT_DATA.sleep.history.month;
                     }
+
+                    // NEW: Patch for legacy English week labels in sleep
+                    if (firestoreData.sleep.history.week?.[0]?.date &&
+                        !firestoreData.sleep.history.week[0].date.includes('-')) {
+                        console.log('[DataContext] Legacy sleep week labels detected. Migrating...');
+                        firestoreData.sleep.history.week = DEFAULT_DATA.sleep.history.week;
+                    }
                 }
 
                 // Also patch steps history if it's legacy
-                if (firestoreData.steps?.history?.month &&
-                    firestoreData.steps.history.month.length > 0 &&
-                    !firestoreData.steps.history.month[0].date.includes('-')) {
-                    console.log('[DataContext] Legacy steps month dates detected. Migrating...');
-                    firestoreData.steps.history.month = DEFAULT_DATA.steps.history.month;
+                if (firestoreData.steps?.history) {
+                    if (firestoreData.steps.history.month &&
+                        firestoreData.steps.history.month.length > 0 &&
+                        !firestoreData.steps.history.month[0].date.includes('-')) {
+                        console.log('[DataContext] Legacy steps month dates detected. Migrating...');
+                        firestoreData.steps.history.month = DEFAULT_DATA.steps.history.month;
+                    }
+
+                    // NEW: Patch for legacy English week labels in steps
+                    if (firestoreData.steps.history.week?.[0]?.date &&
+                        !firestoreData.steps.history.week[0].date.includes('-')) {
+                        console.log('[DataContext] Legacy steps week labels detected. Migrating...');
+                        firestoreData.steps.history.week = DEFAULT_DATA.steps.history.week;
+                    }
                 }
 
                 setData(firestoreData);

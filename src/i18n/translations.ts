@@ -190,6 +190,15 @@ export const translations = {
         km: "km",
         heart: "Heart",
         s: "s",
+        ms: "ms",
+        energy: "Energy",
+        mon: "Mon",
+        tue: "Tue",
+        wed: "Wed",
+        thu: "Thu",
+        fri: "Fri",
+        sat: "Sat",
+        sun: "Sun",
 
         // Workouts
         startActivity: 'Start Activity',
@@ -582,6 +591,15 @@ export const translations = {
         km: 'ק"מ',
         heart: "לב",
         s: "שנ׳",
+        ms: 'מ"ש',
+        energy: "אנרגיה",
+        mon: "יום ב׳",
+        tue: "יום ג׳",
+        wed: "יום ד׳",
+        thu: "יום ה׳",
+        fri: "יום ו׳",
+        sat: "יום ש׳",
+        sun: "יום א׳",
 
         // Workouts
         startActivity: 'התחל אימון',

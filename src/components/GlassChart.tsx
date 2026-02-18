@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Dimensions, Text, Pressable, StyleSheet, Animated } from 'react-native';
 import Svg, { Path, Defs, LinearGradient, Stop, G, Line, Circle } from 'react-native-svg';
 import { COLORS } from '../constants/theme';
+import { useLanguage } from '../contexts/LanguageContext';
+import { TranslationKey } from '../i18n/translations';
 
 interface GlassChartProps {
     data: number[];
@@ -13,6 +15,8 @@ interface GlassChartProps {
     showPoints?: boolean;
     labels?: string[];
     liveIndex?: number;
+    unit?: string;
+    unitKey?: TranslationKey;
 }
 
 export const GlassChart = ({
@@ -24,8 +28,11 @@ export const GlassChart = ({
     gradientId = 'grad',
     showPoints = true,
     labels = [],
-    liveIndex
+    liveIndex,
+    unit = '',
+    unitKey
 }: GlassChartProps) => {
+    const { t } = useLanguage();
     const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
     const [showTooltip, setShowTooltip] = React.useState(false);
 
@@ -39,7 +46,7 @@ export const GlassChart = ({
     const handlePress = (evt: any) => {
         const x = evt.nativeEvent.locationX;
         const divider = data.length > 1 ? data.length - 1 : 1;
-        const exactIndex = (x / width) * divider;
+        const exactIndex = (x / (width)) * divider;
         const index = Math.round(exactIndex);
 
         // Calculate horizontal distance from the tapped point to see if it's a "hit"
@@ -92,7 +99,7 @@ export const GlassChart = ({
         <View style={{ width }}>
             <Pressable
                 onPress={handlePress}
-                style={{ paddingTop: 40 }} // Add room for tooltip at the top
+                style={{ paddingTop: 40, overflow: 'visible' }} // Add room for tooltip at the top
             >
                 <Svg height={height} width={width} pointerEvents="none">
                     <Defs>
@@ -201,22 +208,25 @@ export const GlassChart = ({
                         style={[
                             styles.tooltip,
                             {
-                                left: Math.max(0, Math.min(width - 80, (activeIndex / (data.length - 1)) * width - 40)),
+                                left: Math.max(0, Math.min(width - 100, (activeIndex / (data.length - 1)) * width - 50)),
                                 borderColor: color,
                                 top: 5, // Stay within the 40px padding
+                                width: 100,
                             }
                         ]}
                     >
                         <Text style={styles.tooltipTime}>
-                            {activeIndex === 0 ? "00:00" :
-                                activeIndex === 3 ? "06:00" :
-                                    activeIndex === 6 ? "12:00" :
-                                        activeIndex === 9 ? "18:00" :
-                                            activeIndex === 12 ? "24:00" :
-                                                `${activeIndex * 2}:00`}
+                            {labels && labels[activeIndex] ? labels[activeIndex] : (
+                                activeIndex === 0 ? "00:00" :
+                                    activeIndex === 3 ? "06:00" :
+                                        activeIndex === 6 ? "12:00" :
+                                            activeIndex === 9 ? "18:00" :
+                                                activeIndex === 12 ? "24:00" :
+                                                    `${activeIndex * 2}:00`
+                            )}
                         </Text>
                         <Text style={[styles.tooltipValue, { color }]}>
-                            {data[activeIndex]}% Energy
+                            {data[activeIndex]}{unit}{unitKey ? ` ${t(unitKey)}` : ''}
                         </Text>
                     </Pressable>
                 )}

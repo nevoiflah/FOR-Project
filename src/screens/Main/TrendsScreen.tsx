@@ -77,8 +77,47 @@ export const TrendsScreen = () => {
         }
     };
 
+    const getChartLabels = (tab: string, history: any[]) => {
+        if (!history || history.length === 0) return [];
+        return history.map(d => {
+            if (!d.date) return '';
+            // Robust day name localization for Week tab
+            if (tab === 'Week') {
+                const dayStr = d.date.toLowerCase();
+                const dayKeys: TranslationKey[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                if (dayKeys.includes(dayStr as any)) return t(dayStr as TranslationKey);
+
+                // If it's an ISO string
+                const date = new Date(d.date);
+                if (!isNaN(date.getTime())) {
+                    return t(dayKeys[date.getDay()]);
+                }
+            }
+            // Date localization for Month tab
+            if (tab === 'Month') {
+                const date = new Date(d.date);
+                if (!isNaN(date.getTime())) {
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                    return `${day}/${month}`;
+                }
+            }
+            return d.time || d.date;
+        });
+    };
+
     const activityGraphData = getActivityGraphData();
     const stepsGraphData = getStepsGraphData();
+    const activityLabels = getChartLabels(selectedActivityTab,
+        selectedActivityTab === 'Week' ? data?.steps?.history?.week :
+            selectedActivityTab === 'Month' ? data?.steps?.history?.month :
+                data?.steps?.history?.day
+    );
+    const stepsLabels = getChartLabels(selectedStepsTab,
+        selectedStepsTab === 'Week' ? data?.steps?.history?.week :
+            selectedStepsTab === 'Month' ? data?.steps?.history?.month :
+                data?.steps?.history?.day
+    );
 
     // --- Activity Menu Items ---
     // Moved to src/constants/activities.ts
@@ -166,6 +205,8 @@ export const TrendsScreen = () => {
                                     width={screenWidth - 64}
                                     color={colors.accent}
                                     gradientId="activity-grad"
+                                    unit={` ${t('kcal')}`}
+                                    labels={activityLabels}
                                 />
                             </GlassCard>
                         </View>
@@ -199,6 +240,8 @@ export const TrendsScreen = () => {
                                     width={screenWidth - 64}
                                     color={colors.primary}
                                     gradientId="steps-grad"
+                                    unit={` ${t('stepsUnit')}`}
+                                    labels={stepsLabels}
                                 />
                             </GlassCard>
                         </View>
