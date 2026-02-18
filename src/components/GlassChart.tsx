@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Dimensions, Text, PanResponder, StyleSheet, Animated } from 'react-native';
+import { View, Dimensions, Text, Pressable, StyleSheet, Animated } from 'react-native';
 import Svg, { Path, Defs, LinearGradient, Stop, G, Line, Circle } from 'react-native-svg';
 import { COLORS } from '../constants/theme';
 
@@ -35,38 +35,32 @@ export const GlassChart = ({
         setShowTooltip(false);
     }, [data]);
 
-    const panResponder = React.useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: (_, gestureState) => {
-                // Only capture if user is moving horizontally more than vertically
-                return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-            },
-            onPanResponderGrant: (evt) => {
-                handleTouch(evt.nativeEvent.locationX);
-                setShowTooltip(true);
-            },
-            onPanResponderMove: (evt) => {
-                handleTouch(evt.nativeEvent.locationX);
-            },
-            onPanResponderRelease: () => {
-                // Keep the last point active
-            },
-            onPanResponderTerminate: () => {
-                // If gesture is cancelled, hide tooltip? 
-                // User wants it to stay on touch and unshow on second touch.
-                // But for scrubbing, we want it visible.
-            },
-        })
-    ).current;
-
-    const handleTouch = (x: number) => {
+    // Simplified interaction: Tap a point to show, tap away to hide
+    const handlePress = (evt: any) => {
+        const x = evt.nativeEvent.locationX;
         const divider = data.length > 1 ? data.length - 1 : 1;
-        const index = Math.round((x / width) * divider);
-        if (index >= 0 && index < data.length) {
-            setActiveIndex(index);
+        const exactIndex = (x / width) * divider;
+        const index = Math.round(exactIndex);
+
+        // Calculate horizontal distance from the tapped point to see if it's a "hit"
+        const pointX = (index / divider) * width;
+        const distance = Math.abs(x - pointX);
+
+        if (distance < 25 && index >= 0 && index < data.length) {
+            // If tapping the same point that is already active, toggle it off
+            if (showTooltip && activeIndex === index) {
+                setShowTooltip(false);
+            } else {
+                // Show/Update tooltip
+                setActiveIndex(index);
+                setShowTooltip(true);
+            }
+        } else {
+            // Tapped far from a point, hide tooltip
+            setShowTooltip(false);
         }
     };
+
 
     const toggleTooltip = () => {
         setShowTooltip(!showTooltip);
@@ -96,13 +90,11 @@ export const GlassChart = ({
     // Remove fixed height from outer View so valid children (like labels) are visible
     return (
         <View style={{ width }}>
-            <View
-                {...panResponder.panHandlers}
-                onStartShouldSetResponder={() => true}
-                onResponderRelease={toggleTooltip}
+            <Pressable
+                onPress={handlePress}
                 style={{ paddingTop: 40 }} // Add room for tooltip at the top
             >
-                <Svg height={height} width={width}>
+                <Svg height={height} width={width} pointerEvents="none">
                     <Defs>
                         <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                             <Stop offset="0" stopColor={color} stopOpacity="0.5" />
@@ -147,6 +139,24 @@ export const GlassChart = ({
                         </G>
                     )}
 
+                    {/* Data points/indicators */}
+                    {points.map((p, i) => {
+                        const [px, py] = p.split(',').map(Number);
+                        const isActive = showTooltip && activeIndex === i;
+                        return (
+                            <Circle
+                                key={`point-${i}`}
+                                cx={px}
+                                cy={py}
+                                r={isActive ? 5 : 3}
+                                fill={isActive ? color : 'white'}
+                                stroke={color}
+                                strokeWidth={isActive ? 2 : 1.5}
+                                opacity={isActive ? 1 : 0.6}
+                            />
+                        );
+                    })}
+
                     {/* Live Indicator */}
                     {liveIndex !== undefined && !showTooltip && liveIndex >= 0 && liveIndex < data.length && (() => {
                         const divider = data.length > 1 ? data.length - 1 : 1;
@@ -186,14 +196,17 @@ export const GlassChart = ({
 
                 {/* Tooltip Overlay */}
                 {showTooltip && activeIndex !== null && data[activeIndex] !== undefined && (
-                    <View style={[
-                        styles.tooltip,
-                        {
-                            left: Math.max(0, Math.min(width - 80, (activeIndex / (data.length - 1)) * width - 40)),
-                            borderColor: color,
-                            top: 5, // Stay within the 40px padding
-                        }
-                    ]}>
+                    <Pressable
+                        onPress={() => setShowTooltip(false)}
+                        style={[
+                            styles.tooltip,
+                            {
+                                left: Math.max(0, Math.min(width - 80, (activeIndex / (data.length - 1)) * width - 40)),
+                                borderColor: color,
+                                top: 5, // Stay within the 40px padding
+                            }
+                        ]}
+                    >
                         <Text style={styles.tooltipTime}>
                             {activeIndex === 0 ? "00:00" :
                                 activeIndex === 3 ? "06:00" :
@@ -205,9 +218,9 @@ export const GlassChart = ({
                         <Text style={[styles.tooltipValue, { color }]}>
                             {data[activeIndex]}% Energy
                         </Text>
-                    </View>
+                    </Pressable>
                 )}
-            </View>
+            </Pressable>
 
             {/* Axis Labels */}
             {labels && labels.length > 0 && (

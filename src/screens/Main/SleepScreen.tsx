@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Pressable } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { GlassChart } from '../../components/GlassChart';
@@ -276,30 +276,24 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
         setShowTooltip(false);
     }, [data]);
 
-    const panResponder = React.useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: (_, gestureState) => {
-                return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-            },
-            onPanResponderGrant: (evt) => {
-                handleTouch(evt.nativeEvent.locationX);
-                setShowTooltip(true);
-            },
-            onPanResponderMove: (evt) => {
-                handleTouch(evt.nativeEvent.locationX);
-            },
-            onPanResponderRelease: () => { },
-        })
-    ).current;
-
-    const handleTouch = (x: number) => {
+    const handlePress = (evt: any) => {
+        const x = evt.nativeEvent.locationX;
         const divider = data.length;
         const index = Math.floor((x / width) * divider);
+
         if (index >= 0 && index < data.length) {
-            setActiveIndex(index);
+            // Toggle off if tapping already active point
+            if (showTooltip && activeIndex === index) {
+                setShowTooltip(false);
+            } else {
+                setActiveIndex(index);
+                setShowTooltip(true);
+            }
+        } else {
+            setShowTooltip(false);
         }
     };
+
 
     const toggleTooltip = () => {
         setShowTooltip(!showTooltip);
@@ -322,13 +316,11 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
 
     return (
         <View style={{ height: height + 60, width }}>
-            <View
-                {...panResponder.panHandlers}
-                onStartShouldSetResponder={() => true}
-                onResponderRelease={toggleTooltip}
+            <Pressable
+                onPress={handlePress}
                 style={{ paddingTop: 40 }} // Add room for tooltip
             >
-                <Svg width={width} height={height}>
+                <Svg width={width} height={height} pointerEvents="none">
                     {/* Duration Bars */}
                     {data.map((d, i) => {
                         const barHeight = (d.duration / maxDuration) * height;
@@ -372,14 +364,17 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
 
                 {/* Tooltip */}
                 {showTooltip && activeIndex !== null && data[activeIndex] && (
-                    <View style={[
-                        chartStyles.tooltip,
-                        {
-                            left: Math.max(0, Math.min(width - 100, (activeIndex * stepX) + stepX / 2 - 50)),
-                            borderColor: colors.primary,
-                            top: -10, // Move up into the padded area
-                        }
-                    ]}>
+                    <Pressable
+                        onPress={() => setShowTooltip(false)}
+                        style={[
+                            chartStyles.tooltip,
+                            {
+                                left: Math.max(0, Math.min(width - 100, (activeIndex * stepX) + stepX / 2 - 50)),
+                                borderColor: colors.primary,
+                                top: -10, // Move up into the padded area
+                            }
+                        ]}
+                    >
                         <Text style={chartStyles.tooltipDate}>{data[activeIndex].date || data[activeIndex].time}</Text>
                         <Text style={chartStyles.tooltipLabel}>
                             {t('duration')}: <Text style={{ color: colors.primary }}>{data[activeIndex].duration}h</Text>
@@ -387,9 +382,9 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
                         <Text style={chartStyles.tooltipLabel}>
                             {t('qualityScore')}: <Text style={{ color: colors.accent }}>{data[activeIndex].score}</Text>
                         </Text>
-                    </View>
+                    </Pressable>
                 )}
-            </View>
+            </Pressable>
 
             {/* Axis Labels */}
             <View style={{ height: 20, width: width, marginTop: 8 }}>
