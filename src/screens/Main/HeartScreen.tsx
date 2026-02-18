@@ -128,8 +128,8 @@ export const HeartScreen = () => {
                         <View style={{ marginBottom: SPACING.l }}>
                             <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('heart')}</Text>
                             <GlassCard
-                                style={{ alignItems: 'center', overflow: 'hidden' }}
-                                contentContainerStyle={{ paddingHorizontal: SPACING.m, paddingVertical: SPACING.s, alignItems: 'center', width: '100%' }}
+                                style={{ alignItems: 'center', overflow: 'visible' }}
+                                contentContainerStyle={{ paddingHorizontal: SPACING.m, paddingVertical: SPACING.s, alignItems: 'center', width: '100%', overflow: 'visible' }}
                             >
                                 <GlassChart
                                     data={data.heart.trend}
@@ -146,8 +146,8 @@ export const HeartScreen = () => {
                         <View style={{ marginBottom: SPACING.l }}>
                             <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('hrv')}</Text>
                             <GlassCard
-                                style={{ alignItems: 'center', overflow: 'hidden' }}
-                                contentContainerStyle={{ paddingHorizontal: SPACING.m, paddingVertical: SPACING.s, alignItems: 'center', width: '100%' }}
+                                style={{ alignItems: 'center', overflow: 'visible' }}
+                                contentContainerStyle={{ paddingHorizontal: SPACING.m, paddingVertical: SPACING.s, alignItems: 'center', width: '100%', overflow: 'visible' }}
                             >
                                 <GlassChart
                                     data={data.heart.hrvTrend || [0, 0, 0, 0, 0]}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, PanResponder } from 'react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { GlassCard } from '../../components/GlassCard';
 import { GlassChart } from '../../components/GlassChart';
@@ -69,7 +69,7 @@ const SleepScoreMeter = ({ score, size = 180, color }: { score: number, size?: n
     );
 };
 
-// Sleep Stages Donut Chart Component (Transparent Center)
+// Sleep Stages Donut Chart Component (With Center Text)
 const SleepStagesPieChart = ({ deep, rem, total, size = 160, colors }: { deep: string, rem: string, total: string, size?: number, colors: any }) => {
     const { t } = useLanguage();
     const totalMins = parseDurationToMinutes(total);
@@ -77,19 +77,45 @@ const SleepStagesPieChart = ({ deep, rem, total, size = 160, colors }: { deep: s
     const remMins = parseDurationToMinutes(rem);
     const lightMins = Math.max(0, totalMins - deepMins - remMins);
 
+    const [selectedStage, setSelectedStage] = useState<'Deep' | 'REM' | 'Light' | null>(null);
+
     // Distinct colors from Theme
-    const DEEP_COLOR = colors.primary; // Main Orange
-    const REM_COLOR = colors.accent;   // Gold/Amber
+    const DEEP_COLOR = colors.primary;
+    const REM_COLOR = colors.accent;
     const LIGHT_COLOR = 'rgba(255,255,255,0.2)';
 
     const strokeWidth = 20;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
 
-    // Calculate stroke lengths
-    const deepStroke = (deepMins / totalMins) * circumference;
-    const remStroke = (remMins / totalMins) * circumference;
-    const lightStroke = (lightMins / totalMins) * circumference;
+    const getCoordinatesForPercent = (percent: number) => {
+        const x = Math.cos(2 * Math.PI * percent);
+        const y = Math.sin(2 * Math.PI * percent);
+        return [x, y];
+    };
+
+    const getArcPath = (startPercent: number, endPercent: number, r: number) => {
+        const [startX, startY] = getCoordinatesForPercent(startPercent);
+        const [endX, endY] = getCoordinatesForPercent(endPercent);
+
+        const largeArcFlag = endPercent - startPercent > 0.5 ? 1 : 0;
+
+        const centerX = size / 2;
+        const centerY = size / 2;
+
+        return [
+            `M ${centerX + r * startX} ${centerY + r * startY}`,
+            `A ${r} ${r} 0 ${largeArcFlag} 1 ${centerX + r * endX} ${centerY + r * endY}`
+        ].join(' ');
+    };
+
+    const deepPercent = deepMins / totalMins;
+    const remPercent = remMins / totalMins;
+    const lightPercent = lightMins / totalMins;
+
+    const handleStagePress = (stage: 'Deep' | 'REM' | 'Light') => {
+        setSelectedStage(selectedStage === stage ? null : stage);
+    };
 
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
@@ -99,74 +125,76 @@ const SleepStagesPieChart = ({ deep, rem, total, size = 160, colors }: { deep: s
                     <G rotation="-90" origin={`${size / 2}, ${size / 2}`}>
                         {/* Deep Sleep Segment */}
                         {deepMins > 0 && (
-                            <SvgCircle
-                                cx={size / 2}
-                                cy={size / 2}
-                                r={radius}
+                            <Path
+                                d={getArcPath(0, deepPercent, radius)}
                                 stroke={DEEP_COLOR}
-                                strokeWidth={strokeWidth}
+                                strokeWidth={selectedStage === 'Deep' ? strokeWidth + 4 : strokeWidth}
                                 fill="none"
-                                strokeDasharray={`${deepStroke} ${circumference}`}
-                                strokeDashoffset={0}
                                 strokeLinecap="round"
+                                onPress={() => handleStagePress('Deep')}
                             />
                         )}
                         {/* REM Sleep Segment */}
                         {remMins > 0 && (
-                            <SvgCircle
-                                cx={size / 2}
-                                cy={size / 2}
-                                r={radius}
+                            <Path
+                                d={getArcPath(deepPercent, deepPercent + remPercent, radius)}
                                 stroke={REM_COLOR}
-                                strokeWidth={strokeWidth}
+                                strokeWidth={selectedStage === 'REM' ? strokeWidth + 4 : strokeWidth}
                                 fill="none"
-                                strokeDasharray={`${remStroke} ${circumference}`}
-                                strokeDashoffset={-deepStroke}
                                 strokeLinecap="round"
+                                onPress={() => handleStagePress('REM')}
                             />
                         )}
                         {/* Light Sleep Segment */}
                         {lightMins > 0 && (
-                            <SvgCircle
-                                cx={size / 2}
-                                cy={size / 2}
-                                r={radius}
+                            <Path
+                                d={getArcPath(deepPercent + remPercent, 1, radius)}
                                 stroke={LIGHT_COLOR}
-                                strokeWidth={strokeWidth}
+                                strokeWidth={selectedStage === 'Light' ? strokeWidth + 4 : strokeWidth}
                                 fill="none"
-                                strokeDasharray={`${lightStroke} ${circumference}`}
-                                strokeDashoffset={-(deepStroke + remStroke)}
                                 strokeLinecap="round"
+                                onPress={() => handleStagePress('Light')}
                             />
                         )}
                     </G>
                 </Svg>
-                {/* Center Text (Optional, currently empty for true donut) */}
+                {/* Center Text */}
+                <View style={[StyleSheet.absoluteFillObject, { alignItems: 'center', justifyContent: 'center' }]}>
+                    <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 2 }}>
+                        {selectedStage ? t((selectedStage.toLowerCase() + 'Sleep') as any) : t('totalSleep')}
+                    </Text>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.textPrimary }}>
+                        {selectedStage === 'Deep' ? deep :
+                            selectedStage === 'REM' ? rem :
+                                selectedStage === 'Light' ? `${Math.floor(lightMins / 60)}${t('h')} ${lightMins % 60}${t('m')}` :
+                                    total}
+                    </Text>
+                </View>
             </View>
 
             {/* Legend */}
             <View style={{ flex: 1, marginLeft: SPACING.l }}>
-                <View style={legendStyles.row}>
-                    <View style={[legendStyles.dot, { backgroundColor: DEEP_COLOR }]} />
+                <TouchableOpacity onPress={() => handleStagePress('Deep')} style={legendStyles.row}>
+                    <View style={[legendStyles.dot, { backgroundColor: DEEP_COLOR, transform: [{ scale: selectedStage === 'Deep' ? 1.5 : 1 }] }]} />
                     <View>
                         <Text style={[legendStyles.label, { color: colors.textSecondary }]}>{t('deepSleep')}</Text>
                         <Text style={[legendStyles.value, { color: colors.textPrimary }]}>{deep} ({Math.round(deepMins / totalMins * 100)}%)</Text>
                     </View>
-                </View>
-                <View style={legendStyles.row}>
-                    <View style={[legendStyles.dot, { backgroundColor: REM_COLOR }]} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleStagePress('REM')} style={legendStyles.row}>
+                    <View style={[legendStyles.dot, { backgroundColor: REM_COLOR, transform: [{ scale: selectedStage === 'REM' ? 1.5 : 1 }] }]} />
                     <View>
                         <Text style={[legendStyles.label, { color: colors.textSecondary }]}>{t('remSleep')}</Text>
                         <Text style={[legendStyles.value, { color: colors.textPrimary }]}>{rem} ({Math.round(remMins / totalMins * 100)}%)</Text>
                     </View>
-                </View>
-                <View style={legendStyles.row}>
-                    <View style={[legendStyles.dot, { backgroundColor: LIGHT_COLOR }]} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleStagePress('Light')} style={legendStyles.row}>
+                    <View style={[legendStyles.dot, { backgroundColor: LIGHT_COLOR, transform: [{ scale: selectedStage === 'Light' ? 1.5 : 1 }] }]} />
                     <View>
                         <Text style={[legendStyles.label, { color: colors.textSecondary }]}>{t('lightSleep')}</Text>
                         <Text style={[legendStyles.value, { color: colors.textPrimary }]}>{Math.floor(lightMins / 60)}{t('h')} {lightMins % 60}{t('m')} ({Math.round(lightMins / totalMins * 100)}%)</Text>
                     </View>
-                </View>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -177,6 +205,36 @@ const legendStyles = StyleSheet.create({
     dot: { width: 10, height: 10, borderRadius: 5, marginRight: 10 },
     label: { fontSize: 12, marginBottom: 2 },
     value: { fontSize: 14, fontWeight: 'bold' }
+});
+
+const chartStyles = StyleSheet.create({
+    tooltip: {
+        position: 'absolute',
+        top: 20,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        padding: 8,
+        borderRadius: 8,
+        borderWidth: 1,
+        width: 100,
+        zIndex: 100,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    tooltipDate: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+        marginBottom: 4,
+        textAlign: 'center',
+    },
+    tooltipLabel: {
+        color: '#fff',
+        fontSize: 10,
+        marginBottom: 2,
+    },
 });
 
 // Tab Selector Component
@@ -207,10 +265,46 @@ const TabSelector = ({ tabs, activeTab, onTabChange, colors }: { tabs: string[],
 const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 }: { data: any[], width: number, height?: number, colors: any, maxDurationVal?: number }) => {
     const { t } = useLanguage();
     const maxScore = 100;
-    // Allow maxDuration to be passed in (e.g. 60 for minutes, 10 for hours)
     const maxDuration = maxDurationVal;
 
-    // Guard against empty data
+    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const [showTooltip, setShowTooltip] = useState(false);
+
+    // Reset interaction state when data changes to prevent out-of-bounds access
+    useEffect(() => {
+        setActiveIndex(null);
+        setShowTooltip(false);
+    }, [data]);
+
+    const panResponder = React.useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: (_, gestureState) => {
+                return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+            },
+            onPanResponderGrant: (evt) => {
+                handleTouch(evt.nativeEvent.locationX);
+                setShowTooltip(true);
+            },
+            onPanResponderMove: (evt) => {
+                handleTouch(evt.nativeEvent.locationX);
+            },
+            onPanResponderRelease: () => { },
+        })
+    ).current;
+
+    const handleTouch = (x: number) => {
+        const divider = data.length;
+        const index = Math.floor((x / width) * divider);
+        if (index >= 0 && index < data.length) {
+            setActiveIndex(index);
+        }
+    };
+
+    const toggleTooltip = () => {
+        setShowTooltip(!showTooltip);
+    };
+
     if (!data || data.length === 0) return (
         <View style={{ height, width, justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ color: colors.textSecondary }}>{t('awaitingData')}</Text>
@@ -220,56 +314,84 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
     const barWidth = (width / data.length) * 0.6;
     const stepX = width / data.length;
 
-    // Line Path for Score
     const linePoints = data.map((d, i) => {
         const x = i * stepX + stepX / 2;
-        const y = height - (d.score / maxScore) * height; // Scale score to height
+        const y = height - (d.score / maxScore) * height;
         return `${x},${y}`;
     }).join(' ');
 
     return (
-        <View style={{ height, width }}>
-            <Svg width={width} height={height}>
-                {/* Duration Bars */}
-                {data.map((d, i) => {
-                    const barHeight = (d.duration / maxDuration) * height;
-                    return (
-                        <Path
-                            key={`bar-${i}`}
-                            d={`M ${i * stepX + (stepX - barWidth) / 2},${height} v -${barHeight} h ${barWidth} v ${barHeight} z`}
-                            fill={colors.primary} // Primary Orange for Duration
-                            opacity={0.8}
-                        />
-                    );
-                })}
+        <View style={{ height: height + 60, width }}>
+            <View
+                {...panResponder.panHandlers}
+                onStartShouldSetResponder={() => true}
+                onResponderRelease={toggleTooltip}
+                style={{ paddingTop: 40 }} // Add room for tooltip
+            >
+                <Svg width={width} height={height}>
+                    {/* Duration Bars */}
+                    {data.map((d, i) => {
+                        const barHeight = (d.duration / maxDuration) * height;
+                        return (
+                            <Path
+                                key={`bar-${i}`}
+                                d={`M ${i * stepX + (stepX - barWidth) / 2},${height} v -${barHeight} h ${barWidth} v ${barHeight} z`}
+                                fill={colors.primary}
+                                opacity={activeIndex === i && showTooltip ? 1 : 0.6}
+                            />
+                        );
+                    })}
 
-                {/* Score Line */}
-                <Path
-                    d={`M ${linePoints}`}
-                    fill="none"
-                    stroke={colors.accent} // Gold/Amber for Quality
-                    strokeWidth="3"
-                />
+                    {/* Score Line */}
+                    <Path
+                        d={`M ${linePoints}`}
+                        fill="none"
+                        stroke={colors.accent}
+                        strokeWidth="3"
+                        opacity={showTooltip ? 0.3 : 1}
+                    />
 
-                {/* Score Points */}
-                {data.map((d, i) => {
-                    const x = i * stepX + stepX / 2;
-                    const y = height - (d.score / maxScore) * height;
-                    return (
-                        <SvgCircle
-                            key={`point-${i}`}
-                            cx={x}
-                            cy={y}
-                            r="4"
-                            fill={colors.card}
-                            stroke={colors.accent}
-                            strokeWidth="2"
-                        />
-                    );
-                })}
-            </Svg>
+                    {/* Score Points */}
+                    {data.map((d, i) => {
+                        const x = i * stepX + stepX / 2;
+                        const y = height - (d.score / maxScore) * height;
+                        return (
+                            <SvgCircle
+                                key={`point-${i}`}
+                                cx={x}
+                                cy={y}
+                                r="4"
+                                fill={colors.card}
+                                stroke={colors.accent}
+                                strokeWidth="2"
+                                opacity={activeIndex === i && showTooltip ? 1 : (showTooltip ? 0.3 : 1)}
+                            />
+                        );
+                    })}
+                </Svg>
 
-            {/* Axis Labels (Absolute Position to prevent wrapping) */}
+                {/* Tooltip */}
+                {showTooltip && activeIndex !== null && data[activeIndex] && (
+                    <View style={[
+                        chartStyles.tooltip,
+                        {
+                            left: Math.max(0, Math.min(width - 100, (activeIndex * stepX) + stepX / 2 - 50)),
+                            borderColor: colors.primary,
+                            top: -10, // Move up into the padded area
+                        }
+                    ]}>
+                        <Text style={chartStyles.tooltipDate}>{data[activeIndex].date || data[activeIndex].time}</Text>
+                        <Text style={chartStyles.tooltipLabel}>
+                            {t('duration')}: <Text style={{ color: colors.primary }}>{data[activeIndex].duration}h</Text>
+                        </Text>
+                        <Text style={chartStyles.tooltipLabel}>
+                            {t('qualityScore')}: <Text style={{ color: colors.accent }}>{data[activeIndex].score}</Text>
+                        </Text>
+                    </View>
+                )}
+            </View>
+
+            {/* Axis Labels */}
             <View style={{ height: 20, width: width, marginTop: 8 }}>
                 {data.map((d, i) => {
                     const step = Math.ceil(data.length / 7);
@@ -284,9 +406,6 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
 
                     if (!showLabel) return null;
 
-                    // Calculate position
-                    // Center the text on the "bar" slot which is at i*stepX
-                    // We widen the container to prevent wrapping for 2-digit dates
                     const left = i * stepX;
                     const extraWidth = 20;
 
@@ -295,7 +414,7 @@ const DualAxisChart = ({ data, width, height = 200, colors, maxDurationVal = 10 
                             key={i}
                             style={{
                                 position: 'absolute',
-                                left: left - extraWidth / 2 + stepX / 2, // Center on the slot
+                                left: left - extraWidth / 2 + stepX / 2,
                                 width: stepX + extraWidth,
                                 textAlign: 'center',
                                 fontSize: 10,
@@ -452,7 +571,7 @@ export const SleepScreen = () => {
                 {data ? (
                     <>
                         {/* 1. Main Toggleable Sleep Card */}
-                        <GlassCard style={styles.scoreCard} contentContainerStyle={{ alignItems: 'center', padding: SPACING.xl }}>
+                        <GlassCard style={[styles.scoreCard, { overflow: 'visible' }]} contentContainerStyle={{ alignItems: 'center', padding: SPACING.xl, overflow: 'visible' }}>
                             <TabSelector
                                 tabs={[t('dayTab'), t('weekTab'), t('monthTab')]}
                                 activeTab={selectedTab === 'Day' ? t('dayTab') : selectedTab === 'Week' ? t('weekTab') : t('monthTab')}
@@ -483,8 +602,8 @@ export const SleepScreen = () => {
                         <View style={{ marginBottom: SPACING.xl }}>
                             <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('avgSleepHR')}</Text>
                             <GlassCard
-                                style={{ alignItems: 'center', overflow: 'hidden' }}
-                                contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%' }}
+                                style={{ alignItems: 'center', overflow: 'visible' }}
+                                contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%', overflow: 'visible' }}
                             >
                                 <GlassChart
                                     // Use weekly duration data as a placeholder for HR trend if actual HR trend unavailable, 
