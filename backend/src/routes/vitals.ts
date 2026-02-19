@@ -89,9 +89,11 @@ router.get('/sleep/history', checkAuth, async (req: AuthenticatedRequest, res: a
         const { start, end } = req.query;
         const uid = req.user?.uid;
 
+        if (!start || !end) return res.status(400).json({ error: 'Missing start/end dates' });
+
         const logs = await SleepLog.find({
             userId: uid,
-            date: { $gte: start, $lte: end } // String comparison for YYYY-MM-DD works
+            date: { $gte: start as string, $lte: end as string } // String comparison for YYYY-MM-DD works
         }).sort({ date: 1 }).lean();
 
         return res.status(200).json({ data: logs });
@@ -126,9 +128,11 @@ router.get('/readiness/history', checkAuth, async (req: AuthenticatedRequest, re
         const { start, end } = req.query;
         const uid = req.user?.uid;
 
+        if (!start || !end) return res.status(400).json({ error: 'Missing start/end dates' });
+
         const logs = await ReadinessLog.find({
             userId: uid,
-            date: { $gte: start, $lte: end }
+            date: { $gte: start as string, $lte: end as string }
         }).sort({ date: 1 }).lean();
 
         return res.status(200).json({ data: logs });
