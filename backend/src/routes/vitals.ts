@@ -141,8 +141,6 @@ router.get('/readiness/history', checkAuth, async (req: AuthenticatedRequest, re
         return res.status(500).json({ error: 'Failed to fetch readiness history' });
     }
 });
-
-return res.status(500).json({ error: 'Failed to fetch readiness history' });
     }
 });
 
