@@ -31,6 +31,15 @@ export interface ReadinessData {
     };
 }
 
+export interface WorkoutData {
+    type: 'run' | 'walk' | 'cycle' | 'yoga' | 'hiit' | 'mindfulness';
+    duration: number; // seconds
+    calories: number;
+    heartRateAvg?: number;
+    distance?: number;
+    date: string; // ISO
+}
+
 class VitalsService {
     private async getHeaders() {
         const user = auth.currentUser;
@@ -128,8 +137,40 @@ class VitalsService {
             if (!response.ok) throw new Error('Failed to fetch readiness history');
             const data = await response.json();
             return data.data || [];
+            return [];
+        }
+    }
+
+    // --- Workouts ---
+    async syncWorkout(workout: WorkoutData) {
+        try {
+            const headers = await this.getHeaders();
+            const response = await fetch(`${BASE_URL}/vitals/workouts`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ workout })
+            });
+
+            if (!response.ok) throw new Error('Failed to sync workout');
+            return true;
         } catch (error) {
-            console.error('[VitalsService] getReadinessHistory error:', error);
+            console.error('[VitalsService] syncWorkout error:', error);
+            return false;
+        }
+    }
+
+    async getWorkoutHistory(start: string, end: string) {
+        try {
+            const headers = await this.getHeaders();
+            const response = await fetch(`${BASE_URL}/vitals/workouts/history?start=${start}&end=${end}`, {
+                headers
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch workout history');
+            const data = await response.json();
+            return data.data || [];
+        } catch (error) {
+            console.error('[VitalsService] getWorkoutHistory error:', error);
             return [];
         }
     }

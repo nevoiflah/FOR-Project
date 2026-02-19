@@ -2,6 +2,7 @@ import express from 'express';
 import VitalsLog from '../models/VitalsLog.js';
 import SleepLog from '../models/SleepLog.js';
 import ReadinessLog from '../models/ReadinessLog.js';
+import WorkoutLog from '../models/WorkoutLog.js';
 import { checkAuth, AuthenticatedRequest } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -138,6 +139,51 @@ router.get('/readiness/history', checkAuth, async (req: AuthenticatedRequest, re
         return res.status(200).json({ data: logs });
     } catch (error) {
         return res.status(500).json({ error: 'Failed to fetch readiness history' });
+    }
+});
+
+return res.status(500).json({ error: 'Failed to fetch readiness history' });
+    }
+});
+
+// WORKOUT ROUTES
+router.post('/workouts', checkAuth, async (req: AuthenticatedRequest, res: any) => {
+    try {
+        const { workout } = req.body;
+        const uid = req.user?.uid;
+
+        if (!uid) return res.status(401).json({ error: 'User not authenticated' });
+
+        const log = new WorkoutLog({
+            ...workout,
+            userId: uid,
+            date: new Date(workout.date) // Ensure date is Date object
+        });
+
+        await log.save();
+
+        return res.status(200).json({ success: true, data: log });
+    } catch (error) {
+        console.error('Workout Save Error:', error);
+        return res.status(500).json({ error: 'Failed to save workout' });
+    }
+});
+
+router.get('/workouts/history', checkAuth, async (req: AuthenticatedRequest, res: any) => {
+    try {
+        const { start, end } = req.query;
+        const uid = req.user?.uid;
+
+        if (!start || !end) return res.status(400).json({ error: 'Missing start/end dates' });
+
+        const logs = await WorkoutLog.find({
+            userId: uid,
+            date: { $gte: new Date(start as string), $lte: new Date(end as string) }
+        }).sort({ date: -1 }).lean();
+
+        return res.status(200).json({ data: logs });
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to fetch workout history' });
     }
 });
 
