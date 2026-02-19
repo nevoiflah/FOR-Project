@@ -9,6 +9,7 @@ import { COLORS } from '../constants/theme';
 import { notificationService } from '../services/NotificationService';
 import { useLanguage } from './LanguageContext';
 import { appleHealthService } from '../services/AppleHealthService';
+import { vitalsService } from '../services/VitalsService';
 
 export interface Goal {
     id: string;
@@ -498,29 +499,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     const fetchHistory = async () => {
         if (!user) return;
         try {
-            console.log('[DataContext] Fetching history from Backend...');
-            const token = await user.getIdToken();
+            console.log('[DataContext] Fetching history from Backend (VitalsService)...');
             const end = new Date();
             const start = new Date(end.getTime() - 24 * 60 * 60 * 1000); // Last 24h
 
-            const API_URL = `https://for-project-8ris.onrender.com/vitals/history?start=${start.toISOString()}&end=${end.toISOString()}`;
-
-            const response = await fetch(API_URL, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok) throw new Error('Failed to fetch history');
-
-            const result = await response.json();
-            const logs = result.data;
+            const logs = await vitalsService.getHistory(start, end);
 
             if (logs && logs.length > 0) {
-                // Process logs into trend arrays (resample to ~24 points if needed, or just take raw)
-                // For simplicity, let's map raw. Chart can handle typical arrays.
-                // Or if too many points, we might want to sample. 
-                // Let's assume backend returns minute data -> 1440 points. Too much for UI?
-                // GlassChart might lag with 1440 points. Let's sample every 60th point (hourly) or similar.
-
                 // Process Heart Rate Trends
                 const hrTrend = logs
                     .filter((l: any) => l.data?.heartRate)
