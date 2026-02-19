@@ -141,8 +141,7 @@ router.get('/readiness/history', checkAuth, async (req: AuthenticatedRequest, re
         return res.status(500).json({ error: 'Failed to fetch readiness history' });
     }
 });
-    }
-});
+
 
 // WORKOUT ROUTES
 router.post('/workouts', checkAuth, async (req: AuthenticatedRequest, res: any) => {
