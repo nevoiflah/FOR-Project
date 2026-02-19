@@ -137,6 +137,8 @@ class VitalsService {
             if (!response.ok) throw new Error('Failed to fetch readiness history');
             const data = await response.json();
             return data.data || [];
+        } catch (error) {
+            console.error('[VitalsService] getReadinessHistory error:', error);
             return [];
         }
     }
