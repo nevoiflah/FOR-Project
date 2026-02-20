@@ -5,7 +5,7 @@
   "scripts": {
     "start": "expo start",
     "dev": "expo start --dev-client",
-    "dev:lan": "REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.10 expo start --dev-client",
+    "dev:lan": "kill -9 $(lsof -ti:8081) 2>/dev/null; REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.10 expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web"
