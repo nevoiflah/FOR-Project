@@ -10,6 +10,17 @@ import { notificationService } from '../services/NotificationService';
 import { useLanguage } from './LanguageContext';
 import { appleHealthService } from '../services/AppleHealthService';
 import { vitalsService } from '../services/VitalsService';
+import { WorkoutData } from '../services/VitalsService';
+
+// Helper to parse "Xh Ym" to minutes
+const parseDurationToMinutes = (durationStr: string | null | undefined): number => {
+    if (!durationStr) return 0;
+    const hoursMatch = durationStr.match(/(\d+)h/);
+    const minutesMatch = durationStr.match(/(\d+)m/);
+    const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+    const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
+    return hours * 60 + minutes;
+};
 
 export interface Goal {
     id: string;
@@ -242,7 +253,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             setIsConnected(bluetoothService.isConnected());
             // Fetch history from backend (Sleep, Readiness, Workouts)
             if (user) {
-                await fetchHistory();
+                await fetchCloudHistory();
             }
         };
         init();
@@ -316,7 +327,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
                         firestoreData.steps.history.week = DEFAULT_DATA.steps.history.week;
                     }
                 }
-
+                // Trigger health fetch now that we are connected
+                fetchCloudHistory();
                 setData(firestoreData);
                 setIsRingBound(true);
             } else {
@@ -502,95 +514,110 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     };
 
 
-    // Fetch History from MongoDB (Backend)
-    const fetchHistory = async () => {
+    // Fetch Comprehensive History from MongoDB (Cloud Pull)
+    const fetchCloudHistory = async () => {
         if (!user) return;
         try {
-            console.log('[DataContext] Fetching history from Backend (VitalsService)...');
+            console.log('[DataContext] Fetching comprehensive cloud history from MongoDB...');
             const end = new Date();
-            const start = new Date(end.getTime() - 24 * 60 * 60 * 1000); // Last 24h
+            const start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000); // Last 30 Days
 
-            const logs = await vitalsService.getHistory(start, end);
+            const startStr = start.toISOString().split('T')[0];
+            const endStr = end.toISOString().split('T')[0];
 
-            if (logs && logs.length > 0) {
-                // Process Heart Rate Trends
-                const hrTrend = logs
-                    .filter((l: any) => l.data?.heartRate)
-                    .map((l: any) => l.data.heartRate);
+            // Run all fetches in parallel for speed
+            const [vitalsLogs, sleepLogs, readinessLogs, workoutLogs] = await Promise.all([
+                vitalsService.getHistory(start, end),
+                vitalsService.getSleepHistory(startStr, endStr),
+                vitalsService.getReadinessHistory(startStr, endStr),
+                vitalsService.getWorkoutHistory(start.toISOString(), end.toISOString())
+            ]);
 
-                const hrvTrend = logs
-                    .filter((l: any) => l.data?.hrv)
-                    .map((l: any) => l.data.hrv);
+            setData(prev => {
+                if (!prev) return null;
+                const newState = { ...prev };
 
-                // Process Steps History (Hourly Aggregation for "Day" View)
-                const hourlySteps: Record<string, { steps: number, calories: number }> = {};
+                // --- 1. Process Vitals (Heart Rate, HRV, Steps) ---
+                if (vitalsLogs && vitalsLogs.length > 0) {
+                    const hrTrend = vitalsLogs.filter((l: any) => l.data?.heartRate).map((l: any) => l.data.heartRate);
+                    const hrvTrend = vitalsLogs.filter((l: any) => l.data?.hrv).map((l: any) => l.data.hrv);
 
-                logs.forEach((log: any) => {
-                    if (log.data?.steps || log.data?.calories) {
-                        const date = new Date(log.timestamp);
-                        const hourHost = `${date.getHours().toString().padStart(2, '0')}:00`;
-
-                        if (!hourlySteps[hourHost]) {
-                            hourlySteps[hourHost] = { steps: 0, calories: 0 };
-                        }
-                        hourlySteps[hourHost].steps += (log.data.steps || 0);
-                        hourlySteps[hourHost].calories += (log.data.calories || 0);
-                    }
-                });
-
-                // Convert map to array { time, steps, calories } and sort by time
-                const dayHistory = Object.keys(hourlySteps).map(time => ({
-                    time,
-                    steps: hourlySteps[time].steps,
-                    calories: hourlySteps[time].calories
-                })).sort((a, b) => a.time.localeCompare(b.time));
-
-                // Downsample HR/HRV for trends
-                const downsample = (arr: number[], target: number) => {
-                    if (arr.length <= target) return arr;
-                    const step = Math.ceil(arr.length / target);
-                    return arr.filter((_, i) => i % step === 0);
-                };
-
-                setData(prev => {
-                    if (!prev) return null;
-                    return {
-                        ...prev,
-                        heart: {
-                            ...prev.heart,
-                            trend: downsample(hrTrend, 50),
-                            hrvTrend: downsample(hrvTrend, 50)
-                        },
-                        steps: {
-                            ...prev.steps,
-                            history: {
-                                ...prev.steps.history,
-                                day: dayHistory.length > 0 ? dayHistory : prev.steps.history.day
-                            }
-                        }
+                    const downsample = (arr: number[], target: number) => {
+                        if (arr.length <= target) return arr;
+                        const step = Math.ceil(arr.length / target);
+                        return arr.filter((_, i) => i % step === 0);
                     };
-                });
-                console.log(`[DataContext] History loaded: ${hrTrend.length} points (downsampled to ~50)`);
-            }
 
-            // Fetch Workout History
-            console.log('[DataContext] Fetching workout history...');
-            const workoutLogs = await vitalsService.getWorkoutHistory(start.toISOString(), end.toISOString());
-            if (workoutLogs && workoutLogs.length > 0) {
-                const history: Workout[] = workoutLogs.map((log: any) => ({
-                    id: log._id,
-                    type: log.type,
-                    duration: log.duration,
-                    calories: log.calories,
-                    date: log.date,
-                    heartRateAvg: log.heartRateAvg,
-                    distance: log.distance
-                }));
-                setData(prev => prev ? { ...prev, history } : null);
-            }
+                    newState.heart = {
+                        ...newState.heart,
+                        trend: downsample(hrTrend, 50),
+                        hrvTrend: downsample(hrvTrend, 50)
+                    };
+
+                    // Simple daily steps aggregation from 5-min logs
+                    const dailyStepsMap: Record<string, number> = {};
+                    vitalsLogs.forEach((log: any) => {
+                        if (log.data?.steps) {
+                            const dateStr = new Date(log.timestamp).toISOString().split('T')[0];
+                            dailyStepsMap[dateStr] = (dailyStepsMap[dateStr] || 0) + log.data.steps;
+                        }
+                    });
+
+                    const stepsWeek = Object.entries(dailyStepsMap).slice(-7).map(([date, count]) => ({
+                        date,
+                        steps: count as number,
+                        calories: Math.round((count as number) * 0.04) // Estimate calories from steps
+                    }));
+                    if (stepsWeek.length > 0) {
+                        newState.steps.history.week = stepsWeek;
+                    }
+                }
+
+                // --- 2. Process Sleep History ---
+                if (sleepLogs && sleepLogs.length > 0) {
+                    newState.sleep.history.month = sleepLogs.map((log: any) => ({
+                        date: log.date,
+                        duration: log.duration / 60, // Convert minutes to hours for chart
+                        score: log.score
+                    }));
+                    newState.sleep.history.week = newState.sleep.history.month.slice(-7);
+                }
+
+                // --- 3. Process Readiness History ---
+                if (readinessLogs && readinessLogs.length > 0) {
+                    const monthData = readinessLogs.map((log: any) => ({
+                        date: log.date,
+                        score: log.score
+                    }));
+                    newState.readiness = {
+                        ...newState.readiness,
+                        history: {
+                            month: monthData,
+                            week: monthData.slice(-7)
+                        }
+                    } as any; // Using any temporarily as the Readiness type structure might need strict TS interfaces defined later
+                }
+
+                // --- 4. Process Workout History ---
+                if (workoutLogs && workoutLogs.length > 0) {
+                    newState.history = workoutLogs.map((log: any) => ({
+                        id: log._id,
+                        type: log.type,
+                        duration: log.duration,
+                        calories: log.calories,
+                        date: log.date,
+                        heartRateAvg: log.heartRateAvg,
+                        distance: log.distance
+                    }));
+                }
+
+                return newState;
+            });
+
+            console.log('[DataContext] Cloud Pull Complete: Merged MongoDB data successfully.');
 
         } catch (e) {
-            console.error('[DataContext] Fetch History Error:', e);
+            console.error('[DataContext] Fetch Cloud History Error:', e);
         }
     };
 
@@ -648,36 +675,78 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         }
 
         try {
-            console.log(`[DataContext] Uploading ${logsToUpload.length} vitals logs to Backend...`);
-            const token = await user.getIdToken();
-
-            // Production API URL (Render)
-            const API_URL = 'https://for-project-8ris.onrender.com/vitals/batch';
-
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ logs: logsToUpload })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Server returned ${response.status}`);
+            // 1. Sync Sleep Data
+            if (data?.sleep) {
+                const sleepDate = new Date().toISOString().split('T')[0];
+                await vitalsService.syncSleepData({
+                    date: sleepDate,
+                    timestamp: new Date(),
+                    duration: parseDurationToMinutes(data.sleep.duration), // Need helper or approximate
+                    score: data.sleep.score,
+                    efficiency: 85, // Mock default for now
+                    stages: {
+                        deep: parseDurationToMinutes(data.sleep.deep),
+                        rem: parseDurationToMinutes(data.sleep.rem),
+                        light: Math.max(0, parseDurationToMinutes(data.sleep.duration) - parseDurationToMinutes(data.sleep.deep) - parseDurationToMinutes(data.sleep.rem)),
+                        awake: 0
+                    },
+                    heartRateAvg: data.sleep.avgHeartRate || 60,
+                    hrvAvg: data.heart?.hrvTrend?.[data.heart.hrvTrend.length - 1] || 50
+                });
             }
 
-            // Success! Clear offline storage
-            console.log('[DataContext] Batch upload successful.');
-            await AsyncStorage.removeItem(OFFLINE_STORAGE_KEY);
+            // 2. Sync Readiness Data
+            if (data?.readiness) {
+                const readinessDate = new Date().toISOString().split('T')[0];
+                await vitalsService.syncReadinessData({
+                    date: readinessDate,
+                    score: data.readiness.score,
+                    contributors: {
+                        sleepBalance: 85,
+                        previousDayActivity: 75,
+                        activityBalance: 80,
+                        restingHeartRate: data.heart?.bpm || 60,
+                        hrvBalance: data.heart?.hrvTrend?.[data.heart.hrvTrend.length - 1] || 50,
+                        temperature: 98.6
+                    }
+                });
+            }
+
+            // 3. Sync Vitals Buffer
+            if (logsToUpload.length > 0) {
+                console.log(`[DataContext] Uploading ${logsToUpload.length} vitals logs to Backend...`);
+                const token = await user.getIdToken();
+
+                // Production API URL (Render)
+                const API_URL = 'https://for-project-8ris.onrender.com/vitals/batch';
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ logs: logsToUpload })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+
+                // Success! Clear offline storage
+                console.log('[DataContext] Batch upload (Vitals, Sleep, Readiness) successful.');
+                await AsyncStorage.removeItem(OFFLINE_STORAGE_KEY);
+            }
 
         } catch (e) {
             console.error('[DataContext] Upload Failed. Saving to offline storage.', e);
             // Save combined logs back to storage for next time
-            try {
-                await AsyncStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(logsToUpload));
-            } catch (storageErr) {
-                console.error('[DataContext] Failed to save offline logs:', storageErr);
+            if (logsToUpload.length > 0) {
+                try {
+                    await AsyncStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(logsToUpload));
+                } catch (storageErr) {
+                    console.error('[DataContext] Failed to save offline logs:', storageErr);
+                }
             }
         }
     };
@@ -908,8 +977,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         if (!user || !data) return;
 
         // 1. Submit to Backend (MongoDB)
-        const workoutForBackend = {
-            ...workoutData,
+        const workoutForBackend: WorkoutData = {
+            type: workoutData.type,
+            duration: workoutData.duration,
+            calories: workoutData.calories || 0,
+            heartRateAvg: workoutData.heartRateAvg,
+            distance: workoutData.distance,
             date: new Date().toISOString() // Ensure current time
         };
 
@@ -991,7 +1064,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const refreshData = async () => {
         if (user) {
-            await fetchHistory();
+            await fetchCloudHistory();
         }
     };
 
