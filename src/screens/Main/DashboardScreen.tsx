@@ -504,7 +504,6 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
         width: '100%',
         padding: 0,
         marginBottom: SPACING.m,
-        overflow: 'visible',
     },
     iconContainer: {
         marginBottom: SPACING.s,

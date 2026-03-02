@@ -651,7 +651,7 @@ export const SleepScreen = () => {
                 {data ? (
                     <>
                         {/* 1. Main Toggleable Sleep Card */}
-                        <GlassCard style={[styles.scoreCard, { overflow: 'visible' }]} contentContainerStyle={{ alignItems: 'center', padding: SPACING.xl, overflow: 'visible' }}>
+                        <GlassCard style={[styles.scoreCard]} contentContainerStyle={{ alignItems: 'center', padding: SPACING.xl }}>
                             <TabSelector
                                 tabs={[t('dayTab'), t('weekTab'), t('monthTab')]}
                                 activeTab={selectedTab === 'Day' ? t('dayTab') : selectedTab === 'Week' ? t('weekTab') : t('monthTab')}
@@ -682,8 +682,8 @@ export const SleepScreen = () => {
                         <View style={{ marginBottom: SPACING.xl }}>
                             <Text style={[styles.sectionTitle, isRTL && { textAlign: 'right' }]}>{t('avgSleepHR')}</Text>
                             <GlassCard
-                                style={{ alignItems: 'center', overflow: 'visible' }}
-                                contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%', overflow: 'visible' }}
+                                style={{ alignItems: 'center' }}
+                                contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%' }}
                             >
                                 <GlassChart
                                     // Use weekly duration data as a placeholder for HR trend if actual HR trend unavailable, 
@@ -749,7 +749,6 @@ const createStyles = (colors: any, isDark: boolean) => StyleSheet.create({
     },
     scoreCard: {
         marginBottom: SPACING.xl,
-        overflow: 'visible',
     },
     totalDurationValue: {
         fontSize: 24,
