@@ -14,13 +14,24 @@ dotenv.config();
 
 if (!admin.apps.length) {
     try {
-        admin.initializeApp({
-            credential: admin.credential.applicationDefault()
-            // OR admin.credential.cert(serviceAccount)
-        });
-        console.log('🔥 Firebase Admin Initialized');
+        const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+
+        if (serviceAccountJson) {
+            // Use the JSON key provided in Render environment variables
+            const serviceAccount = JSON.parse(serviceAccountJson);
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount)
+            });
+            console.log('🔥 Firebase Admin Initialized with Service Account');
+        } else {
+            // Fallback for local testing if GOOGLE_APPLICATION_CREDENTIALS is set
+            admin.initializeApp({
+                credential: admin.credential.applicationDefault()
+            });
+            console.log('🔥 Firebase Admin Initialized with Default Credentials');
+        }
     } catch (error) {
-        console.error('⚠️ Firebase Admin Initialization Failed (Expected if no CREDENTIALS provided):', error);
+        console.error('⚠️ Firebase Admin Initialization Failed:', error);
     }
 }
 
