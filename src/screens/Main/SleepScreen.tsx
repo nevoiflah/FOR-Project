@@ -689,7 +689,11 @@ export const SleepScreen = () => {
                                     // Use weekly duration data as a placeholder for HR trend if actual HR trend unavailable, 
                                     // but scaling it to look like HR (e.g. 50-70 bpm)
                                     // ideally data.sleep.weekly would be replaced by data.sleep.avgHrTrend if authentic
-                                    data={data.sleep.weekly.map(v => 55 + v * 2)}
+                                    data={(() => {
+                                        const arr = data.sleep.history?.week?.map(d => d.duration) || [6.5, 7.2, 5.8, 8.1, 7.5, 6.9, 7.2];
+                                        const finalArr = arr.length === 1 ? [arr[0], arr[0]] : arr;
+                                        return finalArr.map(v => Math.round(50 + (v * 1.5)));
+                                    })()}
                                     height={150}
                                     width={Dimensions.get('window').width - 48}
                                     color="#FF6B6B"
@@ -713,7 +717,10 @@ export const SleepScreen = () => {
                                 contentContainerStyle={{ padding: 0, alignItems: 'center', width: '100%' }}
                             >
                                 <GlassChart
-                                    data={data.sleep.temperatureTrend || [0, 0, 0, 0, 0, 0, 0]}
+                                    data={(() => {
+                                        const arr = data.sleep.temperatureTrend || [0, 0, 0, 0, 0, 0, 0];
+                                        return arr.length === 1 ? [arr[0], arr[0]] : arr;
+                                    })()}
                                     height={150}
                                     width={Dimensions.get('window').width - 48}
                                     color="#FFA726"

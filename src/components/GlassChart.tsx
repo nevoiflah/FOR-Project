@@ -14,6 +14,7 @@ interface GlassChartProps {
     gradientId?: string;
     showPoints?: boolean;
     labels?: string[];
+    tooltipLabels?: string[];
     liveIndex?: number;
     unit?: string;
     unitKey?: TranslationKey;
@@ -28,6 +29,7 @@ export const GlassChart = ({
     gradientId = 'grad',
     showPoints = true,
     labels = [],
+    tooltipLabels,
     liveIndex,
     unit = '',
     unitKey
@@ -216,14 +218,14 @@ export const GlassChart = ({
                         ]}
                     >
                         <Text style={styles.tooltipTime}>
-                            {labels && labels[activeIndex] ? labels[activeIndex] : (
+                            {(tooltipLabels && tooltipLabels[activeIndex]) ? tooltipLabels[activeIndex] : (labels && labels[activeIndex] ? labels[activeIndex] : (
                                 activeIndex === 0 ? "00:00" :
                                     activeIndex === 3 ? "06:00" :
                                         activeIndex === 6 ? "12:00" :
                                             activeIndex === 9 ? "18:00" :
                                                 activeIndex === 12 ? "24:00" :
                                                     `${activeIndex * 2}:00`
-                            )}
+                            ))}
                         </Text>
                         <Text style={[styles.tooltipValue, { color }]}>
                             {data[activeIndex]}{unit}{unitKey ? ` ${t(unitKey)}` : ''}

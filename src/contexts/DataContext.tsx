@@ -50,7 +50,6 @@ interface RingData {
         score: number;
         deep: string;
         rem: string;
-        weekly: number[];
         avgHeartRate: number;
         temperatureTrend: number[];
         history: {
@@ -83,7 +82,10 @@ interface RingData {
     readiness: {
         score: number;
         status: string;
-        weekly: number[];
+        history?: {
+            week: { date: string; score: number }[];
+            month: { date: string; score: number }[];
+        };
     };
     hydration?: {
         intake: number; // in glasses (250ml)
@@ -136,7 +138,6 @@ const DEFAULT_DATA: RingData = {
         score: 85,
         deep: '1h 45m',
         rem: '2h 10m',
-        weekly: [6.5, 7.2, 5.8, 8.1, 7.5, 6.9, 7.2],
         avgHeartRate: 58,
         temperatureTrend: [0.1, -0.2, 0.0, 0.3, -0.1, 0.2, -0.3],
         history: {
@@ -222,7 +223,10 @@ const DEFAULT_DATA: RingData = {
     readiness: {
         score: 0,
         status: 'No Data',
-        weekly: [0, 0, 0, 0, 0, 0, 0],
+        history: {
+            week: [],
+            month: []
+        }
     },
     hydration: {
         intake: 0,
